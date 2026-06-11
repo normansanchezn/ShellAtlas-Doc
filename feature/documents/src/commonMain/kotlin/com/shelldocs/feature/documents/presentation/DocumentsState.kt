@@ -23,6 +23,8 @@ data class DocumentsState(
     val versions: List<DocumentVersion> = emptyList(),
     val isHistoryVisible: Boolean = false,
     val errorMessage: String? = null,
+    val isExplorerExpanded: Boolean = true,
+    val isAttributesExpanded: Boolean = true,
 ) : MviState {
 
     val filteredDocuments: List<Document> =

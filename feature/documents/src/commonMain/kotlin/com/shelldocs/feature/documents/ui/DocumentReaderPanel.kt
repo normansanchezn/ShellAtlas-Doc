@@ -16,10 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
 import com.shelldocs.core.designsystem.icons.IconBookmark
+import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.icons.IconHistory
 import com.shelldocs.core.designsystem.icons.IconShare
@@ -38,6 +40,8 @@ fun DocumentReaderPanel(
     document: Document,
     isWide: Boolean,
     onIntent: (DocumentsIntent) -> Unit,
+    attributesWidth: Dp,
+    onResizeAttributes: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
@@ -109,16 +113,27 @@ fun DocumentReaderPanel(
                 }
             }
             if (isWide) {
-                if (state.isHistoryVisible) {
-                    VersionHistoryPanel(
-                        state = state,
-                        onIntent = onIntent,
-                        modifier = Modifier.width(250.dp).fillMaxHeight(),
-                    )
-                } else {
-                    AttributesPanel(
-                        document = document,
-                        modifier = Modifier.width(220.dp).fillMaxHeight(),
+                when {
+                    state.isHistoryVisible -> {
+                        ResizeHandle(onDrag = onResizeAttributes)
+                        VersionHistoryPanel(
+                            state = state,
+                            onIntent = onIntent,
+                            modifier = Modifier.width(attributesWidth).fillMaxHeight(),
+                        )
+                    }
+                    state.isAttributesExpanded -> {
+                        ResizeHandle(onDrag = onResizeAttributes)
+                        AttributesPanel(
+                            document = document,
+                            modifier = Modifier.width(attributesWidth).fillMaxHeight(),
+                        )
+                    }
+                    else -> CollapsedPanelRail(
+                        icon = IconChevronLeft,
+                        contentDescription = "Show attributes",
+                        onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
+                        modifier = Modifier.fillMaxHeight(),
                     )
                 }
             }

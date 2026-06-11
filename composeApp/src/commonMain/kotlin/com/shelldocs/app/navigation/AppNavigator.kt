@@ -16,6 +16,11 @@ class AppNavigator(initial: AppRoute = AppRoute.ASSISTANT) {
 
     private var previous: AppRoute? = null
 
+    private val mutableOpenDocumentRequests = MutableStateFlow<String?>(null)
+
+    /** Document id requested for opening in the Documents screen, if any. */
+    val openDocumentRequests: StateFlow<String?> = mutableOpenDocumentRequests.asStateFlow()
+
     fun navigate(destination: AppRoute) {
         if (destination == mutableRoute.value) return
         previous = mutableRoute.value
@@ -28,5 +33,16 @@ class AppNavigator(initial: AppRoute = AppRoute.ASSISTANT) {
         previous = null
         mutableRoute.value = target
         return true
+    }
+
+    /** Navigates to Documents and asks it to open and select [documentId]. */
+    fun openDocument(documentId: String) {
+        mutableOpenDocumentRequests.value = documentId
+        navigate(AppRoute.DOCUMENTS)
+    }
+
+    /** Marks the current open-document request as handled. */
+    fun consumeOpenDocumentRequest() {
+        mutableOpenDocumentRequests.value = null
     }
 }

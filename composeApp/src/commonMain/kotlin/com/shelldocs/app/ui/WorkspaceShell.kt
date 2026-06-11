@@ -105,7 +105,12 @@ private fun RouteContent(
         AppRoute.ASSISTANT -> {
             val viewModel = remember(container) { container.assistantViewModel() }
             DisposableEffect(viewModel) { onDispose(viewModel::clear) }
-            AssistantScreen(viewModel = viewModel, isWide = isWide, modifier = modifier)
+            AssistantScreen(
+                viewModel = viewModel,
+                isWide = isWide,
+                onOpenDocument = container.navigator::openDocument,
+                modifier = modifier,
+            )
         }
         AppRoute.DOCUMENTS -> {
             val viewModel = remember(container) { container.documentsViewModel() }

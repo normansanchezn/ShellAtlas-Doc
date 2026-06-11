@@ -49,6 +49,10 @@ Question -> intent detection -> grounding retrieval -> assistant engine -> cited
 - `GroundedAssistantEngine` and `CreateDocumentFromAssistantUseCase` each hold a localized `Copy` table (EN/ES/FR) for every template string — questions, flow walkthroughs, improvement advice, summaries, "not enough information", and document-creation confirmations.
 - `OllamaAssistantEngine`'s prompt instructs the LLM to reply in the same language the user wrote in (EN/ES/FR), defaulting to English if unsure.
 
+## Source Card Navigation
+
+- Source cards in `SourcesList`/`ChatMessageBubble` are clickable (`onSourceClick`). `AssistantScreen` wires this to `onOpenDocument(source.documentId)`, which `WorkspaceShell` binds to `AppNavigator::openDocument` — see [[Documents]] "Open From Assistant".
+
 ## Mermaid Diagram
 
 - [[KMM Recovery Flow]]

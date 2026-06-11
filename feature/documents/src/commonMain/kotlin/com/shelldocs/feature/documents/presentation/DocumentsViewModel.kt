@@ -6,6 +6,7 @@ import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.document.DocumentNode
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentVersionsUseCase
@@ -13,6 +14,9 @@ import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
 import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class DocumentsViewModel(
     private val getDocuments: GetDocumentsUseCase,
@@ -24,7 +28,21 @@ class DocumentsViewModel(
     private val createDocument: CreateDocumentUseCase,
     private val roleProvider: () -> UserRole,
     dispatchers: DispatcherProvider,
+    openDocumentRequests: StateFlow<String?> = MutableStateFlow(null),
+    private val consumeOpenDocumentRequest: () -> Unit = {},
 ) : MviViewModel<DocumentsIntent, DocumentsState, DocumentsEffect>(DocumentsState(), dispatchers) {
+
+    init {
+        scope.launch {
+            openDocumentRequests.collect { documentId ->
+                if (documentId != null) {
+                    if (currentState.documents.isEmpty()) initialize()
+                    select(documentId)
+                    consumeOpenDocumentRequest()
+                }
+            }
+        }
+    }
 
     override suspend fun handleIntent(intent: DocumentsIntent) {
         when (intent) {
@@ -43,6 +61,8 @@ class DocumentsViewModel(
             DocumentsIntent.HideHistory -> setState { copy(isHistoryVisible = false) }
             is DocumentsIntent.RestoreVersion -> restore(intent.versionId)
             is DocumentsIntent.CreateDocument -> create(intent.title)
+            DocumentsIntent.ToggleExplorerPanel -> setState { copy(isExplorerExpanded = !isExplorerExpanded) }
+            DocumentsIntent.ToggleAttributesPanel -> setState { copy(isAttributesExpanded = !isAttributesExpanded) }
         }
     }
 
@@ -74,6 +94,7 @@ class DocumentsViewModel(
 
     private fun select(documentId: String) {
         val document = currentState.documents.firstOrNull { it.id == documentId } ?: return
+        val pathFolders = currentState.tree?.folderPathTo(documentId).orEmpty()
         setState {
             copy(
                 selectedDocument = document,
@@ -82,8 +103,21 @@ class DocumentsViewModel(
                 isHistoryVisible = false,
                 versions = emptyList(),
                 errorMessage = null,
+                expandedFolders = expandedFolders + pathFolders,
+                isExplorerExpanded = false,
+                isAttributesExpanded = false,
             )
         }
+    }
+
+    /** Ids of every folder on the path to [documentId], or `null` if not found under this node. */
+    private fun DocumentNode.folderPathTo(documentId: String): List<String>? {
+        if (this.documentId == documentId) return emptyList()
+        children.forEach { child ->
+            val path = child.folderPathTo(documentId)
+            if (path != null) return listOf(id) + path
+        }
+        return null
     }
 
     private fun startEditing() {

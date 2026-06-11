@@ -31,9 +31,13 @@ import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.assistant.AnswerSource
 
-/** Collapsible "Hide N sources" list with relevance meters. */
+/** Collapsible "Hide N sources" list with relevance meters. Clicking a source opens it in Documents. */
 @Composable
-fun SourcesList(sources: List<AnswerSource>, modifier: Modifier = Modifier) {
+fun SourcesList(
+    sources: List<AnswerSource>,
+    onSourceClick: (AnswerSource) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val colors = ShellTheme.colors
     var expanded by remember { mutableStateOf(true) }
 
@@ -67,7 +71,7 @@ fun SourcesList(sources: List<AnswerSource>, modifier: Modifier = Modifier) {
         if (expanded) {
             Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
                 sources.forEachIndexed { index, source ->
-                    SourceRow(rank = index + 1, source = source)
+                    SourceRow(rank = index + 1, source = source, onClick = { onSourceClick(source) })
                 }
             }
         }
@@ -75,13 +79,14 @@ fun SourcesList(sources: List<AnswerSource>, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SourceRow(rank: Int, source: AnswerSource) {
+private fun SourceRow(rank: Int, source: AnswerSource, onClick: () -> Unit) {
     val colors = ShellTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(ShellRadius.sm))
             .background(colors.surfaceSubtle)
+            .clickable(onClick = onClick)
             .padding(horizontal = ShellSpacing.md, vertical = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),

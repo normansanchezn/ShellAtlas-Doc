@@ -37,6 +37,7 @@ import com.shelldocs.feature.assistant.presentation.AssistantViewModel
 fun AssistantScreen(
     viewModel: AssistantViewModel,
     isWide: Boolean,
+    onOpenDocument: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
@@ -84,7 +85,10 @@ fun AssistantScreen(
                         verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
                     ) {
                         items(state.messages.size, key = { state.messages[it].id }) { index ->
-                            ChatMessageBubble(message = state.messages[index])
+                            ChatMessageBubble(
+                                message = state.messages[index],
+                                onSourceClick = { source -> onOpenDocument(source.documentId) },
+                            )
                         }
                         if (state.isAnswering) {
                             item("typing") { TypingIndicator() }

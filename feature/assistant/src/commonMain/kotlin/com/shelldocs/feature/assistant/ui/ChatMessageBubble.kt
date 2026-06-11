@@ -25,6 +25,7 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
+import com.shelldocs.core.domain.entity.assistant.AnswerSource
 import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 
@@ -33,10 +34,14 @@ import com.shelldocs.core.domain.entity.assistant.MessageRole
  * assistant answers as cards with confidence header and source citations.
  */
 @Composable
-fun ChatMessageBubble(message: AssistantMessage, modifier: Modifier = Modifier) {
+fun ChatMessageBubble(
+    message: AssistantMessage,
+    onSourceClick: (AnswerSource) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     when (message.role) {
         MessageRole.USER -> UserBubble(message, modifier)
-        else -> AssistantBubble(message, modifier)
+        else -> AssistantBubble(message, onSourceClick, modifier)
     }
 }
 
@@ -58,7 +63,7 @@ private fun UserBubble(message: AssistantMessage, modifier: Modifier) {
 }
 
 @Composable
-private fun AssistantBubble(message: AssistantMessage, modifier: Modifier) {
+private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSource) -> Unit, modifier: Modifier) {
     val colors = ShellTheme.colors
     Column(modifier = modifier.fillMaxWidth().widthIn(max = 640.dp)) {
         Row(
@@ -95,7 +100,11 @@ private fun AssistantBubble(message: AssistantMessage, modifier: Modifier) {
             MessageMarkdownBody(markdown = message.markdown)
         }
         if (message.sources.isNotEmpty()) {
-            SourcesList(sources = message.sources, modifier = Modifier.padding(top = ShellSpacing.sm))
+            SourcesList(
+                sources = message.sources,
+                onSourceClick = onSourceClick,
+                modifier = Modifier.padding(top = ShellSpacing.sm),
+            )
         }
     }
 }

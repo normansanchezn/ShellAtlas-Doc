@@ -16,4 +16,6 @@ sealed interface DocumentsIntent : MviIntent {
     data object HideHistory : DocumentsIntent
     data class RestoreVersion(val versionId: String) : DocumentsIntent
     data class CreateDocument(val title: String) : DocumentsIntent
+    data object ToggleExplorerPanel : DocumentsIntent
+    data object ToggleAttributesPanel : DocumentsIntent
 }

@@ -32,6 +32,7 @@ Project brain for the Kotlin Multiplatform implementation of ShellDoc.
 - [[KMM Recovery Consolidation]]
 - [[Assistant Natural Replies And Document Creation]]
 - [[Assistant Welcome Message And Multilingual Replies]]
+- [[Assistant Source Navigation And Documents Layout Resize]]
 
 ## Diagrams
 

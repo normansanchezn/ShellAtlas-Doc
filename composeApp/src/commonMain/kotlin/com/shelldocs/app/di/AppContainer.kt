@@ -196,6 +196,8 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
         createDocument = CreateDocumentUseCase(documentRepository),
         roleProvider = ::currentRole,
         dispatchers = dispatchers,
+        openDocumentRequests = navigator.openDocumentRequests,
+        consumeOpenDocumentRequest = navigator::consumeOpenDocumentRequest,
     )
 
     fun updatesViewModel() = UpdatesViewModel(
