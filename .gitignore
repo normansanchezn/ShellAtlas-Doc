@@ -12,6 +12,9 @@ DerivedData/
 *.hprof
 .konan/
 kotlin-js-store/
+.gradle-home/
+backend/node_modules/
+obsidian-vault/.obsidian/
 
 # local env files
 .env*.local

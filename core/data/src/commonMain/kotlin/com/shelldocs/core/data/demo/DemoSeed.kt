@@ -198,6 +198,103 @@ object DemoSeed {
             """.trimIndent(),
         ),
         document(
+            id = "doc-eosb1",
+            title = "EoSB1 Process for America's App - Android",
+            summary = "Android EoSB1 release build, pilot branch and QA handoff process.",
+            status = DocumentStatus.UPDATES_PENDING,
+            owner = james,
+            module = "Release Process",
+            platform = "Android",
+            team = "Android Shell App",
+            tags = listOf("eosb1", "release", "build", "pilot", "qa"),
+            updatedAt = Instant.parse("2026-02-18T00:00:00Z"),
+            markdown = """
+                # EoSB1 Process for America's App - Android
+
+                The Android EoSB1 process coordinates branch preparation, build generation and QA handoff for America's App.
+
+                ## Branch Strategy
+
+                - Prepare `develop`, `extra/pilot-8.99.0` and `madf/pilot`.
+                - Validate pilot branch ownership before cutting a release candidate.
+
+                ## Build Generation
+
+                1. Update `build.gradle.kts` version values.
+                2. Verify `updateconfig.py` and generated versionCodes.
+                3. Run GitHub Actions release workflow for QA handoff.
+
+                ## Validation
+
+                - Confirm smoke tests on pilot branches.
+                - Check Lokalise strings changes before sign-off.
+                - Review Azure secrets required by the new build.
+
+                TODO: document the newest rollback path after pilot rejection.
+            """.trimIndent(),
+        ),
+        document(
+            id = "doc-lokalise",
+            title = "Lokalise Strings Update Process",
+            summary = "Localization workflow for strings sync, review and release readiness.",
+            status = DocumentStatus.PUBLISHED,
+            owner = sofia,
+            module = "Localization",
+            platform = "Cross-platform",
+            team = "Platform Team",
+            tags = listOf("lokalise", "localization", "translations", "strings.xml"),
+            updatedAt = Instant.parse("2026-06-05T00:00:00Z"),
+            markdown = """
+                # Lokalise Strings Update Process
+
+                Localization updates are managed through Lokalise and validated before each release train.
+
+                ## Export
+
+                - Pull the latest strings from Lokalise.
+                - Regenerate `strings.xml` and platform resource bundles.
+
+                ## Review
+
+                1. Check translation coverage for critical flows.
+                2. Validate placeholder integrity.
+                3. Confirm no outdated copy remains in pilot builds.
+
+                ## Release Checks
+
+                - Coordinate with QA for localization smoke tests.
+                - Confirm release notes mention user-visible translation changes.
+            """.trimIndent(),
+        ),
+        document(
+            id = "doc-azure-secrets",
+            title = "Azure Secrets Management for Mobile",
+            summary = "Environment values, rotation steps and release-time secret checks.",
+            status = DocumentStatus.PUBLISHED,
+            owner = sofia,
+            module = "Platform Security",
+            platform = "Cross-platform",
+            team = "Platform Team",
+            tags = listOf("azure secrets", "keychain", "credentials", "environment values"),
+            updatedAt = Instant.parse("2026-05-16T00:00:00Z"),
+            markdown = """
+                # Azure Secrets Management for Mobile
+
+                Secret values for mobile release processes are stored in Azure-managed secret stores and mirrored into safe runtime environments.
+
+                ## Rotation
+
+                - Rotate values before major release trains.
+                - Confirm dependent pipelines pick up the new environment values.
+
+                ## Usage
+
+                1. Validate secret names in release workflows.
+                2. Confirm mobile clients still read the expected environment values.
+                3. Re-check secure local storage such as Keychain or encrypted preferences where applicable.
+            """.trimIndent(),
+        ),
+        document(
             id = "doc-push-notifications",
             title = "Push Notifications",
             summary = "APNS integration, token management, and notification categories.",

@@ -33,6 +33,7 @@ fun App(config: AppConfig = AppConfig()) {
                 DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
                 SignInScreen(
                     viewModel = authViewModel,
+                    isDemoMode = config.isDemoMode,
                     onSignedIn = { /* session flow drives the switch */ },
                 )
             } else {

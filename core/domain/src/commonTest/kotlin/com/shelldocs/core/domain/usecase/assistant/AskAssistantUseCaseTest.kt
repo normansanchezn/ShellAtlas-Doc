@@ -6,7 +6,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
-import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.fixtures.DocumentFixtures
 import com.shelldocs.core.domain.fixtures.FakeDocumentRepository
 import com.shelldocs.core.domain.repository.AssistantCacheRepository
@@ -21,12 +21,12 @@ import kotlin.test.assertTrue
 private class RecordingEngine : AssistantEngine {
     var invocations = 0
     var lastIntent: AssistantIntentType? = null
-    var lastGrounding: List<Document> = emptyList()
+    var lastGrounding: List<ScoredDocument> = emptyList()
 
     override suspend fun answer(
         question: String,
         intent: AssistantIntentType,
-        groundingDocuments: List<Document>,
+        groundingDocuments: List<ScoredDocument>,
     ): DomainResult<AssistantAnswer> {
         invocations++
         lastIntent = intent
@@ -98,6 +98,6 @@ class AskAssistantUseCaseTest {
         useCase("Explain the authentication flow step by step")
 
         assertEquals(AssistantIntentType.EXPLAIN_FLOW, engine.lastIntent)
-        assertEquals(listOf("auth"), engine.lastGrounding.map { it.id })
+        assertEquals(listOf("auth"), engine.lastGrounding.map { it.document.id })
     }
 }

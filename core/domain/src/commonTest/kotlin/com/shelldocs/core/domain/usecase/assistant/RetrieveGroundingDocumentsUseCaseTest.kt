@@ -25,6 +25,22 @@ class RetrieveGroundingDocumentsUseCaseTest {
                 markdown = "# Release\n\nStaging, QA sign-off and App Store submission.",
                 tags = listOf("release"),
             ),
+            DocumentFixtures.document(
+                id = "eosb1",
+                title = "EoSB1 Process for America's App - Android",
+                summary = "Android release build process for EoSB1.",
+                tags = listOf("release", "build", "eosb1"),
+                platform = "Android",
+                module = "Release Process",
+            ),
+            DocumentFixtures.document(
+                id = "lokalise",
+                title = "Lokalise Strings Update Process",
+                summary = "Localization sync workflow and translations release checks.",
+                tags = listOf("lokalise", "localization", "translations"),
+                module = "Localization",
+                platform = "Cross-platform",
+            ),
         ),
     )
     private val retrieve = RetrieveGroundingDocumentsUseCase(repository)
@@ -47,5 +63,19 @@ class RetrieveGroundingDocumentsUseCaseTest {
     fun limitIsRespected() = runTest {
         val results = retrieve("process flow points release authentication", limit = 2).getOrDefault(emptyList())
         assertTrue(results.size <= 2)
+    }
+
+    @Test
+    fun aliasExpansionImprovesReleaseGrounding() = runTest {
+        val results = retrieve("release build").getOrDefault(emptyList())
+
+        assertEquals("eosb1", results.firstOrNull()?.document?.id)
+    }
+
+    @Test
+    fun aliasExpansionImprovesLocalizationGrounding() = runTest {
+        val results = retrieve("localization").getOrDefault(emptyList())
+
+        assertEquals("lokalise", results.firstOrNull()?.document?.id)
     }
 }

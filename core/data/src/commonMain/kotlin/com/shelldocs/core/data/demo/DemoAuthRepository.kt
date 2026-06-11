@@ -20,6 +20,7 @@ class DemoAuthRepository(private val timeProvider: TimeProvider) : AuthRepositor
     override val session: StateFlow<AuthSession?> = mutableSession.asStateFlow()
 
     override suspend fun signIn(credentials: SignInCredentials): DomainResult<AuthSession> {
+        println("[ShellDocsAuth] Demo sign-in for ${credentials.email}")
         val authSession = AuthSession(
             accessToken = "demo-access-token",
             refreshToken = "demo-refresh-token",
@@ -27,6 +28,7 @@ class DemoAuthRepository(private val timeProvider: TimeProvider) : AuthRepositor
             user = DemoSeed.elena,
         )
         mutableSession.value = authSession
+        println("[ShellDocsAuth] Demo sign-in success as ${authSession.user.email}")
         return DomainResult.success(authSession)
     }
 

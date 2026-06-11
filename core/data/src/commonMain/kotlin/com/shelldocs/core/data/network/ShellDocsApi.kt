@@ -51,7 +51,7 @@ class ShellDocsApi(
         get("v1/documents/$id/versions").body()
 
     suspend fun restore(id: String, versionId: String): DocumentDto =
-        post("v1/documents/$id/restore/$versionId", body = null).body()
+        postWithoutBody("v1/documents/$id/restore/$versionId").body()
 
     suspend fun delete(id: String) {
         val response = httpClient.delete(url("v1/documents/$id")) { defaultHeaders() }
@@ -69,6 +69,9 @@ class ShellDocsApi(
                 setBody(body)
             }
         }.also { it.ensureSuccess() }
+
+    private suspend fun postWithoutBody(path: String): HttpResponse =
+        httpClient.post(url(path)) { defaultHeaders() }.also { it.ensureSuccess() }
 
     private fun url(path: String): String = "${config.baseUrl.trimEnd('/')}/$path"
 

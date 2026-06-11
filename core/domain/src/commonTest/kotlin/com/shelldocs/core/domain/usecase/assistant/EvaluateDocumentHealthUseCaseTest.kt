@@ -13,10 +13,30 @@ class EvaluateDocumentHealthUseCaseTest {
 
     private val now = Instant.parse("2026-06-11T00:00:00Z")
     private val evaluate = EvaluateDocumentHealthUseCase(FixedTimeProvider(now))
+    private val completeMarkdown = """
+        # Authentication
+
+        Access tokens expire after 60 minutes and are refreshed silently before the user notices.
+        The refresh flow rotates credentials, preserves session continuity and records failures for later review.
+
+        ## Lifecycle
+
+        1. Detect that the active token is close to expiry.
+        2. Request a new token pair from the authorization server.
+        3. Persist the rotated credentials in secure local storage.
+        4. Resume the blocked requests with the refreshed token.
+
+        ## Notes
+
+        This document includes prerequisites, edge cases, fallback behavior and recovery details so it remains actionable during release support and incident response.
+    """.trimIndent()
 
     @Test
     fun freshPublishedDocumentIsHealthy() {
-        val document = DocumentFixtures.document(updatedAt = Instant.parse("2026-06-01T00:00:00Z"))
+        val document = DocumentFixtures.document(
+            updatedAt = Instant.parse("2026-06-01T00:00:00Z"),
+            markdown = completeMarkdown,
+        )
 
         val health = evaluate(document)
 
@@ -27,7 +47,10 @@ class EvaluateDocumentHealthUseCaseTest {
 
     @Test
     fun veryStaleDocumentLosesThirtyFivePoints() {
-        val document = DocumentFixtures.document(updatedAt = Instant.parse("2025-12-01T00:00:00Z"))
+        val document = DocumentFixtures.document(
+            updatedAt = Instant.parse("2025-12-01T00:00:00Z"),
+            markdown = completeMarkdown,
+        )
 
         val health = evaluate(document)
 

@@ -21,15 +21,27 @@ class SupabaseRoleRepository(
 ) : RoleRepository {
 
     override suspend fun roleOf(userId: String): DomainResult<UserRole> = runCatching {
-        val rows = postgrest.select<List<UserRoleRowDto>>(
-            table = "user_roles",
-            query = "user_id=eq.$userId&select=user_id,role_key",
-        )
-        UserRole.fromKey(rows.firstOrNull()?.roleKey)
+        loadRoleOf(userId)
     }.fold(
         onSuccess = { DomainResult.success(it) },
         onFailure = { DomainResult.failure(AppError.Network(it.message ?: "Role lookup failed")) },
     )
+
+    suspend fun roleOf(userId: String, accessTokenOverride: String): DomainResult<UserRole> = runCatching {
+        loadRoleOf(userId, accessTokenOverride)
+    }.fold(
+        onSuccess = { DomainResult.success(it) },
+        onFailure = { DomainResult.failure(AppError.Network(it.message ?: "Role lookup failed")) },
+    )
+
+    private suspend fun loadRoleOf(userId: String, accessTokenOverride: String? = null): UserRole {
+        val rows = postgrest.select<List<UserRoleRowDto>>(
+            table = "user_roles",
+            query = "user_id=eq.$userId&select=user_id,role_key",
+            accessTokenOverride = accessTokenOverride,
+        )
+        return UserRole.fromKey(rows.firstOrNull()?.roleKey)
+    }
 
     override suspend fun teamMembers(): DomainResult<List<TeamMember>> = runCatching {
         val roleRows = postgrest.select<List<UserRoleRowDto>>(

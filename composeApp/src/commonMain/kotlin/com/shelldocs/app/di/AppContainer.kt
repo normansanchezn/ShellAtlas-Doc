@@ -96,7 +96,7 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
             SupabaseAuthRepository(
                 authApi = SupabaseAuthApi(httpClient, supabase),
                 profiles = SupabaseProfileDataSource(postgrest(supabase)),
-                roleRepository = roleRepository,
+                roleRepository = roleRepository as SupabaseRoleRepository,
                 timeProvider = timeProvider,
             )
         }

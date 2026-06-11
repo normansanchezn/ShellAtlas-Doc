@@ -26,6 +26,7 @@ class DerivedPendingUpdatesRepositoryTest {
         assertTrue(updates.isNotEmpty())
         assertTrue(updates.none { it.documentId == "doc-authentication" }, "fresh doc must not be triaged")
         assertTrue(updates.any { it.documentId == "doc-loyalty" }, "outdated stale doc must be triaged")
+        assertTrue(updates.any { it.documentId == "doc-eosb1" }, "EoSB1 should be triaged from recovered ShellDoc demo data")
     }
 
     @Test

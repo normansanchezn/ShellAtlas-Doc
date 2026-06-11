@@ -12,7 +12,18 @@ class SearchDocumentsUseCaseTest {
 
     private val repository = FakeDocumentRepository(
         stored = listOf(
-            DocumentFixtures.document(id = "auth", title = "Authentication"),
+            DocumentFixtures.document(
+                id = "eosb1",
+                title = "EoSB1 Process for America's App - Android",
+                tags = listOf("release", "build"),
+                platform = "Android",
+            ),
+            DocumentFixtures.document(
+                id = "lokalise",
+                title = "Lokalise Strings Update Process",
+                tags = listOf("lokalise", "translations"),
+                platform = "Cross-platform",
+            ),
             DocumentFixtures.document(id = "push", title = "Push Notifications"),
         ),
     )
@@ -24,8 +35,16 @@ class SearchDocumentsUseCaseTest {
     }
 
     @Test
-    fun delegatesTrimmedQueryToRepository() = runTest {
-        val results = search("  push ").getOrDefault(emptyList())
-        assertEquals(listOf("push"), results.map { it.id })
+    fun releaseBuildAliasFindsEosb1Document() = runTest {
+        val results = search(" release build ").getOrDefault(emptyList())
+
+        assertEquals("eosb1", results.firstOrNull()?.id)
+    }
+
+    @Test
+    fun localizationAliasFindsLokaliseDocument() = runTest {
+        val results = search("localization").getOrDefault(emptyList())
+
+        assertEquals("lokalise", results.firstOrNull()?.id)
     }
 }

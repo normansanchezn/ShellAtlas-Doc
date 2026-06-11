@@ -32,9 +32,7 @@ class AskAssistantUseCase(
             return DomainResult.success(cached.copy(fromCache = true))
         }
 
-        val grounding = retrieveGroundingDocuments(question)
-            .getOrDefault(emptyList())
-            .map { it.document }
+        val grounding = retrieveGroundingDocuments(question).getOrDefault(emptyList())
 
         return engine.answer(question, intent, grounding).onSuccess { answer ->
             cache.save(questionHash, keywords, answer)

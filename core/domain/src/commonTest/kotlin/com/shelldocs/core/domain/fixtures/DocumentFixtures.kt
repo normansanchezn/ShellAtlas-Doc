@@ -19,6 +19,10 @@ object DocumentFixtures {
         markdown: String = "# Authentication\n\nAccess tokens expire after 60 minutes. " +
             "The client silently refreshes using the stored refresh token before prompting re-auth.",
         tags: List<String> = listOf("auth", "ios"),
+        owner: String = "Elena Vargas",
+        module: String = "Authentication",
+        team: String = "iOS Shell App",
+        platform: String = "iOS",
         updatedAt: Instant = baseInstant,
     ): Document = Document(
         id = id,
@@ -30,10 +34,10 @@ object DocumentFixtures {
         content = DocumentContent(),
         plainText = markdown.replace(Regex("[#*`>]"), "").trim(),
         attributes = DocumentAttributes(
-            owner = "Elena Vargas",
-            module = "Authentication",
-            team = "iOS Shell App",
-            platform = "iOS",
+            owner = owner,
+            module = module,
+            team = team,
+            platform = platform,
             tags = tags,
         ),
         createdAt = updatedAt,

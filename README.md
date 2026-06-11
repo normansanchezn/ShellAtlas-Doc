@@ -1,8 +1,10 @@
 # ShellDocs
 
-Kotlin Multiplatform migration of **ShellEnterpriseDoc** — an enterprise knowledge platform
+Kotlin Multiplatform implementation of **ShellEnterpriseDoc** — an enterprise knowledge platform
 with an embedded, documentation-grounded AI assistant. One codebase, four targets:
 **Android · iOS · Desktop (JVM) · Web (Wasm)**.
+
+This repository keeps **KMM as the only product source of truth**. Useful logic recovered from a parallel Swift recovery was ported into the shared KMM modules, but the duplicated Swift app tree is not part of the maintained product anymore.
 
 The UI is a pixel-faithful implementation of the
 [Enterprise Knowledge Management Redesign](https://www.figma.com/file/vZNYrld1B75oIubmMiL6mt)
@@ -19,6 +21,16 @@ Figma file (light and dark palettes, Shell yellow `#FFD100`, 4dp radii, Inter ty
 | **Sources** | Confluence / Azure DevOps / Jira integrations with sync, reconnect and the sync activity log. |
 | **Settings** | General (theme), AI Assistant, **Team & Access** (role delegation), Notifications, Integrations. |
 | **Auth** | Email/password sign-in via Supabase GoTrue. The AUTH feature is the reference clean-architecture example. |
+
+## Demo Knowledge Corpus
+
+The bundled demo data now includes Shell mobile process terminology such as:
+
+- `EoSB1 Process for America's App - Android`
+- `Lokalise Strings Update Process`
+- `Azure Secrets Management for Mobile`
+
+This keeps search, assistant grounding and updates triage aligned with the recovered ShellDoc concept while staying fully deterministic.
 
 ## Roles
 
@@ -57,6 +69,12 @@ The MVI loop: `UI → Intent → ViewModel.handleIntent → setState/sendEffect 
 Every feature follows the AUTH example: View → ViewModel → UseCase → Repository interface →
 data-source implementation.
 
+Recovered Swift-only logic that proved useful was absorbed into this structure, mainly:
+
+- semantic alias expansion for search and assistant grounding
+- ShellDoc-specific demo corpus terminology
+- documentation and architecture decisions restored into `obsidian-vault/`
+
 ## Running
 
 ```bash
@@ -69,6 +87,27 @@ open iosApp/iosApp.xcodeproj                       # iOS (run the iosApp scheme)
 Without configuration the app boots in **demo mode** (seeded in-memory data, any valid
 credentials sign in as the workspace owner). Point it at real services by passing an
 `AppConfig(supabase = SupabaseConfig(...), api = ApiConfig(...), useOllama = true)` to `App()`.
+
+For the desktop app you can also use a root `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+Set at least:
+
+```bash
+SHELLDOC_SUPABASE_URL=http://127.0.0.1:54321
+SHELLDOC_SUPABASE_ANON_KEY=your-local-anon-key
+```
+
+If those values are absent, the app stays in demo mode and accepts any valid email plus an
+8+ character password.
+
+On Android emulators, `127.0.0.1` / `localhost` are rewritten automatically to `10.0.2.2`
+so the app can reach the host machine's local Supabase services.
+
+Project documentation and ADRs live in `obsidian-vault/` and `docs/project-tree.md`.
 
 ## Tests
 

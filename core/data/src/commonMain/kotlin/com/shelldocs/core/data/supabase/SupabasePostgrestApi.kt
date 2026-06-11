@@ -21,11 +21,16 @@ class SupabasePostgrestApi(
     @PublishedApi internal val accessTokenProvider: () -> String?,
 ) {
 
-    suspend inline fun <reified T> select(table: String, query: String): T {
+    suspend inline fun <reified T> select(
+        table: String,
+        query: String,
+        accessTokenOverride: String? = null,
+    ): T {
         val response = httpClient.get("${config.restBaseUrl}/$table?$query") {
             headers {
                 append("apikey", config.anonKey)
-                accessTokenProvider()?.let { append("Authorization", "Bearer $it") }
+                (accessTokenOverride ?: accessTokenProvider())
+                    ?.let { append("Authorization", "Bearer $it") }
             }
         }
         if (!response.status.isSuccess()) {
@@ -34,11 +39,16 @@ class SupabasePostgrestApi(
         return response.body()
     }
 
-    suspend inline fun <reified Body> upsert(table: String, body: Body) {
+    suspend inline fun <reified Body> upsert(
+        table: String,
+        body: Body,
+        accessTokenOverride: String? = null,
+    ) {
         val response: HttpResponse = httpClient.post("${config.restBaseUrl}/$table") {
             headers {
                 append("apikey", config.anonKey)
-                accessTokenProvider()?.let { append("Authorization", "Bearer $it") }
+                (accessTokenOverride ?: accessTokenProvider())
+                    ?.let { append("Authorization", "Bearer $it") }
                 append("Prefer", "resolution=merge-duplicates,return=minimal")
             }
             contentType(ContentType.Application.Json)

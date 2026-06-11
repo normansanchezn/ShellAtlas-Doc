@@ -61,14 +61,15 @@ class MviViewModelTest {
         testScheduler.advanceUntilIdle()
         job.join()
 
-        assertEquals(listOf(CounterEffect.Confetti), collected)
+        assertEquals(listOf<CounterEffect>(CounterEffect.Confetti), collected)
         viewModel.clear()
     }
 
     @Test
     fun initialStateIsExposedBeforeAnyIntent() = runTest {
         val viewModel = CounterViewModel(TestDispatchers(StandardTestDispatcher(testScheduler)))
-        assertEquals(CounterState(0), viewModel.state.value)
+        val initialState: CounterState = viewModel.state.value
+        assertEquals(CounterState(0), initialState)
         viewModel.clear()
     }
 }

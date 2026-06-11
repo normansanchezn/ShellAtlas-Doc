@@ -9,6 +9,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.entity.document.Document
@@ -20,6 +21,7 @@ import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
+import com.shelldocs.core.domain.repository.ConversationRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
@@ -28,7 +30,6 @@ import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.RetrieveGroundingDocumentsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.data.repository.InMemoryConversationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -74,6 +75,24 @@ private class NoopCache : AssistantCacheRepository {
     override suspend fun save(questionHash: String, keywords: List<String>, answer: AssistantAnswer) = Unit
 }
 
+private class TestConversationRepository : ConversationRepository {
+    private val conversations = mutableListOf<Conversation>()
+
+    override suspend fun conversations(): DomainResult<List<Conversation>> =
+        DomainResult.success(conversations.toList())
+
+    override suspend fun upsert(conversation: Conversation): DomainResult<Unit> {
+        conversations.removeAll { it.id == conversation.id }
+        conversations += conversation
+        return DomainResult.success(Unit)
+    }
+
+    override suspend fun delete(conversationId: String): DomainResult<Unit> {
+        conversations.removeAll { it.id == conversationId }
+        return DomainResult.success(Unit)
+    }
+}
+
 private class SingleDocumentRepository : DocumentRepository {
     private val document = Document(
         id = "doc-auth",
@@ -110,6 +129,7 @@ class AssistantViewModelTest {
 
     private fun viewModel(scheduler: TestCoroutineScheduler): AssistantViewModel {
         val documents = SingleDocumentRepository()
+        val conversations = TestConversationRepository()
         var idCounter = 0
         return AssistantViewModel(
             askAssistant = AskAssistantUseCase(
@@ -119,8 +139,8 @@ class AssistantViewModelTest {
                 cache = NoopCache(),
             ),
             checkAvailability = CheckAssistantAvailabilityUseCase(engine),
-            getConversations = GetConversationsUseCase(InMemoryConversationRepository()),
-            saveConversation = SaveConversationUseCase(InMemoryConversationRepository()),
+            getConversations = GetConversationsUseCase(conversations),
+            saveConversation = SaveConversationUseCase(conversations),
             getDocuments = GetDocumentsUseCase(documents),
             timeProvider = TimeProvider { Instant.parse("2026-06-11T10:00:00Z") },
             idGenerator = IdGenerator { "id-${++idCounter}" },

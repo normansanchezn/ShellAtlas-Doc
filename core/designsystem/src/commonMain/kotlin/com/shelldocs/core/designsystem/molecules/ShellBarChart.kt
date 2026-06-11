@@ -18,9 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
 
-/** One bar of a [ShellBarChart]. */
-data class BarEntry(val label: String, val value: Int, val highlighted: Boolean = false)
-
 /** Weekly AI-usage bars; the peak day is highlighted in brand yellow. */
 @Composable
 fun ShellBarChart(

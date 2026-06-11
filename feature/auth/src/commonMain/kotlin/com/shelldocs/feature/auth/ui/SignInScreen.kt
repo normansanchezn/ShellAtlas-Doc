@@ -40,6 +40,7 @@ import com.shelldocs.feature.auth.presentation.AuthViewModel
 @Composable
 fun SignInScreen(
     viewModel: AuthViewModel,
+    isDemoMode: Boolean,
     onSignedIn: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -84,6 +85,14 @@ fun SignInScreen(
                     style = ShellTheme.typography.caption,
                     color = colors.textMuted,
                 )
+                if (isDemoMode) {
+                    Spacer(Modifier.height(ShellSpacing.sm))
+                    Text(
+                        "Demo mode: any corporate email and an 8+ character password will sign in.",
+                        style = ShellTheme.typography.caption,
+                        color = colors.textMuted,
+                    )
+                }
                 Spacer(Modifier.height(ShellSpacing.xxl))
                 Column(
                     modifier = Modifier.fillMaxWidth(),

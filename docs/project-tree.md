@@ -1,374 +1,143 @@
 # ShellDoc Project Tree
 
-Updated: 2026-06-06
+Updated: 2026-06-11
 
 ## Overview
 
-ShellDoc is a SwiftUI multiplatform documentation product using Clean Architecture + MVVM. Feature 01 establishes the Documentation Explorer foundation. Feature 02 adds a local-first RAG-ready Documentation Assistant prepared for Ollama on `localhost`.
+ShellDoc now uses the Kotlin Multiplatform codebase as the only product implementation. The prior Swift recovery was treated as a temporary recovery source for logic and documentation, not as a second app to keep in the repository.
+
+Primary architecture:
+
+```text
+UI (Compose/SwiftUI host) -> Presentation (MVI) -> Domain <- Data
+```
 
 ## Repository Root
 
-```
+```text
 ShelEnterpriseDoc/
-├── ShellDoc/                          ← Main Xcode app (iOS/iPadOS/macOS/visionOS)
-│   ├── ShellDoc/                      ← App target sources (auto-discovered via PBXFileSystemSynchronizedRootGroup)
-│   │   ├── Domain/                    ← Clean Architecture: Domain layer (no external deps)
-│   │   │   ├── Entities/
-│   │   │   │   ├── KnowledgeDocument.swift
-│   │   │   │   ├── KnowledgeTicket.swift
-│   │   │   │   ├── RepositoryCommit.swift
-│   │   │   │   ├── ReleaseNote.swift
-│   │   │   │   ├── WorkflowChange.swift
-│   │   │   │   ├── DocumentOwner.swift
-│   │   │   │   ├── KnowledgeSignal.swift
-│   │   │   │   ├── DocumentHealthResult.swift
-│   │   │   │   ├── UpdateProposal.swift
-│   │   │   │   ├── AssistantAnswer.swift
-│   │   │   │   ├── DocumentDraft.swift        ← in-memory editor state (new)
-│   │   │   │   ├── DocumentGrouping.swift     ← Type/Platform/Owner/Status enum (new)
-│   │   │   │   ├── DocumentType.swift
-│   │   │   │   ├── DocumentStatus.swift
-│   │   │   │   ├── Platform.swift
-│   │   │   │   ├── ConfidenceLevel.swift
-│   │   │   │   ├── ReviewFrequency.swift
-│   │   │   │   ├── AIReviewPriority.swift
-│   │   │   │   ├── TicketStatus.swift
-│   │   │   │   ├── TicketType.swift
-│   │   │   │   └── DocumentHealthRecommendation.swift
-│   │   │   ├── Repositories/
-│   │   │   │   ├── KnowledgeDocumentRepository.swift
-│   │   │   │   ├── TicketRepository.swift
-│   │   │   │   ├── RepositorySignalRepository.swift
-│   │   │   │   ├── ReleaseRepository.swift
-│   │   │   │   └── OwnerRepository.swift
-│   │   │   ├── UseCases/
-│   │   │   │   ├── GetDocumentsUseCase.swift
-│   │   │   │   ├── GetDocumentDetailUseCase.swift
-│   │   │   │   ├── SearchKnowledgeUseCase.swift
-│   │   │   │   ├── EvaluateDocumentHealthUseCase.swift
-│   │   │   │   ├── GetRelatedSignalsUseCase.swift
-│   │   │   │   ├── GenerateUpdateProposalUseCase.swift
-│   │   │   │   └── AnswerQuestionUseCase.swift
-│   │   │   └── Errors/
-│   │   │       └── DomainError.swift
-│   │   │
-│   │   ├── Data/                      ← Clean Architecture: Data layer
-│   │   │   ├── DTOs/
-│   │   │   │   ├── KnowledgeDocumentDTO.swift
-│   │   │   │   ├── KnowledgeTicketDTO.swift
-│   │   │   │   ├── RepositoryCommitDTO.swift
-│   │   │   │   ├── ReleaseNoteDTO.swift
-│   │   │   │   ├── WorkflowChangeDTO.swift
-│   │   │   │   └── DocumentOwnerDTO.swift
-│   │   │   ├── Mappers/
-│   │   │   │   ├── KnowledgeDocumentMapper.swift
-│   │   │   │   ├── KnowledgeTicketMapper.swift
-│   │   │   │   ├── RepositoryCommitMapper.swift
-│   │   │   │   ├── ReleaseNoteMapper.swift
-│   │   │   │   ├── WorkflowChangeMapper.swift
-│   │   │   │   └── DocumentOwnerMapper.swift
-│   │   │   ├── Repositories/
-│   │   │   │   ├── MockKnowledgeDocumentRepository.swift
-│   │   │   │   ├── MockTicketRepository.swift
-│   │   │   │   ├── MockRepositorySignalRepository.swift
-│   │   │   │   ├── MockReleaseRepository.swift
-│   │   │   │   └── MockOwnerRepository.swift
-│   │   │   └── Local/
-│   │   │       ├── MockJSONLoader.swift
-│   │   │       └── Mock/
-│   │   │           ├── documents.json
-│   │   │           ├── tickets.json
-│   │   │           ├── commits.json
-│   │   │           ├── releases.json
-│   │   │           ├── workflows.json
-│   │   │           └── owners.json
-│   │   │
-│   │   ├── DesignSystem/              ← Atomic Design system
-│   │   │   ├── Tokens/
-│   │   │   │   └── SDColors.swift    ← Enterprise ShellDoc palette tokens
-│   │   │   ├── Atoms/
-│   │   │   │   ├── SDBadge.swift
-│   │   │   │   ├── SDStatusChip.swift
-│   │   │   │   └── SDScorePill.swift
-│   │   │   ├── Molecules/
-│   │   │   │   ├── SDMetadataRow.swift
-│   │   │   │   ├── SDHealthScoreRow.swift
-│   │   │   │   ├── SDAssistantComponents.swift
-│   │   │   │   └── SDSettingsComponents.swift
-│   │   │   ├── Shared/
-│   │   │   │   ├── SDStateViews.swift
-│   │   │   │   └── SDLottieView.swift
-│   │   │   ├── Resources/
-│   │   │   │   └── Lottie/assistant_knowledge_graph.json
-│   │   │   └── Organisms/
-│   │   │       ├── SDDocumentCard.swift
-│   │   │       ├── SDHealthPanel.swift
-│   │   │       └── SDDashboardMetricsSection.swift
-│   │   │
-│   │   ├── Presentation/              ← Clean Architecture: Presentation layer
-│   │   │   ├── Navigation/
-│   │   │   │   ├── AppRoute.swift               ← assistant/explorer/updatesPending/dashboard/sources/settings
-│   │   │   │   └── RootNavigationView.swift     ← Assistant home, Explorer tab, DocumentByIDView
-│   │   │   ├── Features/
-│   │   │   │   ├── Assistant/         ← HOME — Knowledge Assistant chat
-│   │   │   │   │   ├── AssistantView.swift      ← Chat + source document side panel + Lottie empty state
-│   │   │   │   │   └── AssistantViewModel.swift ← chat state + selected source document loading
-│   │   │   │   ├── Explorer/          ← Browse + Search unified (replaces Documents + Search)
-│   │   │   │   │   ├── ExplorerView.swift       ← NavigationSplitView + DocumentReaderView
-│   │   │   │   │   └── ExplorerViewModel.swift  ← grouping, search, selection
-│   │   │   │   ├── Editor/            ← Obsidian-style Markdown editor (NEW)
-│   │   │   │   │   ├── EditorView.swift         ← sheet, TextEditor, preview, auto-save
-│   │   │   │   │   └── EditorViewModel.swift    ← DocumentDraft, isDirty, autoSave Task
-│   │   │   │   ├── OutdatedReview/    ← Updates Pending documentation queue
-│   │   │   │   │   ├── OutdatedReviewView.swift ← pending update list + document preview + Edit
-│   │   │   │   │   └── OutdatedReviewViewModel.swift ← filters DocumentationDocument by review policy
-│   │   │   │   ├── Dashboard/         ← Health metrics (secondary)
-│   │   │   │   │   ├── DashboardView.swift
-│   │   │   │   │   └── DashboardViewModel.swift
-│   │   │   │   ├── MockSources/       ← Mock data viewer ("Sources" in nav)
-│   │   │   │   │   ├── MockSourcesView.swift
-│   │   │   │   │   └── MockSourcesViewModel.swift
-│   │   │   │   ├── Settings/
-│   │   │   │   │   └── SettingsView.swift       ← grouped enterprise settings panels
-│   │   │   │   ├── Documents/         ← ORPHANED — superseded by Explorer
-│   │   │   │   └── Search/            ← ORPHANED — superseded by Explorer sidebar search
-│   │   │   └── Shared/
-│   │   │       └── NotificationBannerView.swift ← OutdatedNotificationState + Banner + FAB (NEW)
-│   │   │
-│   │   ├── AppContainer.swift         ← DI root
-│   │   ├── AppEnvironment.swift       ← mock mode config
-│   │   └── ShellDocApp.swift          ← @main
-│   │
-│   ├── ShellDocTests/
-│   │   ├── SearchKnowledgeUseCaseTests.swift
-│   │   ├── EvaluateDocumentHealthUseCaseTests.swift
-│   │   └── DashboardViewModelTests.swift
-│   └── ShellDocUITests/
-│
-├── DS-Core/           ← Swift Package (future formal home)
-├── SD-Domain/         ← Swift Package (future formal home)
-├── SD-Data/           ← Swift Package (future formal home)
-├── SD-Presentation/   ← Swift Package (future formal home)
-├── SD-DesignSystem/   ← Swift Package (future formal home)
-├── obsidian-vault/    ← Project knowledge brain
-├── docs/              ← Documentation
-│   └── glossary/
-│       └── internal-acronyms.md
+├── composeApp/                      ← Main multiplatform app shell
+│   ├── src/androidMain/             ← Android entrypoints
+│   ├── src/commonMain/              ← Shared app container + navigation
+│   ├── src/desktopMain/             ← Desktop host
+│   ├── src/iosMain/                 ← iOS bridge
+│   └── src/wasmJsMain/              ← Web/Wasm host
+├── core/
+│   ├── common/                      ← Dispatchers, errors, MVI primitives, result types
+│   ├── domain/                      ← Entities, repository interfaces, use cases
+│   ├── data/                        ← Demo data, repositories, network clients, assistant engines
+│   └── designsystem/                ← Tokens, icons, atoms and molecules
+├── feature/
+│   ├── assistant/                   ← Assistant state + Compose UI
+│   ├── auth/                        ← Sign-in flow
+│   ├── dashboard/                   ← Health and activity metrics
+│   ├── documents/                   ← Explorer, reader and editor flows
+│   ├── settings/                    ← Preferences and integrations
+│   ├── sources/                     ← Mock / future external sources
+│   └── updates/                     ← Pending updates triage
+├── iosApp/                          ← SwiftUI host project for the shared KMM app
+├── supabase/                        ← SQL migrations and local snippets
+├── backend/                         ← Future backend helpers and markdown tooling
+├── docs/
+│   ├── architecture.md              ← KMM architecture notes
+│   ├── glossary/
+│   └── project-tree.md
+├── obsidian-vault/                  ← Project brain and decision log
+├── gradle/
+├── build.gradle.kts
+├── settings.gradle.kts
 └── README.md
 ```
 
-## Swift Package Tree - Feature 01 Documentation Explorer
+## Core Modules
+
+### `core/common`
 
 ```text
+core/common/src/commonMain/kotlin/com/shelldocs/core/common/
+├── coroutines/                      ← Dispatcher abstractions
+├── error/                           ← Shared app/domain errors
+├── id/                              ← ID generation helpers
+├── mvi/                             ← MviIntent, MviState, MviEffect, MviViewModel
+├── result/                          ← DomainResult helpers
+└── time/                            ← TimeProvider abstractions
+```
+
+### `core/domain`
+
+```text
+core/domain/src/commonMain/kotlin/com/shelldocs/core/domain/
+├── entity/
+│   ├── assistant/                   ← Assistant answers, health, grounding, improvement decisions
+│   ├── auth/                        ← User, roles, permissions, session
+│   ├── dashboard/                   ← Dashboard metrics and activity models
+│   ├── document/                    ← Document aggregate, attributes, versions
+│   ├── source/                      ← Source integrations and sync logs
+│   └── updates/                     ← Pending update risk models
+├── repository/                      ← Source-of-truth interfaces for data access
+└── usecase/
+    ├── assistant/                   ← Intent detection, retrieval, health, assistant orchestration
+    ├── auth/                        ← Sign in/out and role checks
+    ├── dashboard/                   ← Metrics retrieval
+    ├── document/                    ← CRUD, search and versions
+    ├── source/                      ← Sources and sync actions
+    └── updates/                     ← Pending review scans
+```
+
+### `core/data`
+
+```text
+core/data/src/commonMain/kotlin/com/shelldocs/core/data/
+├── assistant/                       ← Grounded, Ollama and composite assistant engines
+├── demo/                            ← DemoSeed and in-memory repositories
+├── mapper/                          ← DTO to domain mappers
+├── markdown/                        ← Markdown parsing and hashing
+├── network/                         ← Future API client for documents
+├── repository/                      ← Derived repositories and caches
+└── supabase/                        ← Future auth/profile adapters
+```
+
+### `core/designsystem`
+
+```text
+core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/
+├── atoms/
+├── icons/
+├── molecules/
+├── theme/
+└── tokens/
+```
+
+## Feature Modules
+
+```text
+feature/<name>/src/commonMain/kotlin/com/shelldocs/feature/<name>/
+├── presentation/                    ← State, intent, effect, view model
+└── ui/                              ← Compose screens and UI sections
+```
+
+Current feature responsibilities:
+
+- `assistant`: grounded Q&A, improvement guidance, source citations.
+- `auth`: demo and future real auth entry flow.
+- `dashboard`: health, coverage, activity and attention views.
+- `documents`: explorer, reader, editor and version history.
+- `settings`: theme, AI and integration preferences.
+- `sources`: mock integrations and sync state.
+- `updates`: triage of outdated or risky documents.
+
+## Removed Duplicate Structure
+
+The following recovered Swift-only structure is no longer part of the product architecture and should not be recreated:
+
+```text
+DS-Core/
 SD-Domain/
-└── Sources/SD-Domain/
-    ├── Entities/
-    │   ├── DocumentationDocument.swift
-    │   ├── DocumentationNode.swift
-    │   └── DocumentationReviewPolicy.swift
-    ├── Repositories/
-    │   ├── DocumentationRepository.swift
-    │   └── DocumentationTreeRepository.swift
-    ├── UseCases/
-    │   └── DocumentationExplorerUseCases.swift
-    └── AppServices.swift              ← exposes Documentation Explorer use cases
-
 SD-Data/
-└── Sources/SD-Data/
-    ├── Data/
-    │   ├── Local/
-    │   │   └── DocumentationMockStore.swift
-    │   └── Repositories/
-    │       ├── MockDocumentationRepository.swift
-    │       └── MockDocumentationTreeRepository.swift
-    └── DataMock/
-        ├── DocumentationExportMock.swift
-        ├── documents.json
-        ├── tickets.json
-        ├── commits.json
-        ├── releases.json
-        ├── workflows.json
-        └── owners.json
-
-SD-Presentation/
-└── Sources/SD-Presentation/
-    ├── Features/
-    │   └── DocumentationExplorer/
-    │       ├── DocumentationEditorMode.swift
-    │       ├── DocumentationExplorerView.swift
-    │       ├── DocumentationExplorerViewModel.swift
-    │       ├── DocumentationEditorView.swift
-    │       ├── MarkdownLiveEditor.swift        ← single-pane in-place Markdown editor
-    │       └── DocumentationEditorViewModel.swift
-    └── Navigation/
-        └── RootNavigationView.swift   ← Docs route opens DocumentationExplorerView
-
 SD-DesignSystem/
-└── Sources/SD-DesignSystem/
-    ├── Atoms/
-    │   ├── SDPrimaryButton.swift
-    │   ├── SDStatusBadge.swift
-    │   └── SDTagView.swift
-    ├── Molecules/
-    │   ├── SDMetadataComponents.swift
-    │   ├── SDSearchField.swift
-    │   └── SDTreeNodeRow.swift
-    ├── Organisms/
-    │   └── SDTopBar.swift
-    └── Shared/
-        └── SDStateViews.swift
-
-ShellDoc/
-└── ShellDoc/
-    └── AppContainer.swift             ← wires mock Data repositories to Domain use cases
-
-obsidian-vault/
-├── 03-features/
-│   └── Documentation Explorer.md
-└── 08-diagrams/
-    └── Documentation Explorer Flow.md
-```
-
-## Swift Package Tree - Feature 02 Local Documentation Assistant
-
-```text
-SD-Domain/
-└── Sources/SD-Domain/
-    ├── Entities/
-    │   ├── DocumentationAssistantEntities.swift
-    │   └── DocumentationAssistantIntent.swift
-    ├── Repositories/
-    │   └── DocumentationAssistantRepositories.swift
-    ├── UseCases/
-    │   └── DocumentationAssistantUseCases.swift
-    └── AppServices.swift              ← exposes askDocumentationAssistantUseCase
-
-SD-Data/
-└── Sources/SD-Data/
-    └── Data/
-        ├── Local/
-        │   └── OllamaLocalLLMClient.swift
-        └── Repositories/
-            ├── LocalDocumentationRetrievalRepository.swift
-            └── DocumentationAssistantRepositories.swift
-
-SD-DesignSystem/
-└── Sources/SD-DesignSystem/
-    ├── Tokens/
-    │   └── SDColors.swift
-    ├── Shared/
-    │   └── SDLottieView.swift
-    ├── Molecules/
-    │   ├── SDAssistantComponents.swift
-    │   ├── SDMarkdownBodyView.swift
-    │   └── SDSettingsComponents.swift
-    └── Resources/
-        └── Lottie/assistant_knowledge_graph.json
-
 SD-Presentation/
-└── Sources/SD-Presentation/
-    └── Features/
-        └── Assistant/
-            ├── AssistantView.swift
-            └── AssistantViewModel.swift
-
+ShellDoc.xcworkspace
 ShellDoc/
-└── ShellDoc/
-    ├── AppEnvironment.swift           ← Ollama base URL/model config
-    └── AppContainer.swift             ← wires retrieval, prompt builder, mock/Ollama LLM
 ```
 
-## Feature 02 Flow
-
-```mermaid
-flowchart LR
-    VIEW[AssistantView] --> VM[AssistantViewModel]
-    VM --> ASK[AskDocumentationAssistantUseCase]
-    ASK --> RETRIEVE[RetrieveDocumentationSnippetsUseCase]
-    RETRIEVE --> LOCAL[LocalDocumentationRetrievalRepository]
-    LOCAL --> DOCREPO[MockDocumentationRepository]
-    LOCAL --> SNIPPETS[Top local snippets]
-    ASK --> PROMPT[DefaultDocumentationAssistantPromptBuilder]
-    ASK --> LLM[LocalLLMClient]
-    LLM --> MOCK[MockLocalLLMClient default]
-    LLM --> OLLAMA[OllamaLocalLLMClient optional localhost only]
-    ASK --> ANSWER[DocumentationAnswer + sources]
-    ANSWER --> VIEW
-```
-
-## Feature 01 Flow
-
-```mermaid
-flowchart LR
-    VIEW[DocumentationExplorerView] --> VM[DocumentationExplorerViewModel]
-    VM --> TREE[GetDocumentationTreeUseCase]
-    VM --> DETAIL[GetDocumentationDocumentDetailUseCase]
-    VM --> SEARCH[SearchDocumentsByTitleUseCase]
-    VIEW --> EDITOR[DocumentationEditorView]
-    EDITOR --> EVM[DocumentationEditorViewModel]
-    EVM --> CREATE[CreateDocumentUseCase]
-    EVM --> UPDATE[UpdateDocumentUseCase]
-    TREE --> DATA[MockDocumentationTreeRepository]
-    TREE --> REVIEW[DocumentationReviewPolicy\nstatus updatesPending/outdated or lastUpdated > 365 days]
-    DETAIL --> REPO[MockDocumentationRepository]
-    SEARCH --> REPO
-    CREATE --> REPO
-    UPDATE --> REPO
-    DATA --> STORE[DocumentationMockStore]
-    STORE --> EXPORT[DataMock\nJira Confluence Azure-shaped exports]
-    REPO --> STORE
-```
-
-## Updates Pending Rule
-
-`DocumentationReviewPolicy` owns the review rule:
-
-```text
-Updates Pending = document.status == updatesPending
-                OR document.status == outdated
-                OR document.lastUpdated is older than 365 days
-```
-
-`OutdatedReviewViewModel` exposes matching documents in the dedicated `Updates Pending` route while preserving their normal location in the documentation tree. The Documentation Explorer left panel stays focused on title search and the nested documentation tree.
-
-## Navigation Architecture
-
-```
-iPhone (compact)          iPad/macOS (regular)
-─────────────────         ──────────────────────────────
-Tab 1: Assistant          Sidebar: Assistant (home)
-Tab 2: Explorer                    Explorer
-Tab 3: Updates Pending             Updates Pending
-Tab 4: Dashboard                   ─────────────
-Tab 5: More                        Dashboard
-  └── Sources                      ─────────────
-  └── Settings                     Sources
-                                   Settings
-```
-
-## Key Changes from MVP Foundation (v1)
-
-| Area | Before | After |
-|------|--------|-------|
-| Home | Dashboard | Assistant |
-| Documents | `DocumentsListView` + `DocumentDetailView` | `ExplorerView` + `DocumentReaderView` |
-| Search | Separate `SearchView` tab | Integrated in Explorer sidebar |
-| Documentation editor | Split source/preview or none | `DocumentationEditorView` with single-pane `MarkdownLiveEditor` |
-| Notifications | None | `NotificationBannerView` + `NotificationFAB` |
-| Design tokens | Legacy Shell colors | `SDColors` enterprise palette plus semantic app shell, surface, text, border, status and soft-state tokens |
-| Metadata | Screen-specific attribute rows | Shared `SDMetadataPanel`, `SDMetadataGrid`, `SDMetadataItem` and `SDMetadataTagGroup` |
-| Nav routes | documents/documentDetail/search/mockSources | explorer/document(id)/sources |
-
-## Architecture Layer Direction
-
-```
-Presentation → Domain ← Data
-```
-
-Feature 01 follows the same rule:
-
-- `SD-Presentation` owns SwiftUI screens and ViewModels.
-- `SD-Presentation` receives use cases from `AppServices`.
-- `SD-Domain` owns documentation entities, repository protocols, and use cases.
-- `SD-Data` owns mock repositories and in-memory mock storage.
-- `SD-DesignSystem` owns reusable generic UI components.
+Any reusable behavior from that recovery must be ported into the KMM modules above instead of restoring a second app tree.
