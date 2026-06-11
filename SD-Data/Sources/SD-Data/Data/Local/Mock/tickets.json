@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ticket-001",
+    "title": "Update EoSB1 process for new versionCode strategy",
+    "type": "task",
+    "status": "closed",
+    "closedDate": "2026-03-10T00:00:00Z",
+    "description": "The updateconfig.py script now handles versionCodes differently after the Gradle upgrade. The EoSB1 document needs to reflect the new strategy.",
+    "platform": "android",
+    "relatedDocumentIDs": ["doc-001"]
+  },
+  {
+    "id": "ticket-002",
+    "title": "Migrate pilot branch from madf/pilot to extra/pilot",
+    "type": "task",
+    "status": "closed",
+    "closedDate": "2026-02-20T00:00:00Z",
+    "description": "Team agreed to standardize on extra/pilot-x.xx.x naming. madf/pilot is being deprecated. Documentation needs update.",
+    "platform": "android",
+    "relatedDocumentIDs": ["doc-001"]
+  },
+  {
+    "id": "ticket-003",
+    "title": "Investigate token refresh failure on Android 14",
+    "type": "bug",
+    "status": "closed",
+    "closedDate": "2026-04-05T00:00:00Z",
+    "description": "Silent token refresh fails on Android 14 due to background process restrictions. Auth flow documentation may need update.",
+    "platform": "android",
+    "relatedDocumentIDs": ["doc-002"]
+  },
+  {
+    "id": "ticket-004",
+    "title": "Add Shell Go+ multiplier tier documentation",
+    "type": "feature",
+    "status": "open",
+    "closedDate": null,
+    "description": "New Shell Go+ tier structure introduced in v2. Rewards overview doc does not cover the multiplier logic.",
+    "platform": "cross-platform",
+    "relatedDocumentIDs": ["doc-003"]
+  },
+  {
+    "id": "ticket-005",
+    "title": "Rewards SDK v2.4 breaking changes",
+    "type": "bug",
+    "status": "closed",
+    "closedDate": "2025-12-15T00:00:00Z",
+    "description": "SDK v2.4 deprecated the old redemption endpoint. Both Android and iOS updated. Architecture doc still references v2.3 endpoint.",
+    "platform": "cross-platform",
+    "relatedDocumentIDs": ["doc-003"]
+  },
+  {
+    "id": "ticket-006",
+    "title": "Lokalise export now supports Android XML plurals",
+    "type": "feature",
+    "status": "closed",
+    "closedDate": "2026-03-20T00:00:00Z",
+    "description": "The lokalise-export workflow was updated to support quantity strings. The process documentation does not mention plural handling.",
+    "platform": "cross-platform",
+    "relatedDocumentIDs": ["doc-005"]
+  },
+  {
+    "id": "ticket-007",
+    "title": "Rotate Azure Key Vault credentials for Android build",
+    "type": "task",
+    "status": "resolved",
+    "closedDate": "2026-04-01T00:00:00Z",
+    "description": "Scheduled rotation of ANDROID_PROD_SIGNING_KEY and ANDROID_PROD_KEYSTORE_PASS. Rotation procedure documented but needs verification.",
+    "platform": "cross-platform",
+    "relatedDocumentIDs": ["doc-006"]
+  },
+  {
+    "id": "ticket-008",
+    "title": "QA smoke test checklist v2 for EoSB builds",
+    "type": "task",
+    "status": "inProgress",
+    "closedDate": null,
+    "description": "QA team updated the smoke test checklist to include new payment flows. EoSB1 doc references old checklist v1.",
+    "platform": "android",
+    "relatedDocumentIDs": ["doc-001"]
+  }
+]

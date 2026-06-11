@@ -1,0 +1,56 @@
+[
+  {
+    "id": "release-001",
+    "version": "8.99.0",
+    "platform": "android",
+    "releaseDate": "2026-03-28T00:00:00Z",
+    "highlights": [
+      "Updated EoSB1 build process with new artifact path",
+      "Bumped compileSdk to 35",
+      "Updated Lokalise export to support plural strings",
+      "Fixed token refresh on Android 14"
+    ],
+    "keywords": ["eosb", "build", "eosb1", "pilot", "updateconfig", "versioncode"],
+    "relatedDocumentIDs": ["doc-001", "doc-002"]
+  },
+  {
+    "id": "release-002",
+    "version": "2.4.0",
+    "platform": "cross-platform",
+    "releaseDate": "2025-12-12T00:00:00Z",
+    "highlights": [
+      "Rewards SDK updated to v2.4",
+      "New redemption endpoint integration",
+      "Shell Go+ tier multipliers added"
+    ],
+    "keywords": ["rewards", "shell go+", "loyalty", "redemption", "sdk"],
+    "relatedDocumentIDs": ["doc-003"]
+  },
+  {
+    "id": "release-003",
+    "version": "9.1.0",
+    "platform": "android",
+    "releaseDate": "2026-05-15T00:00:00Z",
+    "highlights": [
+      "New fuel station deep link support",
+      "Updated QA smoke test automation",
+      "Lokalise payments strings project added",
+      "Azure Secrets rotation completed"
+    ],
+    "keywords": ["deep link", "qa", "smoke test", "lokalise", "azure secrets"],
+    "relatedDocumentIDs": ["doc-001", "doc-004", "doc-005", "doc-006"]
+  },
+  {
+    "id": "release-004",
+    "version": "9.0.0",
+    "platform": "iOS",
+    "releaseDate": "2026-04-20T00:00:00Z",
+    "highlights": [
+      "Universal Links updated for new routes",
+      "Auth token storage migrated to new Keychain group",
+      "Rewards integration v2.4 on iOS"
+    ],
+    "keywords": ["universal links", "auth", "keychain", "rewards"],
+    "relatedDocumentIDs": ["doc-002", "doc-003", "doc-004"]
+  }
+]

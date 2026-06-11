@@ -1,0 +1,47 @@
+[
+  {
+    "id": "wf-001",
+    "name": "Android Release Workflow",
+    "file": ".github/workflows/android-release.yml",
+    "updated": "2026-03-01",
+    "summary": "Refactored to use reusable workflow pattern. The workflow now calls release-core.yml with parameters instead of running steps inline. Callers must update references from android-release.yml to use the new inputs: branch, environment, pilot_branch.",
+    "related_documents": ["doc-001"],
+    "keywords": ["android-release", "github actions", "workflow", "eosb", "release", "reusable", "pilot"]
+  },
+  {
+    "id": "wf-002",
+    "name": "Lokalise String Pull",
+    "file": ".github/workflows/lokalise-pull.yml",
+    "updated": "2026-03-10",
+    "summary": "New automated workflow added to pull Lokalise strings on PR creation targeting develop. Replaces manual pull process. Uses LOKALISE-AMERICAS-API-KEY from Azure Key Vault. Triggers on PR open and synchronize events.",
+    "related_documents": ["doc-005", "doc-001"],
+    "keywords": ["lokalise", "strings", "localization", "automation", "github actions", "strings-xml", "eosb"]
+  },
+  {
+    "id": "wf-003",
+    "name": "Release Core (Reusable)",
+    "file": ".github/workflows/release-core.yml",
+    "updated": "2026-03-01",
+    "summary": "New reusable core workflow extracted from android-release.yml. Accepts inputs: branch (string), environment (uat|prod), pilot_branch (optional string). All release workflows should call this instead of duplicating steps.",
+    "related_documents": ["doc-001"],
+    "keywords": ["github actions", "workflow", "reusable", "release", "eosb", "android"]
+  },
+  {
+    "id": "wf-004",
+    "name": "Auth Config Deploy",
+    "file": ".github/workflows/auth-config-deploy.yml",
+    "updated": "2026-04-18",
+    "summary": "Updated to support MSAL v5 configuration format. auth_config.json schema changed for v5 compatibility. Added validation step to check Azure AD B2C tenant URL format before deploying.",
+    "related_documents": ["doc-002", "doc-006"],
+    "keywords": ["auth", "msal", "authentication", "azure ad b2c", "github actions", "auth-config"]
+  },
+  {
+    "id": "wf-005",
+    "name": "Rewards API Smoke Test",
+    "file": ".github/workflows/rewards-smoke-test.yml",
+    "updated": "2026-04-02",
+    "summary": "Updated smoke test workflow to target Rewards API v2 endpoints. Old v1 endpoints removed. Added new test cases for balance endpoint that now returns tier information. Uses SHELL-REWARDS-V2-CLIENT-ID secret.",
+    "related_documents": ["doc-003", "doc-006"],
+    "keywords": ["rewards", "api", "smoke test", "v2", "github actions", "azure secrets"]
+  }
+]

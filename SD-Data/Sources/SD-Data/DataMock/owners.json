@@ -1,0 +1,56 @@
+[
+  {
+    "id": "owner-001",
+    "name": "Norman Sanchez",
+    "team": "Android Team",
+    "role": "Senior Android Engineer",
+    "email": "norman.sanchez@shell.internal",
+    "documents_owned": ["doc-001"],
+    "documents_contact": ["doc-002"]
+  },
+  {
+    "id": "owner-002",
+    "name": "Ana Torres",
+    "team": "Android Team",
+    "role": "Android Engineer",
+    "email": "ana.torres@shell.internal",
+    "documents_owned": ["doc-002"],
+    "documents_contact": ["doc-004"]
+  },
+  {
+    "id": "owner-003",
+    "name": "Sofia Mendez",
+    "team": "Backend Team",
+    "role": "Backend Engineer",
+    "email": "sofia.mendez@shell.internal",
+    "documents_owned": ["doc-003"],
+    "documents_contact": []
+  },
+  {
+    "id": "owner-004",
+    "name": "Marcus Chen",
+    "team": "Android Team",
+    "role": "Android Engineer",
+    "email": "marcus.chen@shell.internal",
+    "documents_owned": ["doc-004"],
+    "documents_contact": []
+  },
+  {
+    "id": "owner-005",
+    "name": "Priya Sharma",
+    "team": "Localization Team",
+    "role": "Localization Engineer",
+    "email": "priya.sharma@shell.internal",
+    "documents_owned": ["doc-005"],
+    "documents_contact": []
+  },
+  {
+    "id": "owner-006",
+    "name": "James O'Brien",
+    "team": "DevOps Team",
+    "role": "DevOps Engineer",
+    "email": "james.obrien@shell.internal",
+    "documents_owned": ["doc-006"],
+    "documents_contact": []
+  }
+]

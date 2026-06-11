@@ -1,0 +1,47 @@
+[
+  {
+    "id": "rel-001",
+    "version": "8.9.0",
+    "date": "2025-11-14",
+    "title": "Shell Americas Android 8.9.0 Release",
+    "summary": "Sprint 42 release. Includes loyalty rewards v1 integration, Lokalise strings update, and MSAL SDK 4.3 upgrade. EoSB1 process followed for develop and extra/pilot-8.9.0 branches.",
+    "related_documents": ["doc-001", "doc-003", "doc-005"],
+    "keywords": ["eosb", "release", "android", "rewards", "lokalise", "msal", "pilot", "develop", "americas"]
+  },
+  {
+    "id": "rel-002",
+    "version": "8.10.0",
+    "date": "2026-01-09",
+    "title": "Shell Americas Android 8.10.0 Release",
+    "summary": "Sprint 43 release. Rewards API v1 migration preparations. Auth flow improvements for Android 13. Deep link routing updated for new station finder feature.",
+    "related_documents": ["doc-001", "doc-002", "doc-003", "doc-004"],
+    "keywords": ["eosb", "release", "android", "auth", "msal", "deeplink", "rewards", "pilot", "americas"]
+  },
+  {
+    "id": "rel-003",
+    "version": "8.11.0",
+    "date": "2026-05-22",
+    "title": "Shell Americas Android 8.11.0 Release",
+    "summary": "Sprint 44 release. Rewards API v2 migration complete. Updated versionCode generation via updateconfig.py (5-digit format). Pilot validation process changed: madf/pilot no longer required, only extra/pilot-8.11.0 used for QA smoke test. android-release.yml now uses reusable workflow pattern.",
+    "related_documents": ["doc-001", "doc-003"],
+    "keywords": ["eosb", "release", "android", "updateconfig", "versioncode", "pilot", "madf/pilot", "rewards", "github actions", "reusable workflow", "qa smoke test", "americas"]
+  },
+  {
+    "id": "rel-004",
+    "version": "8.11.1",
+    "date": "2026-05-30",
+    "title": "Shell Americas Android 8.11.1 Hotfix",
+    "summary": "Hotfix for critical auth regression in 8.11.0. MSAL 5.0.0-beta caused silent auth failures on certain device models. Rolled back to MSAL 4.9.0 while v5 upgrade is properly tested on feature/auth-v2 branch.",
+    "related_documents": ["doc-002"],
+    "keywords": ["hotfix", "auth", "msal", "authentication", "silent auth", "android", "regression"]
+  },
+  {
+    "id": "rel-005",
+    "version": "8.12.0-rc1",
+    "date": "2026-06-02",
+    "title": "Shell Americas Android 8.12.0 Release Candidate",
+    "summary": "Sprint 45 RC. Branch.io SDK upgraded to v5 with new /promotions and /stations/nearby deep links. Lokalise strings pull now automated via CI. Azure Secrets updated with v2 credentials.",
+    "related_documents": ["doc-004", "doc-005", "doc-006"],
+    "keywords": ["rc", "branch-io", "deeplink", "lokalise", "strings", "automation", "azure secrets", "github actions", "android"]
+  }
+]

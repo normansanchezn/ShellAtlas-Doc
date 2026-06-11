@@ -1,0 +1,19 @@
+{
+  "name": "shelldoc-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env ./node_modules/.bin/tsx --watch src/index.ts",
+    "dev:local": "node --env-file=.env.local ./node_modules/.bin/tsx --watch src/index.ts",
+    "start": "node --env-file=.env ./node_modules/.bin/tsx src/index.ts",
+    "start:local": "node --env-file=.env.local ./node_modules/.bin/tsx src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.4",
+    "@supabase/supabase-js": "^2.49.8",
+    "hono": "^4.7.11"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
