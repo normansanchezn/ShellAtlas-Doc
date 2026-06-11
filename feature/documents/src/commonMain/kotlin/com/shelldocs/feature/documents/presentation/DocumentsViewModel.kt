@@ -6,6 +6,7 @@ import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentNode
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
@@ -14,6 +15,7 @@ import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
 import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
+import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,6 +28,7 @@ class DocumentsViewModel(
     private val getVersions: GetDocumentVersionsUseCase,
     private val restoreVersion: RestoreDocumentVersionUseCase,
     private val createDocument: CreateDocumentUseCase,
+    private val updateAttributes: UpdateDocumentAttributesUseCase,
     private val roleProvider: () -> UserRole,
     dispatchers: DispatcherProvider,
     openDocumentRequests: StateFlow<String?> = MutableStateFlow(null),
@@ -63,6 +66,19 @@ class DocumentsViewModel(
             is DocumentsIntent.CreateDocument -> create(intent.title)
             DocumentsIntent.ToggleExplorerPanel -> setState { copy(isExplorerExpanded = !isExplorerExpanded) }
             DocumentsIntent.ToggleAttributesPanel -> setState { copy(isAttributesExpanded = !isAttributesExpanded) }
+            DocumentsIntent.OpenAttributesEditor -> openAttributesEditor()
+            DocumentsIntent.CloseAttributesEditor -> setState { copy(isAttributesDialogOpen = false) }
+            is DocumentsIntent.AttributesOwnerChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(owner = intent.value)) }
+            is DocumentsIntent.AttributesModuleChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(module = intent.value)) }
+            is DocumentsIntent.AttributesTeamChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(team = intent.value)) }
+            is DocumentsIntent.AttributesPlatformChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(platform = intent.value)) }
+            is DocumentsIntent.AttributesTagsChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(tagsText = intent.value)) }
+            DocumentsIntent.SaveAttributes -> persistAttributes()
         }
     }
 
@@ -171,6 +187,47 @@ class DocumentsViewModel(
             .onSuccess { created ->
                 refreshAfterMutation(selectedId = created.id)
                 setState { copy(isEditing = true, editorMarkdown = created.rawMarkdown) }
+            }
+            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+    }
+
+    private fun openAttributesEditor() {
+        val document = currentState.selectedDocument ?: return
+        setState {
+            copy(
+                isAttributesDialogOpen = true,
+                attributesDraft = AttributesDraft(
+                    owner = document.attributes.owner,
+                    module = document.attributes.module,
+                    team = document.attributes.team,
+                    platform = document.attributes.platform,
+                    tagsText = document.attributes.tags.joinToString(", "),
+                ),
+            )
+        }
+    }
+
+    private suspend fun persistAttributes() {
+        val document = currentState.selectedDocument ?: return
+        val draft = currentState.attributesDraft
+        val attributes = DocumentAttributes(
+            owner = draft.owner,
+            module = draft.module,
+            team = draft.team,
+            platform = draft.platform,
+            parentFolderId = document.attributes.parentFolderId,
+            tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+        )
+        updateAttributes(currentState.role, document.id, attributes)
+            .onSuccess { updated ->
+                setState {
+                    copy(
+                        isAttributesDialogOpen = false,
+                        selectedDocument = updated,
+                        documents = documents.map { if (it.id == updated.id) updated else it },
+                    )
+                }
+                sendEffect(DocumentsEffect.ShowNotice("Attributes updated"))
             }
             .onFailure { error -> setState { copy(errorMessage = error.message) } }
     }

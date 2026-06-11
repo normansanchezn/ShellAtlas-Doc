@@ -53,60 +53,69 @@ fun DocumentsScreen(
 
     LaunchedEffect(viewModel) { viewModel.onIntent(DocumentsIntent.Initialize) }
 
-    Row(modifier = modifier.fillMaxSize().background(colors.background)) {
-        if (isWide) {
-            if (state.isExplorerExpanded) {
-                ExplorerTreePanel(
-                    state = state,
-                    onIntent = viewModel::onIntent,
-                    modifier = Modifier.width(explorerWidth).fillMaxHeight(),
-                )
-                ResizeHandle(
-                    onDrag = { deltaPx ->
-                        explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
-                    },
-                )
-            } else {
-                CollapsedPanelRail(
-                    icon = IconChevronRight,
-                    contentDescription = "Show explorer",
-                    onClick = { viewModel.onIntent(DocumentsIntent.ToggleExplorerPanel) },
-                    modifier = Modifier.fillMaxHeight(),
-                )
-            }
-        }
-        DocumentListPanel(
+    if (state.isEditing && state.selectedDocument != null) {
+        DocumentEditorPanel(
             state = state,
             onIntent = viewModel::onIntent,
-            modifier = Modifier.width(if (isWide) 250.dp else 230.dp).fillMaxHeight(),
+            isWide = isWide,
+            modifier = modifier.fillMaxSize(),
         )
-        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
-            val selected = state.selectedDocument
-            when {
-                selected == null -> ShellEmptyState(
-                    icon = IconFileText,
-                    title = "Select a document to read",
-                    subtitle = "or create a new document with + New",
-                    modifier = Modifier.align(Alignment.Center),
-                )
-                state.isEditing -> DocumentEditorPanel(
-                    state = state,
-                    onIntent = viewModel::onIntent,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                else -> DocumentReaderPanel(
-                    state = state,
-                    document = selected,
-                    isWide = isWide,
-                    onIntent = viewModel::onIntent,
-                    attributesWidth = attributesWidth,
-                    onResizeAttributes = { deltaPx ->
-                        attributesWidth = withDelta(attributesWidth, -deltaPx, density, ATTRIBUTES_MIN_WIDTH, ATTRIBUTES_MAX_WIDTH)
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                )
+    } else {
+        Row(modifier = modifier.fillMaxSize().background(colors.background)) {
+            if (isWide) {
+                if (state.isExplorerExpanded) {
+                    ExplorerTreePanel(
+                        state = state,
+                        onIntent = viewModel::onIntent,
+                        modifier = Modifier.width(explorerWidth).fillMaxHeight(),
+                    )
+                    ResizeHandle(
+                        onDrag = { deltaPx ->
+                            explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
+                        },
+                    )
+                } else {
+                    CollapsedPanelRail(
+                        icon = IconChevronRight,
+                        contentDescription = "Show explorer",
+                        onClick = { viewModel.onIntent(DocumentsIntent.ToggleExplorerPanel) },
+                        modifier = Modifier.fillMaxHeight(),
+                    )
+                }
+            }
+            DocumentListPanel(
+                state = state,
+                onIntent = viewModel::onIntent,
+                modifier = Modifier.width(if (isWide) 250.dp else 230.dp).fillMaxHeight(),
+            )
+            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                val selected = state.selectedDocument
+                if (selected == null) {
+                    ShellEmptyState(
+                        icon = IconFileText,
+                        title = "Select a document to read",
+                        subtitle = "or create a new document with + New",
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                } else {
+                    DocumentReaderPanel(
+                        state = state,
+                        document = selected,
+                        isWide = isWide,
+                        onIntent = viewModel::onIntent,
+                        attributesWidth = attributesWidth,
+                        onResizeAttributes = { deltaPx ->
+                            attributesWidth = withDelta(attributesWidth, -deltaPx, density, ATTRIBUTES_MIN_WIDTH, ATTRIBUTES_MAX_WIDTH)
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
+    }
+
+    if (state.isAttributesDialogOpen) {
+        AttributesEditDialog(state = state, onIntent = viewModel::onIntent)
     }
 }
 

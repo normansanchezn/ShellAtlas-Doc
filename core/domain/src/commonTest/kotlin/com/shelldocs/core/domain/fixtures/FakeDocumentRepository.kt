@@ -3,6 +3,7 @@ package com.shelldocs.core.domain.fixtures
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
@@ -51,6 +52,13 @@ class FakeDocumentRepository(
 
     override suspend fun restoreVersion(id: String, versionId: String): DomainResult<Document> =
         document(id)
+
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document> {
+        val existing = stored.firstOrNull { it.id == id } ?: return DomainResult.failure(AppError.NotFound())
+        val updated = existing.copy(attributes = attributes)
+        stored = stored.map { if (it.id == id) updated else it }
+        return DomainResult.success(updated)
+    }
 
     override suspend fun delete(id: String): DomainResult<Unit> {
         deletedIds += id

@@ -39,8 +39,9 @@ class GroundedAssistantEngine(
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> {
-        val language = detectLanguage(question)
+        val language = language ?: detectLanguage(question)
         if (grounding.isEmpty()) {
             return DomainResult.success(notEnoughInformation(intent, language))
         }

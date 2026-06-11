@@ -7,6 +7,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerSource
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.repository.AssistantEngine
 
@@ -20,8 +21,9 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> = try {
-        val markdown = client.generate(buildPrompt(question, intent, grounding))
+        val markdown = client.generate(buildPrompt(question, intent, grounding, language))
         DomainResult.success(
             AssistantAnswer(
                 markdown = markdown.trim(),
@@ -56,13 +58,18 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): String = buildString {
         appendLine("You are ShellDoc AI, the assistant of an enterprise knowledge platform.")
         appendLine("Answer ONLY with facts from the documentation excerpts below.")
-        appendLine(
-            "Reply in the same language the user wrote the question in (Spanish, French or English); " +
-                "default to English if unsure.",
-        )
+        if (language != null) {
+            appendLine("Reply in ${language.promptName} — this is the language the rest of the conversation has used.")
+        } else {
+            appendLine(
+                "Reply in the same language the user wrote the question in (Spanish, French or English); " +
+                    "default to English if unsure.",
+            )
+        }
         appendLine(
             "If the excerpts do not contain the answer, say so naturally in that language, suggest other " +
                 "search terms, and offer to create a draft document about the topic instead of a flat error.",

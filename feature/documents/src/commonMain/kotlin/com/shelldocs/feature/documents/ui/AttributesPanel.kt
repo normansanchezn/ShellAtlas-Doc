@@ -9,8 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.shelldocs.core.designsystem.atoms.ShellBadge
+import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
+import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.Document
@@ -22,13 +24,23 @@ import kotlin.time.ExperimentalTime
 fun AttributesPanel(
     document: Document,
     modifier: Modifier = Modifier,
+    canEdit: Boolean = false,
+    onEdit: () -> Unit = {},
 ) {
     val colors = ShellTheme.colors
     Column(
         modifier = modifier.padding(ShellSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
     ) {
-        ShellSectionLabel(text = "Attributes")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            ShellSectionLabel(text = "Attributes")
+            if (canEdit) {
+                ShellGhostButton(text = "Edit", icon = IconEdit, onClick = onEdit)
+            }
+        }
 
         AttributeGroupLabel("Status")
         ShellStatusBadge(status = document.status)

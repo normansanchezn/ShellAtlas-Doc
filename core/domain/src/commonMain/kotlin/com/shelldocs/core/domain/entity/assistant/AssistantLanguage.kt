@@ -5,4 +5,13 @@ enum class AssistantLanguage {
     ENGLISH,
     SPANISH,
     FRENCH,
+    ;
+
+    /** Human-readable name to embed in LLM prompts. */
+    val promptName: String
+        get() = when (this) {
+            ENGLISH -> "English"
+            SPANISH -> "Spanish"
+            FRENCH -> "French"
+        }
 }

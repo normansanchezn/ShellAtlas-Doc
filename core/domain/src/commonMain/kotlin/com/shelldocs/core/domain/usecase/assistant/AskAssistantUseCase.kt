@@ -5,6 +5,7 @@ import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
@@ -27,10 +28,10 @@ class AskAssistantUseCase(
     private val roleProvider: () -> UserRole,
 ) {
 
-    suspend operator fun invoke(question: String): DomainResult<AssistantAnswer> {
+    suspend operator fun invoke(question: String, language: AssistantLanguage? = null): DomainResult<AssistantAnswer> {
         val intent = detectIntent(question)
         if (intent == AssistantIntentType.CREATE_DOCUMENT) {
-            return createDocumentFromAssistant(roleProvider(), question)
+            return createDocumentFromAssistant(roleProvider(), question, language)
         }
 
         val keywords = question.lowercase()
@@ -45,7 +46,7 @@ class AskAssistantUseCase(
 
         val grounding = retrieveGroundingDocuments(question).getOrDefault(emptyList())
 
-        return engine.answer(question, intent, grounding).onSuccess { answer ->
+        return engine.answer(question, intent, grounding, language).onSuccess { answer ->
             cache.save(questionHash, keywords, answer)
         }
     }

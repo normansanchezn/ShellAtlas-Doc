@@ -6,6 +6,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.fixtures.DocumentFixtures
@@ -29,6 +30,7 @@ private class RecordingEngine : AssistantEngine {
         question: String,
         intent: AssistantIntentType,
         groundingDocuments: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> {
         invocations++
         lastIntent = intent

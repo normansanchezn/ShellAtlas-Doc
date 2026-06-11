@@ -1,6 +1,7 @@
 package com.shelldocs.core.data.network
 
 import com.shelldocs.core.data.network.dto.CreateDocumentRequestDto
+import com.shelldocs.core.data.network.dto.DocumentAttributesDto
 import com.shelldocs.core.data.network.dto.DocumentDto
 import com.shelldocs.core.data.network.dto.DocumentVersionDto
 import com.shelldocs.core.data.network.dto.DraftReceiptDto
@@ -52,6 +53,9 @@ class ShellDocsApi(
 
     suspend fun restore(id: String, versionId: String): DocumentDto =
         postWithoutBody("v1/documents/$id/restore/$versionId").body()
+
+    suspend fun updateAttributes(id: String, request: DocumentAttributesDto): DocumentDto =
+        post("v1/documents/$id/attributes", request).body()
 
     suspend fun delete(id: String) {
         val response = httpClient.delete(url("v1/documents/$id")) { defaultHeaders() }

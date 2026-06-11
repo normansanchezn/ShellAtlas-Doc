@@ -7,6 +7,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.repository.AssistantEngine
 import kotlinx.coroutines.test.runTest
@@ -23,6 +24,7 @@ private class StubEngine(
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> = result
 
     override suspend fun availability() = AssistantAvailability(reachable, label, label)

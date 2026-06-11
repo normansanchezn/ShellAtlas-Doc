@@ -4,6 +4,7 @@ import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 
 /**
@@ -13,10 +14,12 @@ import com.shelldocs.core.domain.entity.assistant.ScoredDocument
  */
 interface AssistantEngine {
 
+    /** [language], when non-null, is the language the reply must be written in (overrides per-message detection). */
     suspend fun answer(
         question: String,
         intent: AssistantIntentType,
         groundingDocuments: List<ScoredDocument>,
+        language: AssistantLanguage? = null,
     ): DomainResult<AssistantAnswer>
 
     suspend fun availability(): AssistantAvailability

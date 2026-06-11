@@ -18,4 +18,12 @@ sealed interface DocumentsIntent : MviIntent {
     data class CreateDocument(val title: String) : DocumentsIntent
     data object ToggleExplorerPanel : DocumentsIntent
     data object ToggleAttributesPanel : DocumentsIntent
+    data object OpenAttributesEditor : DocumentsIntent
+    data object CloseAttributesEditor : DocumentsIntent
+    data class AttributesOwnerChanged(val value: String) : DocumentsIntent
+    data class AttributesModuleChanged(val value: String) : DocumentsIntent
+    data class AttributesTeamChanged(val value: String) : DocumentsIntent
+    data class AttributesPlatformChanged(val value: String) : DocumentsIntent
+    data class AttributesTagsChanged(val value: String) : DocumentsIntent
+    data object SaveAttributes : DocumentsIntent
 }

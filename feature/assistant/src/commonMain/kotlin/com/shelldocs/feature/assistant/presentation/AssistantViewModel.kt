@@ -7,12 +7,14 @@ import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.common.time.TimeProvider
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.BuildWelcomeMessageUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
+import com.shelldocs.core.domain.usecase.assistant.DetectAssistantLanguageUseCase
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
@@ -28,6 +30,7 @@ class AssistantViewModel(
     private val idGenerator: IdGenerator,
     dispatchers: DispatcherProvider,
     private val buildWelcomeMessage: BuildWelcomeMessageUseCase = BuildWelcomeMessageUseCase(),
+    private val detectLanguage: DetectAssistantLanguageUseCase = DetectAssistantLanguageUseCase(),
 ) : MviViewModel<AssistantIntent, AssistantState, AssistantEffect>(AssistantState(), dispatchers) {
 
     override suspend fun handleIntent(intent: AssistantIntent) {
@@ -38,7 +41,12 @@ class AssistantViewModel(
             is AssistantIntent.SelectConversation -> select(intent.conversationId)
             AssistantIntent.StartNewConversation ->
                 setState {
-                    copy(activeConversationId = null, messages = listOf(welcomeMessage()), errorMessage = null)
+                    copy(
+                        activeConversationId = null,
+                        messages = listOf(welcomeMessage()),
+                        errorMessage = null,
+                        conversationLanguage = AssistantLanguage.SPANISH,
+                    )
                 }
         }
     }
@@ -87,12 +95,19 @@ class AssistantViewModel(
             markdown = question,
             createdAt = timeProvider.now(),
         )
+        val language = detectLanguage(question, default = currentState.conversationLanguage)
         setState {
-            copy(messages = messages + userMessage, input = "", isAnswering = true, errorMessage = null)
+            copy(
+                messages = messages + userMessage,
+                input = "",
+                isAnswering = true,
+                errorMessage = null,
+                conversationLanguage = language,
+            )
         }
         sendEffect(AssistantEffect.ScrollToLatestMessage)
 
-        askAssistant(question)
+        askAssistant(question, language)
             .onSuccess { answer ->
                 val assistantMessage = AssistantMessage(
                     id = idGenerator.newId(),

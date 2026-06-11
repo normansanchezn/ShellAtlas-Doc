@@ -138,6 +138,14 @@ class DemoDocumentRepository(
         return publish(id, version.rawMarkdown, "Restored version ${version.versionNumber}")
     }
 
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document> {
+        val existing = documents[id]
+            ?: return DomainResult.failure(AppError.NotFound("Document $id not found"))
+        val updated = existing.copy(attributes = attributes, updatedAt = timeProvider.now())
+        documents[id] = updated
+        return DomainResult.success(updated)
+    }
+
     override suspend fun delete(id: String): DomainResult<Unit> {
         documents.remove(id)
             ?: return DomainResult.failure(AppError.NotFound("Document $id not found"))

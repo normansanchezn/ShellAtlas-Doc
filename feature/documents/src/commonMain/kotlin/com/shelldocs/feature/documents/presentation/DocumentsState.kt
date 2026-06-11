@@ -8,6 +8,15 @@ import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentNode
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 
+/** Editable draft of a document's attributes, shown in the attributes dialog. */
+data class AttributesDraft(
+    val owner: String = "",
+    val module: String = "",
+    val team: String = "",
+    val platform: String = "",
+    val tagsText: String = "",
+)
+
 /** Snapshot of the three-pane Documents screen. */
 data class DocumentsState(
     val isLoading: Boolean = false,
@@ -25,6 +34,8 @@ data class DocumentsState(
     val errorMessage: String? = null,
     val isExplorerExpanded: Boolean = true,
     val isAttributesExpanded: Boolean = true,
+    val isAttributesDialogOpen: Boolean = false,
+    val attributesDraft: AttributesDraft = AttributesDraft(),
 ) : MviState {
 
     val filteredDocuments: List<Document> =

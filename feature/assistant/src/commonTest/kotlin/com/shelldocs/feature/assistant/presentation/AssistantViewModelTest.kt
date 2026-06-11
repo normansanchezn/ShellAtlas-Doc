@@ -9,6 +9,7 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
@@ -55,6 +56,7 @@ private class FixedEngine(var failNext: Boolean = false) : AssistantEngine {
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> =
         if (failNext) {
             DomainResult.failure(AppError.Network("Assistant offline"))
@@ -123,6 +125,8 @@ private class SingleDocumentRepository : DocumentRepository {
     override suspend fun versions(id: String): DomainResult<List<DocumentVersion>> =
         DomainResult.success(emptyList())
     override suspend fun restoreVersion(id: String, versionId: String) = DomainResult.success(document)
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes) =
+        DomainResult.success(document.copy(attributes = attributes))
     override suspend fun delete(id: String) = DomainResult.success(Unit)
 }
 

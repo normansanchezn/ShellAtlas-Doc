@@ -22,6 +22,7 @@ import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
 import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
+import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -85,6 +86,11 @@ private class FakeDocsRepository : DocumentRepository {
         ),
     )
     override suspend fun restoreVersion(id: String, versionId: String) = publish(id, "# restored", "Restored")
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document> {
+        val updated = docs.getValue(id).copy(attributes = attributes)
+        docs[id] = updated
+        return DomainResult.success(updated)
+    }
     override suspend fun delete(id: String) = DomainResult.success(Unit)
 }
 
@@ -114,6 +120,7 @@ class DocumentsViewModelTest {
         getVersions = GetDocumentVersionsUseCase(repository),
         restoreVersion = RestoreDocumentVersionUseCase(repository),
         createDocument = CreateDocumentUseCase(repository),
+        updateAttributes = UpdateDocumentAttributesUseCase(repository),
         roleProvider = { role },
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )

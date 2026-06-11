@@ -50,6 +50,7 @@ import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
 import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
+import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
 import com.shelldocs.core.domain.usecase.source.GetSourcesUseCase
 import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
 import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
@@ -194,6 +195,7 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
         getVersions = GetDocumentVersionsUseCase(documentRepository),
         restoreVersion = RestoreDocumentVersionUseCase(documentRepository),
         createDocument = CreateDocumentUseCase(documentRepository),
+        updateAttributes = UpdateDocumentAttributesUseCase(documentRepository),
         roleProvider = ::currentRole,
         dispatchers = dispatchers,
         openDocumentRequests = navigator.openDocumentRequests,

@@ -3,6 +3,7 @@ package com.shelldocs.core.data.repository
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
@@ -49,6 +50,9 @@ class CachingDocumentRepository(private val delegate: DocumentRepository) : Docu
 
     override suspend fun restoreVersion(id: String, versionId: String): DomainResult<Document> =
         delegate.restoreVersion(id, versionId).onSuccess { invalidate() }
+
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document> =
+        delegate.updateAttributes(id, attributes).onSuccess { invalidate() }
 
     override suspend fun delete(id: String): DomainResult<Unit> =
         delegate.delete(id).onSuccess { invalidate() }

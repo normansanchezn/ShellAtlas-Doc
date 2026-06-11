@@ -20,10 +20,14 @@ class CreateDocumentFromAssistantUseCase(
     private val detectLanguage: DetectAssistantLanguageUseCase = DetectAssistantLanguageUseCase(),
 ) {
 
-    suspend operator fun invoke(actorRole: UserRole, request: String): DomainResult<AssistantAnswer> {
+    suspend operator fun invoke(
+        actorRole: UserRole,
+        request: String,
+        language: AssistantLanguage? = null,
+    ): DomainResult<AssistantAnswer> {
         val title = titleFrom(request)
-        val language = detectLanguage(request)
-        val copy = Copy.of(language)
+        val resolvedLanguage = language ?: detectLanguage(request)
+        val copy = Copy.of(resolvedLanguage)
         val markdown = draftMarkdown(title, request, copy)
 
         return when (val result = createDocument(actorRole, title, markdown)) {

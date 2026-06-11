@@ -7,9 +7,11 @@ import com.shelldocs.core.data.mapper.DocumentVersionDtoMapper
 import com.shelldocs.core.data.network.ShellDocsApi
 import com.shelldocs.core.data.network.ShellDocsApiException
 import com.shelldocs.core.data.network.dto.CreateDocumentRequestDto
+import com.shelldocs.core.data.network.dto.DocumentAttributesDto
 import com.shelldocs.core.data.network.dto.PublishDocumentRequestDto
 import com.shelldocs.core.data.network.dto.SaveDraftRequestDto
 import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
@@ -65,6 +67,22 @@ class ApiDocumentRepository(private val api: ShellDocsApi) : DocumentRepository 
 
     override suspend fun restoreVersion(id: String, versionId: String): DomainResult<Document> = guard {
         DocumentDtoMapper.toDomain(api.restore(id, versionId))
+    }
+
+    override suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document> = guard {
+        DocumentDtoMapper.toDomain(
+            api.updateAttributes(
+                id,
+                DocumentAttributesDto(
+                    owner = attributes.owner,
+                    module = attributes.module,
+                    team = attributes.team,
+                    platform = attributes.platform,
+                    parentFolderId = attributes.parentFolderId,
+                    tags = attributes.tags,
+                ),
+            ),
+        )
     }
 
     override suspend fun delete(id: String): DomainResult<Unit> = guard { api.delete(id) }

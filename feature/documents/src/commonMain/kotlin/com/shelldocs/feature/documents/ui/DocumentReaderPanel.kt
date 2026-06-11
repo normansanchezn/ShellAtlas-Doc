@@ -127,6 +127,8 @@ fun DocumentReaderPanel(
                         AttributesPanel(
                             document = document,
                             modifier = Modifier.width(attributesWidth).fillMaxHeight(),
+                            canEdit = state.canEdit,
+                            onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
                         )
                     }
                     else -> CollapsedPanelRail(

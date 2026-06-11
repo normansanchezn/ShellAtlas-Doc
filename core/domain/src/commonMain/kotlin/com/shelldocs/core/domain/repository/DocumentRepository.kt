@@ -2,6 +2,7 @@ package com.shelldocs.core.domain.repository
 
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 
@@ -26,6 +27,8 @@ interface DocumentRepository {
     suspend fun versions(id: String): DomainResult<List<DocumentVersion>>
 
     suspend fun restoreVersion(id: String, versionId: String): DomainResult<Document>
+
+    suspend fun updateAttributes(id: String, attributes: DocumentAttributes): DomainResult<Document>
 
     suspend fun delete(id: String): DomainResult<Unit>
 }

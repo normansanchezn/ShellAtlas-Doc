@@ -4,6 +4,7 @@ import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
+import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
 import com.shelldocs.core.domain.repository.AssistantEngine
 
@@ -20,10 +21,11 @@ class CompositeAssistantEngine(
         question: String,
         intent: AssistantIntentType,
         grounding: List<ScoredDocument>,
+        language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> =
-        when (val primaryResult = primary.answer(question, intent, grounding)) {
+        when (val primaryResult = primary.answer(question, intent, grounding, language)) {
             is DomainResult.Success -> primaryResult
-            is DomainResult.Failure -> fallback.answer(question, intent, grounding)
+            is DomainResult.Failure -> fallback.answer(question, intent, grounding, language)
         }
 
     override suspend fun availability(): AssistantAvailability {

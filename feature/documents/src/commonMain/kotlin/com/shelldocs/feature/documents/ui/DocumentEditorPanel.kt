@@ -5,9 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -18,38 +20,49 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
+import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsState
 
-/** Split Markdown editor: raw source left, live preview right. */
+/**
+ * Full-screen document editor: raw Markdown source, live preview and the
+ * attributes rail, with no explorer/list around it. [onIntent] with
+ * [DocumentsIntent.CancelEditing] returns to the workspace view.
+ */
 @Composable
 fun DocumentEditorPanel(
     state: DocumentsState,
     onIntent: (DocumentsIntent) -> Unit,
     modifier: Modifier = Modifier,
+    isWide: Boolean = true,
 ) {
     val colors = ShellTheme.colors
-    Column(modifier = modifier.padding(ShellSpacing.lg)) {
+    Column(modifier = modifier.background(colors.background).padding(ShellSpacing.lg)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
         ) {
+            ShellGhostButton(
+                text = "Back to workspace",
+                icon = IconChevronLeft,
+                onClick = { onIntent(DocumentsIntent.CancelEditing) },
+            )
             Text(
                 text = "Editing · ${state.selectedDocument?.title.orEmpty()}",
                 style = ShellTheme.typography.sectionTitle,
                 color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).padding(start = ShellSpacing.sm),
             )
             state.draftMessage?.let { message ->
                 Text(text = message, style = ShellTheme.typography.caption, color = colors.success)
             }
-            ShellGhostButton(text = "Cancel", onClick = { onIntent(DocumentsIntent.CancelEditing) })
             ShellGhostButton(text = "Save draft", onClick = { onIntent(DocumentsIntent.SaveDraft) })
             if (state.canPublish) {
                 ShellPrimaryButton(
@@ -95,6 +108,16 @@ fun DocumentEditorPanel(
                     .verticalScroll(rememberScrollState()),
             ) {
                 LiveMarkdownPreview(markdown = state.editorMarkdown)
+            }
+            if (isWide) {
+                state.selectedDocument?.let { document ->
+                    AttributesPanel(
+                        document = document,
+                        modifier = Modifier.width(260.dp).fillMaxHeight(),
+                        canEdit = state.canEdit,
+                        onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
+                    )
+                }
             }
         }
     }
