@@ -3,6 +3,7 @@ package com.shelldocs.core.data.repository
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.repository.ConversationRepository
+import kotlin.time.ExperimentalTime
 
 /** Keeps assistant threads for the current session, newest first. */
 class InMemoryConversationRepository(
@@ -11,6 +12,7 @@ class InMemoryConversationRepository(
 
     private val conversations = seed.toMutableList()
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun conversations(): DomainResult<List<Conversation>> =
         DomainResult.success(conversations.sortedByDescending { it.updatedAt })
 

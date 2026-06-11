@@ -2,10 +2,11 @@ package com.shelldocs.core.data.mapper
 
 import com.shelldocs.core.data.network.dto.DocumentVersionDto
 import com.shelldocs.core.domain.entity.document.DocumentVersion
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 object DocumentVersionDtoMapper {
 
+    @OptIn(ExperimentalTime::class)
     fun toDomain(dto: DocumentVersionDto): DocumentVersion = DocumentVersion(
         id = dto.id,
         documentId = dto.documentId,
@@ -13,7 +14,7 @@ object DocumentVersionDtoMapper {
         title = dto.title,
         rawMarkdown = dto.rawMarkdown,
         changeSummary = dto.changeSummary,
-        createdAt = runCatching { Instant.parse(dto.createdAt) }
-            .getOrElse { Instant.fromEpochMilliseconds(0) },
+        createdAt = runCatching { kotlin.time.Instant.parse(dto.createdAt) }
+            .getOrElse { kotlin.time.Instant.fromEpochMilliseconds(0) },
     )
 }

@@ -6,10 +6,11 @@ import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentClassification
 import com.shelldocs.core.domain.entity.document.DocumentContent
 import com.shelldocs.core.domain.entity.document.DocumentStatus
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 object DocumentDtoMapper {
 
+    @OptIn(ExperimentalTime::class)
     fun toDomain(dto: DocumentDto): Document = Document(
         id = dto.id,
         title = dto.title,
@@ -34,6 +35,7 @@ object DocumentDtoMapper {
         updatedAt = parseInstant(dto.updatedAt),
     )
 
-    private fun parseInstant(raw: String): Instant =
-        runCatching { Instant.parse(raw) }.getOrElse { Instant.fromEpochMilliseconds(0) }
+    @OptIn(ExperimentalTime::class)
+    private fun parseInstant(raw: String): kotlin.time.Instant =
+        runCatching { kotlin.time.Instant.parse(raw) }.getOrElse { kotlin.time.Instant.fromEpochMilliseconds(0) }
 }

@@ -4,6 +4,7 @@ import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.source.KnowledgeSource
 import com.shelldocs.core.domain.entity.source.SourceStatus
 import com.shelldocs.core.domain.entity.source.SyncLogEntry
+import kotlin.time.ExperimentalTime
 
 /** Snapshot of the Imported Sources screen. */
 data class SourcesState(
@@ -18,5 +19,6 @@ data class SourcesState(
 
     val activeIntegrations: Int = sources.count { it.status == SourceStatus.CONNECTED }
 
+    @OptIn(ExperimentalTime::class)
     val lastSync = sources.mapNotNull { it.lastSyncAt }.maxOrNull()
 }

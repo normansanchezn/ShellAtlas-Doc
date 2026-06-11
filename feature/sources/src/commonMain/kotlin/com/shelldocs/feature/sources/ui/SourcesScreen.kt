@@ -26,8 +26,10 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.sources.presentation.SourcesIntent
 import com.shelldocs.feature.sources.presentation.SourcesViewModel
+import kotlin.time.ExperimentalTime
 
 /** Imported Sources: stats, integration rows, sync activity log. */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun SourcesScreen(
     viewModel: SourcesViewModel,

@@ -1,9 +1,10 @@
 package com.shelldocs.core.domain.entity.document
 
 import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 /** Aggregate root of the knowledge base. */
-data class Document(
+data class Document @OptIn(ExperimentalTime::class) constructor(
     val id: String,
     val title: String,
     val summary: String,
@@ -13,6 +14,6 @@ data class Document(
     val content: DocumentContent,
     val plainText: String,
     val attributes: DocumentAttributes,
-    val createdAt: Instant,
-    val updatedAt: Instant,
+    val createdAt: kotlin.time.Instant,
+    val updatedAt: kotlin.time.Instant,
 )

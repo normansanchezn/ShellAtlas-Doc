@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.ExperimentalTime
 
 /**
  * Demo identity provider: any syntactically valid credential signs in as the
@@ -19,6 +20,7 @@ class DemoAuthRepository(private val timeProvider: TimeProvider) : AuthRepositor
     private val mutableSession = MutableStateFlow<AuthSession?>(null)
     override val session: StateFlow<AuthSession?> = mutableSession.asStateFlow()
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun signIn(credentials: SignInCredentials): DomainResult<AuthSession> {
         println("[ShellDocsAuth] Demo sign-in for ${credentials.email}")
         val authSession = AuthSession(

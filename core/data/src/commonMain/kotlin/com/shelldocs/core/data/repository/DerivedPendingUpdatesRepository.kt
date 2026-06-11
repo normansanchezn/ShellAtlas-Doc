@@ -10,6 +10,7 @@ import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.repository.PendingUpdatesRepository
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 /**
  * Computes the maintenance triage from real document health: impact is the
@@ -28,6 +29,7 @@ class DerivedPendingUpdatesRepository(
 
     override suspend fun scanNow(): DomainResult<List<PendingUpdate>> = pendingUpdates()
 
+    @OptIn(ExperimentalTime::class)
     private fun toPendingUpdate(document: Document): PendingUpdate? {
         val health = evaluateHealth(document)
         if (health.isHealthy) return null

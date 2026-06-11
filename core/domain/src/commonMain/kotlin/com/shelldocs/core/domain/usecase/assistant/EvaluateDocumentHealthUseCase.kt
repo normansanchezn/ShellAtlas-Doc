@@ -5,6 +5,7 @@ import com.shelldocs.core.domain.entity.assistant.DocumentHealth
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentStatus
 import kotlin.time.Duration.Companion.days
+import kotlin.time.ExperimentalTime
 
 /**
  * Deterministic health audit used by both the assistant and the
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.days
  */
 class EvaluateDocumentHealthUseCase(private val timeProvider: TimeProvider) {
 
+    @OptIn(ExperimentalTime::class)
     operator fun invoke(document: Document): DocumentHealth {
         val issues = mutableListOf<String>()
         var score = 100

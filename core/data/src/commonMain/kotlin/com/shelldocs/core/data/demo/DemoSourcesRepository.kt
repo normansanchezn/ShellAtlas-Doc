@@ -8,6 +8,7 @@ import com.shelldocs.core.domain.entity.source.SourceStatus
 import com.shelldocs.core.domain.entity.source.SyncLogEntry
 import com.shelldocs.core.domain.entity.source.SyncOutcome
 import com.shelldocs.core.domain.repository.SourcesRepository
+import kotlin.time.ExperimentalTime
 
 /** In-memory integrations with working sync/reconnect state transitions. */
 class DemoSourcesRepository(private val timeProvider: TimeProvider) : SourcesRepository {
@@ -19,9 +20,11 @@ class DemoSourcesRepository(private val timeProvider: TimeProvider) : SourcesRep
     override suspend fun sources(): DomainResult<List<KnowledgeSource>> =
         DomainResult.success(sources.values.sortedBy { it.kind.ordinal })
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun syncLog(): DomainResult<List<SyncLogEntry>> =
         DomainResult.success(log.sortedByDescending { it.occurredAt })
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun sync(sourceId: String): DomainResult<KnowledgeSource> {
         val source = sources[sourceId]
             ?: return DomainResult.failure(AppError.NotFound("Unknown source"))
@@ -42,6 +45,7 @@ class DemoSourcesRepository(private val timeProvider: TimeProvider) : SourcesRep
         return DomainResult.success(synced)
     }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun reconnect(sourceId: String): DomainResult<KnowledgeSource> {
         val source = sources[sourceId]
             ?: return DomainResult.failure(AppError.NotFound("Unknown source"))

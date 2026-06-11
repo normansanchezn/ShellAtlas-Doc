@@ -11,11 +11,13 @@ import com.shelldocs.core.domain.entity.document.DocumentStatus
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
+import kotlin.time.ExperimentalTime
 
 /**
  * Fully functional in-memory [DocumentRepository] with versioning, used in
  * demo mode and as a reference implementation for the API contract.
  */
+@OptIn(ExperimentalTime::class)
 class DemoDocumentRepository(
     private val timeProvider: TimeProvider,
     private val markdownParser: MarkdownParser = MarkdownParser(),

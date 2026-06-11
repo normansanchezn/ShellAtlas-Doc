@@ -1,9 +1,11 @@
 package com.shelldocs.core.common.time
 
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 /** Production [TimeProvider] backed by the system clock. */
+
 class SystemTimeProvider : TimeProvider {
-    override fun now(): Instant = Clock.System.now()
+    @OptIn(ExperimentalTime::class)
+    override fun now(): kotlin.time.Instant = kotlin.time.Clock.System.now()
 }

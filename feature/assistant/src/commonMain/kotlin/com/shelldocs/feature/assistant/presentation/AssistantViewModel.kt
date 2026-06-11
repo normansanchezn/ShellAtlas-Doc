@@ -15,6 +15,7 @@ import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUse
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
+import kotlin.time.ExperimentalTime
 
 class AssistantViewModel(
     private val askAssistant: AskAssistantUseCase,
@@ -62,6 +63,7 @@ class AssistantViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun send() {
         val question = currentState.input.trim()
         if (question.isEmpty() || currentState.isAnswering) return
@@ -96,6 +98,7 @@ class AssistantViewModel(
             }
     }
 
+    @OptIn(ExperimentalTime::class)
     private suspend fun persistActiveConversation(question: String) {
         val snapshot = currentState
         val conversation = Conversation(

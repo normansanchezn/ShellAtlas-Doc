@@ -19,8 +19,10 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsState
+import kotlin.time.ExperimentalTime
 
 /** Version history rail with per-version restore. */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun VersionHistoryPanel(
     state: DocumentsState,

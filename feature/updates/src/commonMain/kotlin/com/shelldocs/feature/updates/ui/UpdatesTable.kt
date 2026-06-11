@@ -22,6 +22,7 @@ import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
 import com.shelldocs.feature.updates.presentation.UpdatesState
+import kotlin.time.ExperimentalTime
 
 /** Triage table: document, team, risk, age, impact, owner, last review. */
 @Composable
@@ -64,6 +65,7 @@ private fun HeaderCell(text: String, modifier: Modifier) {
     )
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 private fun UpdateRow(update: PendingUpdate, isWide: Boolean) {
     val colors = ShellTheme.colors

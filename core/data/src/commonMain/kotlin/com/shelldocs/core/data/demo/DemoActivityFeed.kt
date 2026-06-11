@@ -6,6 +6,7 @@ import com.shelldocs.core.domain.entity.dashboard.AttentionItem
 import com.shelldocs.core.domain.entity.dashboard.AttentionSeverity
 import com.shelldocs.core.domain.entity.dashboard.UsagePoint
 import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 /**
  * Dashboard signals that, in production, come from `audit_logs` and the
@@ -31,6 +32,7 @@ object DemoActivityFeed {
         UsagePoint("Sun", 18),
     )
 
+    @OptIn(ExperimentalTime::class)
     val recentActivity: List<ActivityEvent> = listOf(
         ActivityEvent("act-1", "Elena Vargas", "EV", ActivityKind.PUBLISHED, "iOS Session Recovery", Instant.parse("2026-06-11T10:12:00Z")),
         ActivityEvent("act-2", "Marcus Chen", "MC", ActivityKind.MARKED_OUTDATED, "Loyalty Points v1", Instant.parse("2026-06-11T09:56:00Z")),

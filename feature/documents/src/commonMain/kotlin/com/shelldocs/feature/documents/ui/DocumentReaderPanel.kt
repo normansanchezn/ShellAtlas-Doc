@@ -28,8 +28,10 @@ import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsState
+import kotlin.time.ExperimentalTime
 
 /** Reader: breadcrumb bar, rendered Markdown body and the attributes rail. */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun DocumentReaderPanel(
     state: DocumentsState,

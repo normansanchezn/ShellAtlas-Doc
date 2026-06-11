@@ -14,6 +14,7 @@ import com.shelldocs.core.domain.entity.source.SourceStatus
 import com.shelldocs.core.domain.entity.source.SyncLogEntry
 import com.shelldocs.core.domain.entity.source.SyncOutcome
 import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 /**
  * Deterministic demo dataset mirroring the original ShellEnterpriseDoc mock
@@ -23,7 +24,8 @@ object DemoSeed {
 
     private val parser = MarkdownParser()
 
-    val now: Instant = Instant.parse("2026-06-11T10:14:00Z")
+    @OptIn(ExperimentalTime::class)
+    val now: kotlin.time.Instant = kotlin.time.Instant.parse("2026-06-11T10:14:00Z")
 
     val elena = UserProfile("user-elena", "elena.vargas@shell.com", "Elena Vargas", "iOS Shell App", UserRole.OWNER)
     val marcus = UserProfile("user-marcus", "marcus.chen@shell.com", "Marcus Chen", "Loyalty Squad", UserRole.DEVELOP)
@@ -39,6 +41,7 @@ object DemoSeed {
         TeamMember(sofia),
     )
 
+    @OptIn(ExperimentalTime::class)
     val documents: List<Document> = listOf(
         document(
             id = "doc-authentication",
@@ -49,7 +52,7 @@ object DemoSeed {
             module = "Authentication",
             platform = "iOS",
             tags = listOf("auth", "tokens", "session"),
-            updatedAt = Instant.parse("2026-06-08T09:00:00Z"),
+            updatedAt = kotlin.time.Instant.parse("2026-06-08T09:00:00Z"),
             markdown = """
                 # Authentication
 
@@ -323,6 +326,7 @@ object DemoSeed {
         ),
     )
 
+    @OptIn(ExperimentalTime::class)
     val sources: List<KnowledgeSource> = listOf(
         KnowledgeSource(
             id = "source-confluence",
@@ -330,7 +334,7 @@ object DemoSeed {
             host = "shell-engineering.atlassian.net",
             status = SourceStatus.CONNECTED,
             importedDocs = 84,
-            lastSyncAt = Instant.parse("2026-06-11T08:14:00Z"),
+            lastSyncAt = kotlin.time.Instant.parse("2026-06-11T08:14:00Z"),
         ),
         KnowledgeSource(
             id = "source-azure",
@@ -351,6 +355,7 @@ object DemoSeed {
         ),
     )
 
+    @OptIn(ExperimentalTime::class)
     val syncLog: List<SyncLogEntry> = listOf(
         SyncLogEntry("log-1", SourceKind.CONFLUENCE, SyncOutcome.SUCCESS, "Confluence sync completed", 3, 7, Instant.parse("2026-06-11T10:14:00Z")),
         SyncLogEntry("log-2", SourceKind.AZURE_DEVOPS, SyncOutcome.SUCCESS, "Azure DevOps sync completed", 0, 2, Instant.parse("2026-06-11T08:02:00Z")),
@@ -359,6 +364,7 @@ object DemoSeed {
         SyncLogEntry("log-5", SourceKind.AZURE_DEVOPS, SyncOutcome.SUCCESS, "Azure DevOps sync completed", 2, 0, Instant.parse("2026-06-09T08:00:00Z")),
     )
 
+    @OptIn(ExperimentalTime::class)
     private fun document(
         id: String,
         title: String,
@@ -369,7 +375,7 @@ object DemoSeed {
         platform: String,
         markdown: String,
         tags: List<String>,
-        updatedAt: Instant,
+        updatedAt: kotlin.time.Instant,
         team: String = owner.team,
     ): Document {
         val parsed = parser.parse(markdown)

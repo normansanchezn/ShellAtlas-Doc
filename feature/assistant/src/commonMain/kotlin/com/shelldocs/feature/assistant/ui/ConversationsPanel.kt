@@ -22,6 +22,7 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.assistant.Conversation
+import kotlin.time.ExperimentalTime
 
 /** Left rail listing stored assistant threads, newest first. */
 @Composable
@@ -76,6 +77,7 @@ fun ConversationsPanel(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 private fun relativeDayLabel(conversation: Conversation): String {
     val isoDate = conversation.updatedAt.toString().substringBefore('T')
     return isoDate

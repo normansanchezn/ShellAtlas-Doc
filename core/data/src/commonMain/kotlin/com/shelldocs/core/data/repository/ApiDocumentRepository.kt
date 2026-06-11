@@ -13,7 +13,7 @@ import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
-import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 /** [DocumentRepository] backed by the ShellDocs `/v1` backend. */
 class ApiDocumentRepository(private val api: ShellDocsApi) : DocumentRepository {
@@ -48,13 +48,14 @@ class ApiDocumentRepository(private val api: ShellDocsApi) : DocumentRepository 
         DocumentDtoMapper.toDomain(api.publish(id, PublishDocumentRequestDto(markdown, changeSummary)))
     }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun saveDraft(id: String, markdown: String): DomainResult<DraftReceipt> = guard {
         val receipt = api.saveDraft(id, SaveDraftRequestDto(markdown))
         DraftReceipt(
             documentId = receipt.documentId,
             contentHash = receipt.contentHash,
-            savedAt = runCatching { Instant.parse(receipt.updatedAt) }
-                .getOrElse { Instant.fromEpochMilliseconds(0) },
+            savedAt = runCatching { kotlin.time.Instant.parse(receipt.updatedAt) }
+                .getOrElse { kotlin.time.Instant.fromEpochMilliseconds(0) },
         )
     }
 

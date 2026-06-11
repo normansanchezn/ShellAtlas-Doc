@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 /**
  * Production [AuthRepository]: GoTrue password sign-in enriched with the
@@ -36,6 +37,7 @@ class SupabaseAuthRepository(
 
     val currentUserId: String? get() = mutableSession.value?.user?.id
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun signIn(credentials: SignInCredentials): DomainResult<AuthSession> = try {
         println("[ShellDocsAuth] Starting Supabase sign-in for ${credentials.email}")
         val token = authApi.signInWithPassword(credentials.email, credentials.password)

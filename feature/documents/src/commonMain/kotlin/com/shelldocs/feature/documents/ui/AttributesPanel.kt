@@ -14,8 +14,10 @@ import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.Document
+import kotlin.time.ExperimentalTime
 
 /** ATTRIBUTES rail: status, ownership, timeline and tags. */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun AttributesPanel(
     document: Document,

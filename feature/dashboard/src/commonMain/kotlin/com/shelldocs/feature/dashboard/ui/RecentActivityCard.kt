@@ -16,8 +16,10 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.dashboard.ActivityKind
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
+import kotlin.time.ExperimentalTime
 
 /** Recent Activity feed (actor + verb + target). */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun RecentActivityCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
