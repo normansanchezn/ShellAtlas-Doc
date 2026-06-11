@@ -18,7 +18,7 @@ fun loadDesktopAppConfig(): AppConfig {
     val ollamaBaseUrl = setting("SHELLDOC_OLLAMA_BASE_URL") ?: "http://127.0.0.1:11434"
     val ollamaModel = setting("SHELLDOC_OLLAMA_MODEL") ?: "llama3.1"
 
-    return AppConfig(
+    val config = AppConfig(
         supabase = if (!supabaseUrl.isNullOrBlank() && !supabaseAnonKey.isNullOrBlank()) {
             SupabaseConfig(url = supabaseUrl, anonKey = supabaseAnonKey)
         } else {
@@ -32,6 +32,13 @@ fun loadDesktopAppConfig(): AppConfig {
         ollama = OllamaConfig(baseUrl = ollamaBaseUrl, model = ollamaModel),
         useOllama = useOllama,
     )
+
+    println(
+        "[ShellDocsAuth] Desktop config loaded. demoMode=${config.isDemoMode}, " +
+            "supabaseUrl=${config.supabase?.url ?: "none"}",
+    )
+
+    return config
 }
 
 private fun loadDotEnv(): Map<String, String> {

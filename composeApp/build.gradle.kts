@@ -64,6 +64,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(libs.kotlinx.datetime)
             implementation(projects.core.common)
             implementation(projects.core.domain)
             implementation(projects.core.data)
