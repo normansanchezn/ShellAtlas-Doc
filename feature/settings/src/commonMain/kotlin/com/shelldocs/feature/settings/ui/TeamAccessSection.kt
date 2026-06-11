@@ -61,18 +61,10 @@ fun TeamAccessSection(
                 state.members.forEach { member ->
                     MemberRow(
                         member = member,
-                        canManage = state.canManageMembers && !member.isCurrentUser,
+                        canManage = state.canManageMembers && !member.isCurrentUser && !state.isBusy,
                         onRoleChange = { newRole ->
                             onIntent(SettingsIntent.AssignRole(member.profile.id, newRole))
                         },
-                    )
-                }
-                if (state.errorMessage != null) {
-                    Text(
-                        text = state.errorMessage.orEmpty(),
-                        style = ShellTheme.typography.caption,
-                        color = colors.danger,
-                        modifier = Modifier.padding(top = ShellSpacing.sm),
                     )
                 }
             }
@@ -101,7 +93,11 @@ fun TeamAccessSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
         ) {
-            ShellPrimaryButton(text = "Save Changes", onClick = { onIntent(SettingsIntent.SaveChanges) })
+            ShellPrimaryButton(
+                text = if (state.isBusy) "Saving..." else "Save Changes",
+                onClick = { onIntent(SettingsIntent.SaveChanges) },
+                enabled = !state.isBusy,
+            )
             state.saveMessage?.let { message ->
                 Text(text = message, style = ShellTheme.typography.caption, color = colors.success)
             }

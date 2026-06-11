@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.assistant.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider
@@ -212,7 +214,7 @@ class AssistantViewModelTest {
 
         val state = viewModel.currentState
         assertEquals(1, state.messages.size)
-        assertEquals("Assistant offline", state.errorMessage)
+        assertEquals("We couldn't complete your request", state.errorDialog?.title)
         viewModel.clear()
     }
 

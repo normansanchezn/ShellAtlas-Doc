@@ -65,7 +65,7 @@ class DashboardViewModelTest {
 
         assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
         assertFalse(viewModel.currentState.isLoading)
-        assertNull(viewModel.currentState.errorMessage)
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 
@@ -90,7 +90,7 @@ class DashboardViewModelTest {
         viewModel.onIntent(DashboardIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
-        assertNotNull(viewModel.currentState.errorMessage)
+        assertNotNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

@@ -8,4 +8,5 @@ sealed interface AssistantIntent : MviIntent {
     data object SendQuestion : AssistantIntent
     data class SelectConversation(val conversationId: String) : AssistantIntent
     data object StartNewConversation : AssistantIntent
+    data object DismissError : AssistantIntent
 }

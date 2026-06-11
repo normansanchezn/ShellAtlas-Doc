@@ -38,6 +38,7 @@ fun IntegrationRow(
     isSyncing: Boolean,
     onSync: () -> Unit,
     onReconnect: () -> Unit,
+    actionsEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
@@ -108,24 +109,16 @@ fun IntegrationRow(
                         text = if (isSyncing) "Syncing..." else "Sync",
                         icon = IconRefresh,
                         onClick = onSync,
+                        enabled = actionsEnabled && !isSyncing,
                     )
                     if (source.status == SourceStatus.ERROR) {
-                        ShellPrimaryButton(text = "Reconnect", onClick = onReconnect)
+                        ShellPrimaryButton(
+                            text = "Reconnect",
+                            onClick = onReconnect,
+                            enabled = actionsEnabled && !isSyncing,
+                        )
                     }
                 }
-            }
-            if (source.errorMessage != null) {
-                Text(
-                    text = "⚠ ${source.errorMessage}",
-                    style = ShellTheme.typography.caption,
-                    color = colors.danger,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = ShellSpacing.md)
-                        .clip(RoundedCornerShape(ShellRadius.sm))
-                        .background(colors.dangerSoft)
-                        .padding(ShellSpacing.sm),
-                )
             }
         }
     }

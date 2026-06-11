@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.icons.IconSparkles
+import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
+import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.assistant.presentation.AssistantEffect
@@ -96,14 +98,6 @@ fun AssistantScreen(
                     }
                 }
             }
-            if (state.errorMessage != null) {
-                Text(
-                    text = state.errorMessage.orEmpty(),
-                    style = ShellTheme.typography.caption,
-                    color = colors.danger,
-                    modifier = Modifier.padding(horizontal = ShellSpacing.xxl),
-                )
-            }
             ChatInputBar(
                 value = state.input,
                 canSend = state.canSend,
@@ -111,6 +105,17 @@ fun AssistantScreen(
                 onSend = { viewModel.onIntent(AssistantIntent.SendQuestion) },
             )
         }
+
+        if (state.isInitializing) {
+            ShellLoadingOverlay(message = "Preparing assistant...")
+        }
+    }
+
+    state.errorDialog?.let { dialog ->
+        ShellErrorDialog(
+            state = dialog,
+            onDismiss = { viewModel.onIntent(AssistantIntent.DismissError) },
+        )
     }
 }
 

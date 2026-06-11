@@ -3,6 +3,7 @@ package com.shelldocs.feature.settings.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
+import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -51,56 +54,69 @@ fun SettingsScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.padding(ShellSpacing.lg)) {
-            Text("Settings", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-            Text(
-                "Platform configuration and preferences",
-                style = ShellTheme.typography.caption,
-                color = colors.textMuted,
-            )
-        }
-        Row(modifier = Modifier.weight(1f)) {
-            if (isWide) {
-                SectionRail(
-                    selected = state.selectedSection,
-                    onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
-                    modifier = Modifier.width(180.dp).fillMaxHeight().padding(horizontal = ShellSpacing.lg),
+    Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.padding(ShellSpacing.lg)) {
+                Text("Settings", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
+                Text(
+                    "Platform configuration and preferences",
+                    style = ShellTheme.typography.caption,
+                    color = colors.textMuted,
                 )
             }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = ShellSpacing.xl, vertical = ShellSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-            ) {
-                if (!isWide) {
-                    SectionChipsRow(
+            Row(modifier = Modifier.weight(1f)) {
+                if (isWide) {
+                    SectionRail(
                         selected = state.selectedSection,
                         onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
+                        modifier = Modifier.width(180.dp).fillMaxHeight().padding(horizontal = ShellSpacing.lg),
                     )
                 }
-                when (state.selectedSection) {
-                    SettingsSection.GENERAL -> GeneralSection(
-                        isDarkTheme = isDarkTheme,
-                        onToggleTheme = onToggleTheme,
-                        onSignOut = { viewModel.onIntent(SettingsIntent.SignOut) },
-                    )
-                    SettingsSection.AI_ASSISTANT -> AiAssistantSection()
-                    SettingsSection.TEAM_AND_ACCESS -> TeamAccessSection(
-                        state = state,
-                        onIntent = viewModel::onIntent,
-                    )
-                    SettingsSection.NOTIFICATIONS -> NotificationsSection(
-                        state = state,
-                        onIntent = viewModel::onIntent,
-                    )
-                    SettingsSection.INTEGRATIONS -> IntegrationsSection()
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = ShellSpacing.xl, vertical = ShellSpacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+                ) {
+                    if (!isWide) {
+                        SectionChipsRow(
+                            selected = state.selectedSection,
+                            onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
+                        )
+                    }
+                    when (state.selectedSection) {
+                        SettingsSection.GENERAL -> GeneralSection(
+                            isDarkTheme = isDarkTheme,
+                            onToggleTheme = onToggleTheme,
+                            onSignOut = { viewModel.onIntent(SettingsIntent.SignOut) },
+                        )
+                        SettingsSection.AI_ASSISTANT -> AiAssistantSection()
+                        SettingsSection.TEAM_AND_ACCESS -> TeamAccessSection(
+                            state = state,
+                            onIntent = viewModel::onIntent,
+                        )
+                        SettingsSection.NOTIFICATIONS -> NotificationsSection(
+                            state = state,
+                            onIntent = viewModel::onIntent,
+                        )
+                        SettingsSection.INTEGRATIONS -> IntegrationsSection()
+                    }
                 }
             }
         }
+
+        state.loadingMessage?.let { message ->
+            ShellLoadingOverlay(message = message)
+        }
+    }
+
+    state.errorDialog?.let { dialog ->
+        ShellErrorDialog(
+            state = dialog,
+            onDismiss = { viewModel.onIntent(SettingsIntent.DismissError) },
+        )
     }
 }
 

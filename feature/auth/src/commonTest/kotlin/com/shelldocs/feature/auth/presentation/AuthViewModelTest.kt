@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.auth.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider
@@ -83,7 +85,7 @@ class AuthViewModelTest {
 
         assertEquals(AuthEffect.NavigateToWorkspace, navigated)
         assertFalse(viewModel.currentState.isLoading)
-        assertNull(viewModel.currentState.errorMessage)
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 
@@ -96,7 +98,7 @@ class AuthViewModelTest {
         viewModel.onIntent(AuthIntent.Submit)
         testScheduler.advanceUntilIdle()
 
-        assertNotNull(viewModel.currentState.errorMessage)
+        assertNotNull(viewModel.currentState.errorDialog)
         assertFalse(viewModel.currentState.isLoading)
         viewModel.clear()
     }
@@ -111,7 +113,7 @@ class AuthViewModelTest {
         viewModel.onIntent(AuthIntent.Submit)
         testScheduler.advanceUntilIdle()
 
-        assertEquals("Invalid credentials", viewModel.currentState.errorMessage)
+        assertEquals("You don't have access to do that", viewModel.currentState.errorDialog?.title)
         viewModel.clear()
     }
 
@@ -123,7 +125,7 @@ class AuthViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertFalse(viewModel.currentState.isLoading)
-        assertNull(viewModel.currentState.errorMessage)
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

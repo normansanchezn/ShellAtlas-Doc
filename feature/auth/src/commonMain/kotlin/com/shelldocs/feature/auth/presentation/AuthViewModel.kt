@@ -1,5 +1,6 @@
 package com.shelldocs.feature.auth.presentation
 
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.onFailure
@@ -19,11 +20,11 @@ class AuthViewModel(
     override suspend fun handleIntent(intent: AuthIntent) {
         when (intent) {
             is AuthIntent.EmailChanged ->
-                setState { copy(email = intent.value, errorMessage = null) }
+                setState { copy(email = intent.value, errorDialog = null) }
             is AuthIntent.PasswordChanged ->
-                setState { copy(password = intent.value, errorMessage = null) }
+                setState { copy(password = intent.value, errorDialog = null) }
             AuthIntent.DismissError ->
-                setState { copy(errorMessage = null) }
+                setState { copy(errorDialog = null) }
             AuthIntent.Submit -> submit()
         }
     }
@@ -31,14 +32,14 @@ class AuthViewModel(
     private suspend fun submit() {
         val snapshot = currentState
         if (!snapshot.canSubmit) return
-        setState { copy(isLoading = true, errorMessage = null) }
+        setState { copy(isLoading = true, errorDialog = null) }
         signIn(SignInCredentials(email = snapshot.email, password = snapshot.password))
             .onSuccess {
                 setState { copy(isLoading = false) }
                 sendEffect(AuthEffect.NavigateToWorkspace)
             }
             .onFailure { error ->
-                setState { copy(isLoading = false, errorMessage = error.message) }
+                setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("sign you in")) }
             }
     }
 }

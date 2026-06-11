@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.documents.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider
@@ -182,7 +184,7 @@ class DocumentsViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertFalse(viewModel.currentState.isEditing)
-        assertNotNull(viewModel.currentState.errorMessage)
+        assertNotNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 

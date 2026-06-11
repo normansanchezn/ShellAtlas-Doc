@@ -53,6 +53,7 @@ fun DocumentEditorPanel(
                 text = "Back to workspace",
                 icon = IconChevronLeft,
                 onClick = { onIntent(DocumentsIntent.CancelEditing) },
+                enabled = !state.isBusy,
             )
             Text(
                 text = "Editing · ${state.selectedDocument?.title.orEmpty()}",
@@ -63,21 +64,18 @@ fun DocumentEditorPanel(
             state.draftMessage?.let { message ->
                 Text(text = message, style = ShellTheme.typography.caption, color = colors.success)
             }
-            ShellGhostButton(text = "Save draft", onClick = { onIntent(DocumentsIntent.SaveDraft) })
+            ShellGhostButton(
+                text = if (state.loadingMessage == "Saving draft...") "Saving..." else "Save draft",
+                onClick = { onIntent(DocumentsIntent.SaveDraft) },
+                enabled = !state.isBusy,
+            )
             if (state.canPublish) {
                 ShellPrimaryButton(
-                    text = "Publish",
+                    text = if (state.loadingMessage == "Publishing document...") "Publishing..." else "Publish",
                     onClick = { onIntent(DocumentsIntent.Publish("Updated content")) },
+                    enabled = !state.isBusy,
                 )
             }
-        }
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage.orEmpty(),
-                style = ShellTheme.typography.caption,
-                color = colors.danger,
-                modifier = Modifier.padding(top = ShellSpacing.xs),
-            )
         }
         Row(
             modifier = Modifier.weight(1f).padding(top = ShellSpacing.md),
@@ -115,7 +113,7 @@ fun DocumentEditorPanel(
                         document = document,
                         modifier = Modifier.width(260.dp).fillMaxHeight(),
                         canEdit = state.canEdit,
-                        onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
+                        onEdit = { if (!state.isBusy) onIntent(DocumentsIntent.OpenAttributesEditor) },
                     )
                 }
             }

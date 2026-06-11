@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.icons.IconSparkles
-import com.shelldocs.core.designsystem.molecules.ShellMarkdownText
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -97,7 +96,7 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
                 .border(1.dp, colors.border, RoundedCornerShape(ShellRadius.md))
                 .padding(ShellSpacing.lg),
         ) {
-            MessageMarkdownBody(markdown = message.markdown)
+            AssistantRichContent(markdown = message.markdown)
         }
         if (message.sources.isNotEmpty()) {
             SourcesList(
@@ -119,36 +118,4 @@ private fun ConfidenceChip(confidence: AnswerConfidence) {
         AnswerConfidence.NOT_ENOUGH_INFORMATION -> Triple("Not enough information", colors.textMuted, colors.surfaceSubtle)
     }
     ShellBadge(text = text, contentColor = content, containerColor = container)
-}
-
-@Composable
-private fun MessageMarkdownBody(markdown: String) {
-    val colors = ShellTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
-        markdown.lines().filter { it.isNotBlank() }.forEach { line ->
-            when {
-                line.startsWith("### ") || line.startsWith("## ") || line.startsWith("# ") ->
-                    Text(
-                        text = line.trimStart('#', ' '),
-                        style = ShellTheme.typography.sectionTitle,
-                        color = colors.textPrimary,
-                    )
-                line.trimStart().startsWith("- ") ->
-                    Row {
-                        Text("•  ", style = ShellTheme.typography.body, color = colors.textMuted)
-                        ShellMarkdownText(
-                            text = line.trimStart().removePrefix("- "),
-                            style = ShellTheme.typography.body,
-                            color = colors.textSecondary,
-                        )
-                    }
-                else ->
-                    ShellMarkdownText(
-                        text = line,
-                        style = ShellTheme.typography.body,
-                        color = colors.textSecondary,
-                    )
-            }
-        }
-    }
 }

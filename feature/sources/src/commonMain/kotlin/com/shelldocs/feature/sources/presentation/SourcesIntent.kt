@@ -6,4 +6,5 @@ sealed interface SourcesIntent : MviIntent {
     data object Initialize : SourcesIntent
     data class Sync(val sourceId: String) : SourcesIntent
     data class Reconnect(val sourceId: String) : SourcesIntent
+    data object DismissError : SourcesIntent
 }

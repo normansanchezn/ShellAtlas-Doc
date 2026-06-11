@@ -7,4 +7,5 @@ sealed interface UpdatesIntent : MviIntent {
     data object Initialize : UpdatesIntent
     data object ScanNow : UpdatesIntent
     data class ToggleRiskFilter(val risk: RiskLevel) : UpdatesIntent
+    data object DismissError : UpdatesIntent
 }

@@ -1,5 +1,6 @@
 package com.shelldocs.feature.assistant.presentation
 
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
@@ -12,10 +13,11 @@ data class AssistantState(
     val activeConversationId: String? = null,
     val messages: List<AssistantMessage> = emptyList(),
     val input: String = "",
+    val isInitializing: Boolean = false,
     val isAnswering: Boolean = false,
     val availability: AssistantAvailability? = null,
     val indexedDocuments: Int = 0,
-    val errorMessage: String? = null,
+    val errorDialog: ErrorDialogState? = null,
     val conversationLanguage: AssistantLanguage = AssistantLanguage.SPANISH,
 ) : MviState {
     val canSend: Boolean = input.isNotBlank() && !isAnswering

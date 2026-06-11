@@ -111,7 +111,7 @@ class SettingsViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(UserRole.BUSINESS, roleRepository.members.getValue("user-2").profile.role)
-        assertNotNull(viewModel.currentState.errorMessage)
+        assertNotNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 

@@ -21,6 +21,7 @@ import com.shelldocs.core.data.repository.DerivedDocumentTreeRepository
 import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository
 import com.shelldocs.core.data.repository.InMemoryAssistantCacheRepository
 import com.shelldocs.core.data.repository.InMemoryConversationRepository
+import com.shelldocs.core.data.repository.SupabaseDocumentRepository
 import com.shelldocs.core.data.repository.SupabaseAuthRepository
 import com.shelldocs.core.data.repository.SupabaseRoleRepository
 import com.shelldocs.core.data.supabase.SupabaseAuthApi
@@ -127,10 +128,19 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
 
     private val documentRepository by lazy {
         val api = config.api
-        if (api == null) {
-            DemoDocumentRepository(timeProvider)
-        } else {
+        val supabase = config.supabase
+        if (api != null) {
             CachingDocumentRepository(ApiDocumentRepository(ShellDocsApi(httpClient, api)))
+        } else if (supabase != null) {
+            CachingDocumentRepository(
+                SupabaseDocumentRepository(
+                    postgrest = postgrest(supabase),
+                    timeProvider = timeProvider,
+                    currentUserIdProvider = { authRepository.session.value?.user?.id },
+                ),
+            )
+        } else {
+            DemoDocumentRepository(timeProvider)
         }
     }
     private val treeRepository by lazy { DerivedDocumentTreeRepository(documentRepository) }

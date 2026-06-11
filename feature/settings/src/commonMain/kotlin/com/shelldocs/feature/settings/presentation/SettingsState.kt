@@ -1,5 +1,6 @@
 package com.shelldocs.feature.settings.presentation
 
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.auth.Permission
 import com.shelldocs.core.domain.entity.auth.RolePermissions
@@ -16,9 +17,11 @@ data class SettingsState(
     val notifyOutdatedDocs: Boolean = true,
     val notifySyncFailures: Boolean = true,
     val notifyWeeklyDigest: Boolean = false,
+    val loadingMessage: String? = null,
     val saveMessage: String? = null,
-    val errorMessage: String? = null,
+    val errorDialog: ErrorDialogState? = null,
 ) : MviState {
 
     val canManageMembers: Boolean = RolePermissions.isGranted(role, Permission.MANAGE_MEMBERS)
+    val isBusy: Boolean = loadingMessage != null
 }

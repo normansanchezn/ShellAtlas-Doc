@@ -2,6 +2,7 @@ package com.shelldocs.feature.updates.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.icons.IconRefresh
+import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
+import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.updates.presentation.UpdatesIntent
@@ -35,40 +38,48 @@ fun UpdatesScreen(
 
     LaunchedEffect(viewModel) { viewModel.onIntent(UpdatesIntent.Initialize) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .verticalScroll(rememberScrollState())
-            .padding(ShellSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+    Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(ShellSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Updates Pending", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                Text(
-                    text = "${state.updates.size} documents need attention · Maintenance triage",
-                    style = ShellTheme.typography.caption,
-                    color = colors.textMuted,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Updates Pending", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
+                    Text(
+                        text = "${state.updates.size} documents need attention · Maintenance triage",
+                        style = ShellTheme.typography.caption,
+                        color = colors.textMuted,
+                    )
+                }
+                ShellGhostButton(
+                    text = if (state.isScanning) "Scanning..." else "Scan now",
+                    icon = IconRefresh,
+                    onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
+                    enabled = !state.isScanning && !state.isLoading,
                 )
             }
-            ShellGhostButton(
-                text = if (state.isScanning) "Scanning..." else "Scan now",
-                icon = IconRefresh,
-                onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
-            )
+
+            RiskSummaryRow(state = state, onIntent = viewModel::onIntent, isWide = isWide)
+            UpdatesTable(state = state, isWide = isWide)
         }
-        RiskSummaryRow(state = state, onIntent = viewModel::onIntent, isWide = isWide)
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage.orEmpty(),
-                style = ShellTheme.typography.caption,
-                color = colors.danger,
-            )
+
+        when {
+            state.isLoading -> ShellLoadingOverlay(message = "Loading pending updates...")
+            state.isScanning -> ShellLoadingOverlay(message = "Scanning documentation health...")
         }
-        UpdatesTable(state = state, isWide = isWide)
+    }
+
+    state.errorDialog?.let { dialog ->
+        ShellErrorDialog(
+            state = dialog,
+            onDismiss = { viewModel.onIntent(UpdatesIntent.DismissError) },
+        )
     }
 }

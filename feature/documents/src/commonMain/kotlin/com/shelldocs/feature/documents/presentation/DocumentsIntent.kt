@@ -15,7 +15,12 @@ sealed interface DocumentsIntent : MviIntent {
     data object ShowHistory : DocumentsIntent
     data object HideHistory : DocumentsIntent
     data class RestoreVersion(val versionId: String) : DocumentsIntent
+    data object StartCreatingDocument : DocumentsIntent
     data class CreateDocument(val title: String) : DocumentsIntent
+    data class NewDocumentTitleChanged(val value: String) : DocumentsIntent
+    data class NewDocumentMarkdownChanged(val value: String) : DocumentsIntent
+    data object CancelNewDocument : DocumentsIntent
+    data object SubmitNewDocument : DocumentsIntent
     data object ToggleExplorerPanel : DocumentsIntent
     data object ToggleAttributesPanel : DocumentsIntent
     data object OpenAttributesEditor : DocumentsIntent
@@ -26,4 +31,5 @@ sealed interface DocumentsIntent : MviIntent {
     data class AttributesPlatformChanged(val value: String) : DocumentsIntent
     data class AttributesTagsChanged(val value: String) : DocumentsIntent
     data object SaveAttributes : DocumentsIntent
+    data object DismissError : DocumentsIntent
 }

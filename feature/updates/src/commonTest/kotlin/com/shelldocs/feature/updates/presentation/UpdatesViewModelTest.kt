@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.updates.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider

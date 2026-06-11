@@ -26,8 +26,16 @@ fun AttributesEditDialog(
         title = "Edit attributes",
         onDismiss = { onIntent(DocumentsIntent.CloseAttributesEditor) },
         actions = {
-            ShellGhostButton(text = "Cancel", onClick = { onIntent(DocumentsIntent.CloseAttributesEditor) })
-            ShellPrimaryButton(text = "Save", onClick = { onIntent(DocumentsIntent.SaveAttributes) })
+            ShellGhostButton(
+                text = "Cancel",
+                onClick = { onIntent(DocumentsIntent.CloseAttributesEditor) },
+                enabled = !state.isBusy,
+            )
+            ShellPrimaryButton(
+                text = if (state.loadingMessage == "Saving attributes...") "Saving..." else "Save",
+                onClick = { onIntent(DocumentsIntent.SaveAttributes) },
+                enabled = !state.isBusy,
+            )
         },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
@@ -56,13 +64,6 @@ fun AttributesEditDialog(
                 value = draft.tagsText,
                 onValueChange = { onIntent(DocumentsIntent.AttributesTagsChanged(it)) },
             )
-            if (state.errorMessage != null) {
-                Text(
-                    text = state.errorMessage.orEmpty(),
-                    style = ShellTheme.typography.caption,
-                    color = colors.danger,
-                )
-            }
         }
     }
 }

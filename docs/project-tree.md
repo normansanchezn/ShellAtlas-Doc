@@ -56,7 +56,7 @@ ShelEnterpriseDoc/
 ```text
 core/common/src/commonMain/kotlin/com/shelldocs/core/common/
 ├── coroutines/                      ← Dispatcher abstractions
-├── error/                           ← Shared app/domain errors
+├── error/                           ← Shared app/domain errors + user-facing dialog mapping
 ├── id/                              ← ID generation helpers
 ├── mvi/                             ← MviIntent, MviState, MviEffect, MviViewModel
 ├── result/                          ← DomainResult helpers
@@ -93,8 +93,8 @@ core/data/src/commonMain/kotlin/com/shelldocs/core/data/
 ├── mapper/                          ← DTO to domain mappers
 ├── markdown/                        ← Markdown parsing and hashing
 ├── network/                         ← Future API client for documents
-├── repository/                      ← Derived repositories and caches
-└── supabase/                        ← Future auth/profile adapters
+├── repository/                      ← Derived repositories, caches and Supabase document persistence
+└── supabase/                        ← Auth, profile and PostgREST adapters
 ```
 
 ### `core/designsystem`
@@ -103,7 +103,7 @@ core/data/src/commonMain/kotlin/com/shelldocs/core/data/
 core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/
 ├── atoms/
 ├── icons/
-├── molecules/
+├── molecules/                       ← Includes shared loading overlays and modal error dialogs
 ├── theme/
 └── tokens/
 ```
@@ -118,13 +118,19 @@ feature/<name>/src/commonMain/kotlin/com/shelldocs/feature/<name>/
 
 Current feature responsibilities:
 
-- `assistant`: grounded Q&A, improvement guidance, source citations.
+- `assistant`: grounded Q&A, richer multi-section answers, Mermaid-aware process explanations and source citations.
 - `auth`: demo and future real auth entry flow.
 - `dashboard`: health, coverage, activity and attention views.
-- `documents`: explorer, reader, editor and version history.
+- `documents`: explorer, reader, dedicated create-document editor, full editor and version history.
 - `settings`: theme, AI and integration preferences.
 - `sources`: mock integrations and sync state.
 - `updates`: triage of outdated or risky documents.
+
+Shared UX feedback pattern:
+
+- Async actions now surface progress through blocking loaders from `core/designsystem/molecules/ShellLoadingOverlay.kt`.
+- User-facing failures are translated from `AppError` into descriptive modal dialogs through `core/common/error/ErrorDialogState.kt` and `core/designsystem/molecules/ShellErrorDialog.kt`.
+- Base controls now keep full click targets (`ShellPrimaryButton`, `ShellGhostButton`) and higher-contrast cursors / Enter-submit behaviors (`ShellTextField`, assistant chat input, login form).
 
 ## Removed Duplicate Structure
 

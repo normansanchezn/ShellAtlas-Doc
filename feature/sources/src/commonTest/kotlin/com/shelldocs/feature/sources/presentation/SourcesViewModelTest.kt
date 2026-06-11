@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.sources.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider
@@ -97,7 +99,7 @@ class SourcesViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(0, repository.syncs)
-        assertNotNull(viewModel.currentState.errorMessage)
+        assertNotNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 

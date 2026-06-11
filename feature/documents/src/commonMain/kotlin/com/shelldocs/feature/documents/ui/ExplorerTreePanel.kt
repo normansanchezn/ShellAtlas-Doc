@@ -54,7 +54,7 @@ fun ExplorerTreePanel(
                 ShellPrimaryButton(
                     text = "New",
                     icon = IconPlus,
-                    onClick = { onIntent(DocumentsIntent.CreateDocument("Untitled document")) },
+                    onClick = { onIntent(DocumentsIntent.StartCreatingDocument) },
                 )
             }
         }

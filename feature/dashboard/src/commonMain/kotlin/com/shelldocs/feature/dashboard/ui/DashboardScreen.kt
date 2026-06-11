@@ -2,6 +2,7 @@ package com.shelldocs.feature.dashboard.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,8 @@ import com.shelldocs.core.designsystem.icons.IconCheckCircle
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconMessageSquare
 import com.shelldocs.core.designsystem.icons.IconRefresh
+import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
+import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellMetricCard
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -40,66 +43,72 @@ fun DashboardScreen(
 
     LaunchedEffect(viewModel) { viewModel.onIntent(DashboardIntent.Initialize) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .verticalScroll(rememberScrollState())
-            .padding(ShellSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Dashboard", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                Text(
-                    "Knowledge operations overview",
-                    style = ShellTheme.typography.caption,
-                    color = colors.textMuted,
+    Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(ShellSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Dashboard", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
+                    Text(
+                        "Knowledge operations overview",
+                        style = ShellTheme.typography.caption,
+                        color = colors.textMuted,
+                    )
+                }
+                ShellGhostButton(
+                    text = if (state.isLoading) "Refreshing..." else "Refresh",
+                    icon = IconRefresh,
+                    onClick = { viewModel.onIntent(DashboardIntent.Refresh) },
+                    enabled = !state.isLoading,
                 )
             }
-            ShellGhostButton(
-                text = "Refresh",
-                icon = IconRefresh,
-                onClick = { viewModel.onIntent(DashboardIntent.Refresh) },
-            )
+
+            val metrics = state.metrics
+            if (metrics != null) {
+                if (isWide) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
+                        MetricCards(metrics = metrics, modifier = Modifier.weight(1f))
+                    }
+                } else {
+                    MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), stacked = true)
+                }
+
+                if (isWide) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
+                        KnowledgeHealthCard(metrics = metrics, modifier = Modifier.weight(1.1f))
+                        ModuleCoverageCard(metrics = metrics, modifier = Modifier.weight(1.2f))
+                        StatusDonutCard(metrics = metrics, modifier = Modifier.weight(1f))
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
+                        UsageChartCard(metrics = metrics, modifier = Modifier.weight(1.6f))
+                        RecentActivityCard(metrics = metrics, modifier = Modifier.weight(1f))
+                    }
+                } else {
+                    KnowledgeHealthCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    ModuleCoverageCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    StatusDonutCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    UsageChartCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    RecentActivityCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                }
+                NeedsAttentionRow(metrics = metrics, isWide = isWide)
+            }
         }
 
-        val metrics = state.metrics
-        if (metrics == null) {
-            Text(
-                text = state.errorMessage ?: "Loading metrics...",
-                style = ShellTheme.typography.body,
-                color = colors.textMuted,
-            )
-            return@Column
+        if (state.isLoading) {
+            ShellLoadingOverlay(message = "Loading dashboard...")
         }
+    }
 
-        if (isWide) {
-            Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
-                MetricCards(metrics = metrics, modifier = Modifier.weight(1f))
-            }
-        } else {
-            MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), stacked = true)
-        }
-
-        if (isWide) {
-            Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
-                KnowledgeHealthCard(metrics = metrics, modifier = Modifier.weight(1.1f))
-                ModuleCoverageCard(metrics = metrics, modifier = Modifier.weight(1.2f))
-                StatusDonutCard(metrics = metrics, modifier = Modifier.weight(1f))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
-                UsageChartCard(metrics = metrics, modifier = Modifier.weight(1.6f))
-                RecentActivityCard(metrics = metrics, modifier = Modifier.weight(1f))
-            }
-        } else {
-            KnowledgeHealthCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-            ModuleCoverageCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-            StatusDonutCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-            UsageChartCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-            RecentActivityCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-        }
-        NeedsAttentionRow(metrics = metrics, isWide = isWide)
+    state.errorDialog?.let { dialog ->
+        ShellErrorDialog(
+            state = dialog,
+            onDismiss = { viewModel.onIntent(DashboardIntent.DismissError) },
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.shelldocs.feature.settings.presentation
 
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.getOrDefault
@@ -34,26 +35,71 @@ class SettingsViewModel(
                 setState { copy(notifySyncFailures = intent.enabled, saveMessage = null) }
             is SettingsIntent.SetNotifyWeeklyDigest ->
                 setState { copy(notifyWeeklyDigest = intent.enabled, saveMessage = null) }
-            SettingsIntent.SaveChanges ->
-                setState { copy(saveMessage = "Changes saved") }
-            SettingsIntent.SignOut -> {
-                signOut.invoke()
-                sendEffect(SettingsEffect.SignedOut)
-            }
+            SettingsIntent.SaveChanges -> saveChanges()
+            SettingsIntent.SignOut -> signOut()
+            SettingsIntent.DismissError -> setState { copy(errorDialog = null) }
         }
     }
 
     private suspend fun initialize() {
-        val members = getTeamMembers().getOrDefault(emptyList())
-        setState { copy(role = roleProvider(), members = members, errorMessage = null) }
+        setState { copy(loadingMessage = "Loading settings...", errorDialog = null) }
+        getTeamMembers()
+            .onSuccess { members ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        role = roleProvider(),
+                        members = members,
+                    )
+                }
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        role = roleProvider(),
+                        errorDialog = error.toErrorDialogState("load the settings"),
+                    )
+                }
+            }
     }
 
     private suspend fun delegateRole(userId: String, newRole: UserRole) {
+        setState { copy(loadingMessage = "Updating team access...", errorDialog = null, saveMessage = null) }
         assignRole(actorRole = currentState.role, targetUserId = userId, newRole = newRole)
             .onSuccess {
                 val members = getTeamMembers().getOrDefault(currentState.members)
-                setState { copy(members = members, errorMessage = null) }
+                setState { copy(loadingMessage = null, members = members) }
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("update team access"),
+                    )
+                }
+            }
+    }
+
+    private fun saveChanges() {
+        setState { copy(loadingMessage = "Saving settings...", errorDialog = null, saveMessage = null) }
+        setState { copy(loadingMessage = null, saveMessage = "Changes saved") }
+    }
+
+    private suspend fun signOut() {
+        setState { copy(loadingMessage = "Signing out...", errorDialog = null) }
+        signOut.invoke()
+            .onSuccess {
+                setState { copy(loadingMessage = null) }
+                sendEffect(SettingsEffect.SignedOut)
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("sign you out"),
+                    )
+                }
+            }
     }
 }

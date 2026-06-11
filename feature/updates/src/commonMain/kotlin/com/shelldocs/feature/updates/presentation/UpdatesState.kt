@@ -1,5 +1,6 @@
 package com.shelldocs.feature.updates.presentation
 
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
@@ -10,7 +11,7 @@ data class UpdatesState(
     val isScanning: Boolean = false,
     val updates: List<PendingUpdate> = emptyList(),
     val riskFilter: RiskLevel? = null,
-    val errorMessage: String? = null,
+    val errorDialog: ErrorDialogState? = null,
 ) : MviState {
 
     val filteredUpdates: List<PendingUpdate> =

@@ -1,5 +1,6 @@
 package com.shelldocs.feature.documents.presentation
 
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.auth.Permission
 import com.shelldocs.core.domain.entity.auth.RolePermissions
@@ -20,18 +21,22 @@ data class AttributesDraft(
 /** Snapshot of the three-pane Documents screen. */
 data class DocumentsState(
     val isLoading: Boolean = false,
+    val loadingMessage: String? = null,
     val role: UserRole = UserRole.VIEWER,
     val tree: DocumentNode? = null,
     val documents: List<Document> = emptyList(),
     val filterQuery: String = "",
     val expandedFolders: Set<String> = emptySet(),
     val selectedDocument: Document? = null,
+    val isCreatingDocument: Boolean = false,
+    val newDocumentTitle: String = "",
+    val newDocumentMarkdown: String = "",
     val isEditing: Boolean = false,
     val editorMarkdown: String = "",
     val draftMessage: String? = null,
     val versions: List<DocumentVersion> = emptyList(),
     val isHistoryVisible: Boolean = false,
-    val errorMessage: String? = null,
+    val errorDialog: ErrorDialogState? = null,
     val isExplorerExpanded: Boolean = true,
     val isAttributesExpanded: Boolean = true,
     val isAttributesDialogOpen: Boolean = false,
@@ -51,4 +56,6 @@ data class DocumentsState(
     val canEdit: Boolean = RolePermissions.isGranted(role, Permission.EDIT_DOCUMENTS)
 
     val canPublish: Boolean = RolePermissions.isGranted(role, Permission.PUBLISH_DOCUMENTS)
+
+    val isBusy: Boolean = isLoading || loadingMessage != null
 }

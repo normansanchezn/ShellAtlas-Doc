@@ -1,5 +1,6 @@
 package com.shelldocs.feature.dashboard.presentation
 
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 
@@ -7,5 +8,5 @@ import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 data class DashboardState(
     val isLoading: Boolean = false,
     val metrics: DashboardMetrics? = null,
-    val errorMessage: String? = null,
+    val errorDialog: ErrorDialogState? = null,
 ) : MviState

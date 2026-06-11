@@ -14,4 +14,5 @@ sealed interface SettingsIntent : MviIntent {
     data class SetNotifyWeeklyDigest(val enabled: Boolean) : SettingsIntent
     data object SaveChanges : SettingsIntent
     data object SignOut : SettingsIntent
+    data object DismissError : SettingsIntent
 }

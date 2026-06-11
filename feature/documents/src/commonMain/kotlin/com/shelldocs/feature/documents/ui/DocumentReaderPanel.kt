@@ -64,12 +64,14 @@ fun DocumentReaderPanel(
                 text = "History",
                 icon = IconHistory,
                 onClick = { onIntent(DocumentsIntent.ShowHistory) },
+                enabled = !state.isBusy,
             )
             if (state.canEdit) {
                 ShellPrimaryButton(
                     text = "Edit",
                     icon = IconEdit,
                     onClick = { onIntent(DocumentsIntent.StartEditing) },
+                    enabled = !state.isBusy,
                 )
             }
         }
@@ -108,8 +110,8 @@ fun DocumentReaderPanel(
                     modifier = Modifier.padding(top = ShellSpacing.xl),
                     horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
                 ) {
-                    ShellGhostButton(text = "Share", icon = IconShare, onClick = {})
-                    ShellGhostButton(text = "Bookmark", icon = IconBookmark, onClick = {})
+                    ShellGhostButton(text = "Share", icon = IconShare, onClick = {}, enabled = !state.isBusy)
+                    ShellGhostButton(text = "Bookmark", icon = IconBookmark, onClick = {}, enabled = !state.isBusy)
                 }
             }
             if (isWide) {
@@ -139,14 +141,6 @@ fun DocumentReaderPanel(
                     )
                 }
             }
-        }
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage.orEmpty(),
-                style = ShellTheme.typography.caption,
-                color = colors.danger,
-                modifier = Modifier.padding(ShellSpacing.md),
-            )
         }
     }
 }

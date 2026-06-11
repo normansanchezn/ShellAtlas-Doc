@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.icons.IconSend
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -67,20 +76,43 @@ fun ChatInputBar(
                     value = value,
                     onValueChange = onValueChange,
                     textStyle = ShellTheme.typography.body.copy(color = colors.textPrimary),
-                    cursorBrush = SolidColor(colors.brand),
+                    cursorBrush = SolidColor(colors.info),
                     maxLines = 4,
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(
+                        onSend = { if (canSend) onSend() },
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onPreviewKeyEvent { event ->
+                            if (
+                                event.type == KeyEventType.KeyUp &&
+                                event.key == Key.Enter &&
+                                !event.isShiftPressed
+                            ) {
+                                if (canSend) onSend()
+                                true
+                            } else {
+                                false
+                            }
+                        },
                 )
             }
-            Icon(
-                imageVector = IconSend,
-                contentDescription = "Send",
-                tint = if (canSend) colors.brand else colors.textMuted,
+            Box(
                 modifier = Modifier
-                    .size(16.dp)
+                    .size(32.dp)
                     .alpha(if (canSend) 1f else 0.6f)
+                    .clip(RoundedCornerShape(10.dp))
                     .clickable(enabled = canSend, onClick = onSend),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = IconSend,
+                    contentDescription = "Send",
+                    tint = if (canSend) colors.brand else colors.textMuted,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
         Text(
             text = "Answers are grounded on indexed documentation. Always verify critical information.",

@@ -1,5 +1,6 @@
 package com.shelldocs.feature.assistant.presentation
 
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.id.IdGenerator
 import com.shelldocs.core.common.mvi.MviViewModel
@@ -39,12 +40,13 @@ class AssistantViewModel(
             is AssistantIntent.InputChanged -> setState { copy(input = intent.value) }
             AssistantIntent.SendQuestion -> send()
             is AssistantIntent.SelectConversation -> select(intent.conversationId)
+            AssistantIntent.DismissError -> setState { copy(errorDialog = null) }
             AssistantIntent.StartNewConversation ->
                 setState {
                     copy(
                         activeConversationId = null,
                         messages = listOf(welcomeMessage()),
-                        errorMessage = null,
+                        errorDialog = null,
                         conversationLanguage = AssistantLanguage.SPANISH,
                     )
                 }
@@ -52,11 +54,13 @@ class AssistantViewModel(
     }
 
     private suspend fun initialize() {
+        setState { copy(isInitializing = true, errorDialog = null) }
         val availability = checkAvailability()
         val conversations = getConversations().getOrDefault(emptyList())
         val documents = getDocuments().getOrDefault(emptyList())
         setState {
             copy(
+                isInitializing = false,
                 availability = availability,
                 conversations = conversations,
                 indexedDocuments = documents.size,
@@ -79,7 +83,7 @@ class AssistantViewModel(
             copy(
                 activeConversationId = conversation.id,
                 messages = conversation.messages,
-                errorMessage = null,
+                errorDialog = null,
             )
         }
     }
@@ -101,7 +105,7 @@ class AssistantViewModel(
                 messages = messages + userMessage,
                 input = "",
                 isAnswering = true,
-                errorMessage = null,
+                errorDialog = null,
                 conversationLanguage = language,
             )
         }
@@ -122,7 +126,12 @@ class AssistantViewModel(
                 persistActiveConversation(question)
             }
             .onFailure { error ->
-                setState { copy(isAnswering = false, errorMessage = error.message) }
+                setState {
+                    copy(
+                        isAnswering = false,
+                        errorDialog = error.toErrorDialogState("generate an answer"),
+                    )
+                }
             }
     }
 

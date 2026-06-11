@@ -17,7 +17,7 @@ tags:
 
 ## Summary
 
-Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It always answers — never a bare "no information" error — and can turn a chat request into a new draft document.
+Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It now answers with longer structured sections, can render context-aware Mermaid diagrams inside the conversation, and can still turn a chat request into a new draft document.
 
 ## Related Files
 
@@ -30,6 +30,8 @@ Deterministic grounded assistant for Q&A, flow explanation, improvement guidance
 Question -> intent detection -> grounding retrieval -> assistant engine -> cited answer.
 
 `CREATE_DOCUMENT` intent skips grounding/cache and goes straight to `CreateDocumentFromAssistantUseCase`, which creates a draft via `CreateDocumentUseCase` and confirms it back to the user with a link-style source.
+
+When the detected intent is a flow/process explanation, `GroundedAssistantEngine` now routes the answer through `AssistantMermaidBuilder` and `AssistantRichContent`, so the chat can show a readable diagram instead of plain fenced code.
 
 ## Intents
 
@@ -55,9 +57,12 @@ Question -> intent detection -> grounding retrieval -> assistant engine -> cited
 
 ## Mermaid Diagram
 
-- [[KMM Recovery Flow]]
+- [[Assistant Mermaid And Persistence Flow]]
 
 ## Development Notes
 
 - Alias expansion from the recovered Swift search logic is reused for grounding and search.
 - When no documents match, the assistant replies in the user's detected language (EN/ES/FR) with alternative search terms and offers to create a draft instead of returning a flat "no information" message.
+- `GroundedAssistantEngine` now answers with sections like overview, detailed explanation, key details, related documents and next steps, so the assistant no longer feels overly terse.
+- `AssistantMermaidBuilder` chooses `flowchart`, `sequenceDiagram` or `gantt` heuristically from the question and top grounding document.
+- `AssistantRichContent` parses Mermaid fences and renders a responsive Compose representation for flow, sequence and timeline diagrams inside `ChatMessageBubble`.

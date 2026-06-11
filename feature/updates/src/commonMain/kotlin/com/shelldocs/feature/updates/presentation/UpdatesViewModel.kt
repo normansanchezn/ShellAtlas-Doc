@@ -1,5 +1,6 @@
 package com.shelldocs.feature.updates.presentation
 
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.onFailure
@@ -17,22 +18,27 @@ class UpdatesViewModel(
         when (intent) {
             UpdatesIntent.Initialize -> load()
             UpdatesIntent.ScanNow -> scan()
+            UpdatesIntent.DismissError -> setState { copy(errorDialog = null) }
             is UpdatesIntent.ToggleRiskFilter ->
                 setState { copy(riskFilter = if (riskFilter == intent.risk) null else intent.risk) }
         }
     }
 
     private suspend fun load() {
-        setState { copy(isLoading = true, errorMessage = null) }
+        setState { copy(isLoading = true, errorDialog = null) }
         getPendingUpdates()
             .onSuccess { updates -> setState { copy(isLoading = false, updates = updates) } }
-            .onFailure { error -> setState { copy(isLoading = false, errorMessage = error.message) } }
+            .onFailure { error ->
+                setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("load pending updates")) }
+            }
     }
 
     private suspend fun scan() {
-        setState { copy(isScanning = true, errorMessage = null) }
+        setState { copy(isScanning = true, errorDialog = null) }
         scanForUpdates()
             .onSuccess { updates -> setState { copy(isScanning = false, updates = updates) } }
-            .onFailure { error -> setState { copy(isScanning = false, errorMessage = error.message) } }
+            .onFailure { error ->
+                setState { copy(isScanning = false, errorDialog = error.toErrorDialogState("scan for updates")) }
+            }
     }
 }

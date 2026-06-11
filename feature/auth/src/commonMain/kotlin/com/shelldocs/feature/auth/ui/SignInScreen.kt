@@ -23,12 +23,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
 import com.shelldocs.core.designsystem.icons.IconShellPecten
+import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
+import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -102,21 +106,21 @@ fun SignInScreen(
                         value = state.email,
                         onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
                         placeholder = "Work email",
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next,
+                        ),
                     )
                     ShellTextField(
                         value = state.password,
                         onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
                         placeholder = "Password",
                         isPassword = true,
-                    )
-                }
-                if (state.errorMessage != null) {
-                    Text(
-                        text = state.errorMessage.orEmpty(),
-                        style = ShellTheme.typography.caption,
-                        color = colors.danger,
-                        modifier = Modifier.padding(top = ShellSpacing.sm),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(
+                            onDone = { if (state.canSubmit) viewModel.onIntent(AuthIntent.Submit) },
+                        ),
+                        onSubmit = { if (state.canSubmit) viewModel.onIntent(AuthIntent.Submit) },
                     )
                 }
                 Spacer(Modifier.height(ShellSpacing.lg))
@@ -128,5 +132,16 @@ fun SignInScreen(
                 )
             }
         }
+
+        if (state.isLoading) {
+            ShellLoadingOverlay(message = "Signing you in...")
+        }
+    }
+
+    state.errorDialog?.let { dialog ->
+        ShellErrorDialog(
+            state = dialog,
+            onDismiss = { viewModel.onIntent(AuthIntent.DismissError) },
+        )
     }
 }

@@ -47,8 +47,8 @@ class GroundedAssistantEngine(
         }
         val top = grounding.first()
         val markdown = when (intent) {
-            AssistantIntentType.QUESTION -> answerQuestion(question, top.document, language)
-            AssistantIntentType.EXPLAIN_FLOW -> explainFlow(top.document, language)
+            AssistantIntentType.QUESTION -> answerQuestion(question, grounding, language)
+            AssistantIntentType.EXPLAIN_FLOW -> explainFlow(question, top.document, grounding, language)
             AssistantIntentType.IMPROVE_DOCUMENT -> adviseOnImprovement(top.document, language)
             AssistantIntentType.SUMMARIZE -> summarize(top.document, language)
             AssistantIntentType.CREATE_DOCUMENT -> Copy.of(language).createDocumentHint
@@ -76,36 +76,69 @@ class GroundedAssistantEngine(
         statusMessage = "Grounded engine — answers come strictly from indexed documentation",
     )
 
-    private fun answerQuestion(question: String, document: Document, language: AssistantLanguage): String {
+    private fun answerQuestion(
+        question: String,
+        grounding: List<ScoredDocument>,
+        language: AssistantLanguage,
+    ): String {
         val copy = Copy.of(language)
+        val document = grounding.first().document
         val blocks = blocksOf(document)
         val terms = question.lowercase().split(' ').filter { it.length >= 4 }
         val relevantParagraphs = blocks
             .filterIsInstance<ParagraphBlock>()
-            .filter { paragraph -> terms.any { it in paragraph.text.lowercase() } }
-            .take(2)
+            .filter { paragraph -> terms.any { it in paragraph.text.lowercase() } || paragraph.text.length > 80 }
+            .take(3)
+        val listPoints = blocks.filterIsInstance<ListBlock>().flatMap { it.items }.take(4)
+        val relatedDocuments = grounding.drop(1).take(2).map { it.document.title }
         return buildString {
             appendLine(copy.questionIntro(document.title))
             appendLine()
+            appendLine("## ${copy.overviewTitle}")
+            appendLine(document.summary.ifBlank { firstParagraph(blocks, copy) })
+            appendLine()
+            appendLine("## ${copy.detailedExplanationTitle}")
             if (relevantParagraphs.isEmpty()) {
-                appendLine(document.summary.ifBlank { firstParagraph(blocks, copy) })
+                appendLine(firstParagraph(blocks, copy))
+                appendLine()
             } else {
-                relevantParagraphs.forEach { appendLine(it.text); appendLine() }
+                relevantParagraphs.forEach {
+                    appendLine(it.text)
+                    appendLine()
+                }
             }
+            if (listPoints.isNotEmpty()) {
+                appendLine("## ${copy.keyDetailsTitle}")
+                listPoints.forEach { appendLine("- $it") }
+                appendLine()
+            }
+            if (relatedDocuments.isNotEmpty()) {
+                appendLine("## ${copy.relatedDocumentsTitle}")
+                relatedDocuments.forEach { appendLine("- $it") }
+                appendLine()
+            }
+            appendLine("## ${copy.nextStepTitle}")
             append(copy.questionOutro)
         }.trim()
     }
 
-    private fun explainFlow(document: Document, language: AssistantLanguage): String {
+    private fun explainFlow(
+        question: String,
+        document: Document,
+        grounding: List<ScoredDocument>,
+        language: AssistantLanguage,
+    ): String {
         val copy = Copy.of(language)
         val blocks = blocksOf(document)
-        val sections = mutableListOf<Pair<String, List<String>>>()
+        val sections = mutableListOf<AssistantMermaidBuilder.Section>()
         var currentHeading: String? = null
         var currentSteps = mutableListOf<String>()
         blocks.forEach { block ->
             when (block) {
                 is HeadingBlock -> if (block.level > 1) {
-                    currentHeading?.let { sections += it to currentSteps.toList() }
+                    currentHeading?.let {
+                        sections += AssistantMermaidBuilder.Section(it, currentSteps.toList())
+                    }
                     currentHeading = block.text
                     currentSteps = mutableListOf()
                 }
@@ -116,20 +149,40 @@ class GroundedAssistantEngine(
                 else -> Unit
             }
         }
-        currentHeading?.let { sections += it to currentSteps.toList() }
+        currentHeading?.let {
+            sections += AssistantMermaidBuilder.Section(it, currentSteps.toList())
+        }
+        val diagram = AssistantMermaidBuilder.build(question, document, sections)
+        val relatedDocs = grounding.drop(1).take(2).map { it.document.title }
 
         return buildString {
             appendLine(copy.flowIntro(document.title))
             appendLine()
+            appendLine("## ${copy.overviewTitle}")
+            appendLine(document.summary.ifBlank { firstParagraph(blocks, copy) })
+            appendLine()
+            appendLine("## ${copy.stepByStepTitle}")
             if (sections.isEmpty()) {
-                appendLine(document.summary.ifBlank { firstParagraph(blocks, copy) })
+                appendLine(firstParagraph(blocks, copy))
             } else {
-                sections.forEachIndexed { index, (heading, steps) ->
-                    appendLine("${index + 1}. **$heading**")
+                sections.forEachIndexed { index, section ->
+                    appendLine("${index + 1}. **${section.heading}**")
+                    val steps = section.steps
                     steps.take(MAX_STEPS_PER_SECTION).forEach { appendLine("   - $it") }
                 }
             }
             appendLine()
+            diagram?.let {
+                appendLine("## ${copy.diagramTitle}")
+                appendLine(it)
+                appendLine()
+            }
+            if (relatedDocs.isNotEmpty()) {
+                appendLine("## ${copy.relatedDocumentsTitle}")
+                relatedDocs.forEach { appendLine("- $it") }
+                appendLine()
+            }
+            appendLine("## ${copy.nextStepTitle}")
             append(copy.flowOutro)
         }.trim()
     }
@@ -164,10 +217,11 @@ class GroundedAssistantEngine(
         return buildString {
             appendLine(copy.summaryHeader(document.title))
             appendLine()
+            appendLine("## ${copy.overviewTitle}")
             appendLine(document.summary.ifBlank { firstParagraph(blocks, copy) })
             if (keyPoints.isNotEmpty()) {
                 appendLine()
-                appendLine(copy.keyPoints)
+                appendLine("## ${copy.keyDetailsTitle}")
                 keyPoints.forEach { appendLine("- $it") }
             }
         }.trim()
@@ -208,6 +262,13 @@ class GroundedAssistantEngine(
         val noNarrativeContent: String,
         val createDocumentHint: String,
         val notEnoughInformation: String,
+        val overviewTitle: String,
+        val detailedExplanationTitle: String,
+        val keyDetailsTitle: String,
+        val relatedDocumentsTitle: String,
+        val nextStepTitle: String,
+        val stepByStepTitle: String,
+        val diagramTitle: String,
     ) {
         companion object {
             fun of(language: AssistantLanguage): Copy = when (language) {
@@ -235,6 +296,13 @@ class GroundedAssistantEngine(
                     "(for example *authentication*, *loyalty rewards*, *release process*), or if you'd " +
                     "rather start from scratch I can create a draft for you right now — just say " +
                     "\"create a document about ...\" and I'll set up the initial structure.",
+                overviewTitle = "Overview",
+                detailedExplanationTitle = "Detailed explanation",
+                keyDetailsTitle = "Key details",
+                relatedDocumentsTitle = "Related documents",
+                nextStepTitle = "What to do next",
+                stepByStepTitle = "Step by step",
+                diagramTitle = "Mermaid diagram",
             )
 
             private val SPANISH = Copy(
@@ -256,6 +324,13 @@ class GroundedAssistantEngine(
                     "terminos (por ejemplo *autenticacion*, *recompensas*, *proceso de release*), o si quieres " +
                     "puedo crearte un borrador nuevo ahora mismo — solo dime \"crea un documento sobre ...\" y " +
                     "te armo la estructura inicial para que la completes.",
+                overviewTitle = "Resumen general",
+                detailedExplanationTitle = "Explicacion detallada",
+                keyDetailsTitle = "Detalles clave",
+                relatedDocumentsTitle = "Documentos relacionados",
+                nextStepTitle = "Siguiente paso recomendado",
+                stepByStepTitle = "Paso a paso",
+                diagramTitle = "Diagrama Mermaid",
             )
 
             private val FRENCH = Copy(
@@ -277,6 +352,13 @@ class GroundedAssistantEngine(
                     "d'autres termes (par exemple *authentification*, *recompenses*, *processus de release*), ou " +
                     "si tu preferes je peux creer un brouillon des maintenant — dis simplement " +
                     "\"cree un document sur ...\" et je prepare la structure initiale.",
+                overviewTitle = "Vue d'ensemble",
+                detailedExplanationTitle = "Explication detaillee",
+                keyDetailsTitle = "Points importants",
+                relatedDocumentsTitle = "Documents lies",
+                nextStepTitle = "Prochaine action recommandee",
+                stepByStepTitle = "Etape par etape",
+                diagramTitle = "Diagramme Mermaid",
             )
         }
     }

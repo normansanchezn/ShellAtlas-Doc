@@ -1,7 +1,9 @@
 package com.shelldocs.feature.documents.presentation
 
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.mvi.MviViewModel
+import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
@@ -63,7 +65,22 @@ class DocumentsViewModel(
             DocumentsIntent.ShowHistory -> showHistory()
             DocumentsIntent.HideHistory -> setState { copy(isHistoryVisible = false) }
             is DocumentsIntent.RestoreVersion -> restore(intent.versionId)
+            DocumentsIntent.StartCreatingDocument -> startCreatingDocument()
             is DocumentsIntent.CreateDocument -> create(intent.title)
+            is DocumentsIntent.NewDocumentTitleChanged ->
+                setState { copy(newDocumentTitle = intent.value) }
+            is DocumentsIntent.NewDocumentMarkdownChanged ->
+                setState { copy(newDocumentMarkdown = intent.value) }
+            DocumentsIntent.CancelNewDocument ->
+                setState {
+                    copy(
+                        isCreatingDocument = false,
+                        newDocumentTitle = "",
+                        newDocumentMarkdown = "",
+                        loadingMessage = null,
+                    )
+                }
+            DocumentsIntent.SubmitNewDocument -> submitNewDocument()
             DocumentsIntent.ToggleExplorerPanel -> setState { copy(isExplorerExpanded = !isExplorerExpanded) }
             DocumentsIntent.ToggleAttributesPanel -> setState { copy(isAttributesExpanded = !isAttributesExpanded) }
             DocumentsIntent.OpenAttributesEditor -> openAttributesEditor()
@@ -79,19 +96,30 @@ class DocumentsViewModel(
             is DocumentsIntent.AttributesTagsChanged ->
                 setState { copy(attributesDraft = attributesDraft.copy(tagsText = intent.value)) }
             DocumentsIntent.SaveAttributes -> persistAttributes()
+            DocumentsIntent.DismissError -> setState { copy(errorDialog = null) }
         }
     }
 
     private suspend fun initialize() {
-        setState { copy(isLoading = true, role = roleProvider()) }
-        val documents = getDocuments().getOrDefault(emptyList())
-        val tree = getDocumentTree().getOrDefault(null)
+        setState { copy(isLoading = true, loadingMessage = "Loading documents...", role = roleProvider(), errorDialog = null) }
+        val documentsResult = getDocuments()
+        val treeResult = getDocumentTree()
+        val documents = documentsResult.getOrDefault(emptyList())
+        val tree = treeResult.getOrDefault(null)
         setState {
             copy(
                 isLoading = false,
+                loadingMessage = null,
                 documents = documents,
                 tree = tree,
                 expandedFolders = tree?.children?.map { it.id }?.toSet().orEmpty() + setOfNotNull(tree?.id),
+                errorDialog = when {
+                    documentsResult is DomainResult.Failure ->
+                        documentsResult.error.toErrorDialogState("load the documents")
+                    treeResult is DomainResult.Failure ->
+                        treeResult.error.toErrorDialogState("load the document folders")
+                    else -> null
+                },
             )
         }
     }
@@ -118,7 +146,7 @@ class DocumentsViewModel(
                 editorMarkdown = "",
                 isHistoryVisible = false,
                 versions = emptyList(),
-                errorMessage = null,
+                errorDialog = null,
                 expandedFolders = expandedFolders + pathFolders,
                 isExplorerExpanded = false,
                 isAttributesExpanded = false,
@@ -139,56 +167,173 @@ class DocumentsViewModel(
     private fun startEditing() {
         val document = currentState.selectedDocument ?: return
         if (!currentState.canEdit) {
-            setState { copy(errorMessage = "Your role cannot edit documents") }
+            setState {
+                copy(
+                    errorDialog = com.shelldocs.core.common.error.AppError.Unauthorized()
+                        .toErrorDialogState("open the editor"),
+                )
+            }
             return
         }
         setState { copy(isEditing = true, editorMarkdown = document.rawMarkdown, draftMessage = null) }
     }
 
+    private fun startCreatingDocument() {
+        if (!currentState.canEdit) {
+            setState {
+                copy(
+                    errorDialog = com.shelldocs.core.common.error.AppError.Unauthorized()
+                        .toErrorDialogState("create a document"),
+                )
+            }
+            return
+        }
+        setState {
+            copy(
+                isCreatingDocument = true,
+                isEditing = false,
+                selectedDocument = null,
+                newDocumentTitle = "",
+                newDocumentMarkdown = "# Untitled document\n\n",
+                errorDialog = null,
+            )
+        }
+    }
+
     private suspend fun persistDraft() {
         val document = currentState.selectedDocument ?: return
+        setState { copy(loadingMessage = "Saving draft...", errorDialog = null, draftMessage = null) }
         saveDraft(document.id, currentState.editorMarkdown)
             .onSuccess { receipt ->
-                setState { copy(draftMessage = "Draft saved · ${receipt.contentHash.take(8)}") }
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        draftMessage = "Draft saved · ${receipt.contentHash.take(8)}",
+                    )
+                }
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("save your draft"),
+                    )
+                }
+            }
     }
 
     private suspend fun publish(changeSummary: String) {
         val document = currentState.selectedDocument ?: return
+        setState { copy(loadingMessage = "Publishing document...", errorDialog = null) }
         publishDocument(currentState.role, document.id, currentState.editorMarkdown, changeSummary)
             .onSuccess { published ->
                 refreshAfterMutation(selectedId = published.id)
-                setState { copy(isEditing = false, editorMarkdown = "", draftMessage = null) }
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        isEditing = false,
+                        editorMarkdown = "",
+                        draftMessage = null,
+                    )
+                }
                 sendEffect(DocumentsEffect.ShowNotice("Published \"${published.title}\""))
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("publish this document"),
+                    )
+                }
+            }
     }
 
     private suspend fun showHistory() {
         val document = currentState.selectedDocument ?: return
-        val versions = getVersions(document.id).getOrDefault(emptyList())
-        setState { copy(isHistoryVisible = true, versions = versions) }
+        setState { copy(loadingMessage = "Loading version history...", errorDialog = null) }
+        getVersions(document.id)
+            .onSuccess { versions ->
+                setState { copy(loadingMessage = null, isHistoryVisible = true, versions = versions) }
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("load the version history"),
+                    )
+                }
+            }
     }
 
     private suspend fun restore(versionId: String) {
         val document = currentState.selectedDocument ?: return
+        setState { copy(loadingMessage = "Restoring version...", errorDialog = null) }
         restoreVersion(currentState.role, document.id, versionId)
             .onSuccess { restored ->
                 refreshAfterMutation(selectedId = restored.id)
-                setState { copy(isHistoryVisible = false) }
+                setState { copy(loadingMessage = null, isHistoryVisible = false) }
                 sendEffect(DocumentsEffect.ShowNotice("Restored a previous version"))
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("restore this version"),
+                    )
+                }
+            }
     }
 
     private suspend fun create(title: String) {
+        setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
         createDocument(currentState.role, title, "# $title\n\n")
             .onSuccess { created ->
                 refreshAfterMutation(selectedId = created.id)
-                setState { copy(isEditing = true, editorMarkdown = created.rawMarkdown) }
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        isEditing = true,
+                        editorMarkdown = created.rawMarkdown,
+                    )
+                }
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("create a document"),
+                    )
+                }
+            }
+    }
+
+    private suspend fun submitNewDocument() {
+        val title = currentState.newDocumentTitle.trim().ifBlank { "Untitled document" }
+        val markdown = currentState.newDocumentMarkdown.trim().ifBlank { "# $title\n\n" }
+        setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
+        createDocument(currentState.role, title, markdown)
+            .onSuccess { created ->
+                refreshAfterMutation(selectedId = created.id)
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        isCreatingDocument = false,
+                        newDocumentTitle = "",
+                        newDocumentMarkdown = "",
+                        isEditing = true,
+                        editorMarkdown = created.rawMarkdown,
+                    )
+                }
+                sendEffect(DocumentsEffect.ShowNotice("Created \"${created.title}\""))
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("create a document"),
+                    )
+                }
+            }
     }
 
     private fun openAttributesEditor() {
@@ -218,10 +363,12 @@ class DocumentsViewModel(
             parentFolderId = document.attributes.parentFolderId,
             tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
         )
+        setState { copy(loadingMessage = "Saving attributes...", errorDialog = null) }
         updateAttributes(currentState.role, document.id, attributes)
             .onSuccess { updated ->
                 setState {
                     copy(
+                        loadingMessage = null,
                         isAttributesDialogOpen = false,
                         selectedDocument = updated,
                         documents = documents.map { if (it.id == updated.id) updated else it },
@@ -229,7 +376,14 @@ class DocumentsViewModel(
                 }
                 sendEffect(DocumentsEffect.ShowNotice("Attributes updated"))
             }
-            .onFailure { error -> setState { copy(errorMessage = error.message) } }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        loadingMessage = null,
+                        errorDialog = error.toErrorDialogState("save the document details"),
+                    )
+                }
+            }
     }
 
     private suspend fun refreshAfterMutation(selectedId: String) {
