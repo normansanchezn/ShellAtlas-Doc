@@ -93,6 +93,58 @@ class GroundedAssistantEngineTest {
     }
 
     @Test
+    fun spanishQuestionGetsSpanishAnswer() = runTest {
+        val answer = engine.answer(
+            question = "¿Cómo funciona la autenticación?",
+            intent = AssistantIntentType.QUESTION,
+            grounding = listOf(ScoredDocument(authDoc, 0.8)),
+        ).getOrNull()
+
+        assertNotNull(answer)
+        assertTrue("Esto es lo que dice" in answer.markdown)
+        assertTrue("Authentication" in answer.markdown)
+    }
+
+    @Test
+    fun frenchQuestionGetsFrenchAnswer() = runTest {
+        val answer = engine.answer(
+            question = "Comment fonctionne l'authentification ?",
+            intent = AssistantIntentType.QUESTION,
+            grounding = listOf(ScoredDocument(authDoc, 0.8)),
+        ).getOrNull()
+
+        assertNotNull(answer)
+        assertTrue("Voici ce que" in answer.markdown)
+        assertTrue("Authentication" in answer.markdown)
+    }
+
+    @Test
+    fun spanishNotEnoughInformationIsLocalized() = runTest {
+        val answer = engine.answer(
+            question = "¿Qué sabes sobre widgets cuánticos?",
+            intent = AssistantIntentType.QUESTION,
+            grounding = emptyList(),
+        ).getOrNull()
+
+        assertNotNull(answer)
+        assertEquals(AnswerConfidence.NOT_ENOUGH_INFORMATION, answer.confidence)
+        assertTrue("Todavia no tengo documentacion indexada" in answer.markdown)
+    }
+
+    @Test
+    fun frenchNotEnoughInformationIsLocalized() = runTest {
+        val answer = engine.answer(
+            question = "Parle-moi des widgets quantiques",
+            intent = AssistantIntentType.QUESTION,
+            grounding = emptyList(),
+        ).getOrNull()
+
+        assertNotNull(answer)
+        assertEquals(AnswerConfidence.NOT_ENOUGH_INFORMATION, answer.confidence)
+        assertTrue("Je n'ai pas encore de documentation indexee" in answer.markdown)
+    }
+
+    @Test
     fun summarizeListsKeyPoints() = runTest {
         val answer = engine.answer(
             question = "Summarize the loyalty rewards doc",

@@ -31,6 +31,7 @@ import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.repository.RoleRepository
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
+import com.shelldocs.core.domain.usecase.assistant.CreateDocumentFromAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.DetectAssistantIntentUseCase
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
@@ -173,6 +174,8 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
             retrieveGroundingDocuments = RetrieveGroundingDocumentsUseCase(documentRepository),
             engine = assistantEngine,
             cache = assistantCache,
+            createDocumentFromAssistant = CreateDocumentFromAssistantUseCase(CreateDocumentUseCase(documentRepository)),
+            roleProvider = ::currentRole,
         ),
         checkAvailability = CheckAssistantAvailabilityUseCase(assistantEngine),
         getConversations = GetConversationsUseCase(conversationRepository),

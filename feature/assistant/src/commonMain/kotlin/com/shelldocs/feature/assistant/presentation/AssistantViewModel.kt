@@ -11,6 +11,7 @@ import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
+import com.shelldocs.core.domain.usecase.assistant.BuildWelcomeMessageUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
@@ -26,6 +27,7 @@ class AssistantViewModel(
     private val timeProvider: TimeProvider,
     private val idGenerator: IdGenerator,
     dispatchers: DispatcherProvider,
+    private val buildWelcomeMessage: BuildWelcomeMessageUseCase = BuildWelcomeMessageUseCase(),
 ) : MviViewModel<AssistantIntent, AssistantState, AssistantEffect>(AssistantState(), dispatchers) {
 
     override suspend fun handleIntent(intent: AssistantIntent) {
@@ -35,7 +37,9 @@ class AssistantViewModel(
             AssistantIntent.SendQuestion -> send()
             is AssistantIntent.SelectConversation -> select(intent.conversationId)
             AssistantIntent.StartNewConversation ->
-                setState { copy(activeConversationId = null, messages = emptyList(), errorMessage = null) }
+                setState {
+                    copy(activeConversationId = null, messages = listOf(welcomeMessage()), errorMessage = null)
+                }
         }
     }
 
@@ -48,9 +52,18 @@ class AssistantViewModel(
                 availability = availability,
                 conversations = conversations,
                 indexedDocuments = documents.size,
+                messages = if (messages.isEmpty()) listOf(welcomeMessage()) else messages,
             )
         }
     }
+
+    @OptIn(ExperimentalTime::class)
+    private fun welcomeMessage(): AssistantMessage = AssistantMessage(
+        id = idGenerator.newId(),
+        role = MessageRole.ASSISTANT,
+        markdown = buildWelcomeMessage(),
+        createdAt = timeProvider.now(),
+    )
 
     private suspend fun select(conversationId: String) {
         val conversation = currentState.conversations.firstOrNull { it.id == conversationId } ?: return

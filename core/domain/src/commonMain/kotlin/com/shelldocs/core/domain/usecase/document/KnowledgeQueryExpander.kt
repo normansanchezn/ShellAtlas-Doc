@@ -11,6 +11,15 @@ internal object KnowledgeQueryExpander {
         "android release" to listOf("eosb", "build", "apk", "versioncode"),
         "deep link" to listOf("branch", "deeplinking", "uri", "intent"),
         "rewards" to listOf("loyalty", "points", "redemption", "shell go+"),
+        "onboarding" to listOf(
+            "kt", "knowledge transfer", "new collaborator", "getting started",
+            "authentication", "release process", "nuevo colaborador", "incorporación",
+            "nouveau collaborateur",
+        ),
+        "knowledge transfer" to listOf("onboarding", "authentication", "release process"),
+        "kt session" to listOf("onboarding", "authentication", "release process"),
+        "nuevo colaborador" to listOf("onboarding", "authentication", "release process"),
+        "nouveau collaborateur" to listOf("onboarding", "authentication", "release process"),
     )
 
     private val stopWords = setOf(

@@ -7,10 +7,12 @@ import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
 import com.shelldocs.core.domain.entity.assistant.ScoredDocument
+import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.fixtures.DocumentFixtures
 import com.shelldocs.core.domain.fixtures.FakeDocumentRepository
 import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
+import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -71,6 +73,8 @@ class AskAssistantUseCaseTest {
         retrieveGroundingDocuments = RetrieveGroundingDocumentsUseCase(repository),
         engine = engine,
         cache = cache,
+        createDocumentFromAssistant = CreateDocumentFromAssistantUseCase(CreateDocumentUseCase(repository)),
+        roleProvider = { UserRole.DEVELOP },
     )
 
     @Test
@@ -99,5 +103,16 @@ class AskAssistantUseCaseTest {
 
         assertEquals(AssistantIntentType.EXPLAIN_FLOW, engine.lastIntent)
         assertEquals(listOf("auth"), engine.lastGrounding.map { it.document.id })
+    }
+
+    @Test
+    fun createDocumentRequestBypassesEngineAndCreatesDraft() = runTest {
+        val answer = useCase("Create a document about onboarding").getOrNull()
+
+        assertNotNull(answer)
+        assertEquals(AssistantIntentType.CREATE_DOCUMENT, answer.intent)
+        assertEquals(0, engine.invocations)
+        assertEquals(1, answer.sources.size)
+        assertTrue(repository.stored.any { it.id == "created" })
     }
 }

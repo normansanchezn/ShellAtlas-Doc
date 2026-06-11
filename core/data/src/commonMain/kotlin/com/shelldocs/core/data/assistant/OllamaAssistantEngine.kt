@@ -59,7 +59,14 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
     ): String = buildString {
         appendLine("You are ShellDoc AI, the assistant of an enterprise knowledge platform.")
         appendLine("Answer ONLY with facts from the documentation excerpts below.")
-        appendLine("If the excerpts do not contain the answer, say you do not have enough information.")
+        appendLine(
+            "Reply in the same language the user wrote the question in (Spanish, French or English); " +
+                "default to English if unsure.",
+        )
+        appendLine(
+            "If the excerpts do not contain the answer, say so naturally in that language, suggest other " +
+                "search terms, and offer to create a draft document about the topic instead of a flat error.",
+        )
         when (intent) {
             AssistantIntentType.EXPLAIN_FLOW ->
                 appendLine("The user wants a step-by-step explanation of a flow or process; structure the answer as ordered steps.")
@@ -67,6 +74,8 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
                 appendLine("The user asks whether a document should be improved; judge it honestly and say no when it is healthy.")
             AssistantIntentType.SUMMARIZE ->
                 appendLine("The user wants a concise summary with key points.")
+            AssistantIntentType.CREATE_DOCUMENT ->
+                appendLine("The user wants a new document created; explain that you'll set up a draft.")
             AssistantIntentType.QUESTION -> Unit
         }
         appendLine()

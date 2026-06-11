@@ -19,16 +19,19 @@ import com.shelldocs.core.domain.entity.document.DocumentContent
 import com.shelldocs.core.domain.entity.document.DocumentStatus
 import com.shelldocs.core.domain.entity.document.DocumentVersion
 import com.shelldocs.core.domain.entity.document.DraftReceipt
+import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
 import com.shelldocs.core.domain.repository.ConversationRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
+import com.shelldocs.core.domain.usecase.assistant.CreateDocumentFromAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.DetectAssistantIntentUseCase
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.RetrieveGroundingDocumentsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
+import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -137,6 +140,8 @@ class AssistantViewModelTest {
                 retrieveGroundingDocuments = RetrieveGroundingDocumentsUseCase(documents),
                 engine = engine,
                 cache = NoopCache(),
+                createDocumentFromAssistant = CreateDocumentFromAssistantUseCase(CreateDocumentUseCase(documents)),
+                roleProvider = { UserRole.DEVELOP },
             ),
             checkAvailability = CheckAssistantAvailabilityUseCase(engine),
             getConversations = GetConversationsUseCase(conversations),
@@ -157,6 +162,20 @@ class AssistantViewModelTest {
 
         assertNotNull(viewModel.currentState.availability)
         assertEquals(1, viewModel.currentState.indexedDocuments)
+        viewModel.clear()
+    }
+
+    @Test
+    fun initializeShowsWelcomeMessageWhenNoMessagesYet() = runTest {
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(AssistantIntent.Initialize)
+        testScheduler.advanceUntilIdle()
+
+        val state = viewModel.currentState
+        assertEquals(1, state.messages.size)
+        assertEquals(MessageRole.ASSISTANT, state.messages[0].role)
+        assertTrue(state.messages[0].markdown.isNotBlank())
         viewModel.clear()
     }
 
@@ -203,8 +222,10 @@ class AssistantViewModelTest {
         viewModel.onIntent(AssistantIntent.StartNewConversation)
         testScheduler.advanceUntilIdle()
 
-        assertTrue(viewModel.currentState.messages.isEmpty())
-        assertEquals(null, viewModel.currentState.activeConversationId)
+        val state = viewModel.currentState
+        assertEquals(1, state.messages.size)
+        assertEquals(MessageRole.ASSISTANT, state.messages[0].role)
+        assertEquals(null, state.activeConversationId)
         viewModel.clear()
     }
 

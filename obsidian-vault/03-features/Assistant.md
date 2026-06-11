@@ -17,7 +17,7 @@ tags:
 
 ## Summary
 
-Deterministic grounded assistant for Q&A, flow explanation and improvement guidance.
+Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It always answers — never a bare "no information" error — and can turn a chat request into a new draft document.
 
 ## Related Files
 
@@ -29,6 +29,26 @@ Deterministic grounded assistant for Q&A, flow explanation and improvement guida
 
 Question -> intent detection -> grounding retrieval -> assistant engine -> cited answer.
 
+`CREATE_DOCUMENT` intent skips grounding/cache and goes straight to `CreateDocumentFromAssistantUseCase`, which creates a draft via `CreateDocumentUseCase` and confirms it back to the user with a link-style source.
+
+## Intents
+
+- `QUESTION`, `EXPLAIN_FLOW`, `IMPROVE_DOCUMENT`, `SUMMARIZE` — grounded answers from `GroundedAssistantEngine`.
+- `CREATE_DOCUMENT` — trigger phrases in EN/ES/FR ("create a document about...", "crea un documento sobre...", "cree un document sur..."); generates a titled draft with a Summary/Details/Open Questions skeleton and creates it via `CreateDocumentUseCase`. Respects `Permission.EDIT_DOCUMENTS` and explains in natural language when the role can't create.
+- Guided KT / onboarding requests ("onboarding", "knowledge transfer", "kt session", "nuevo colaborador", "nouveau collaborateur"...) are expanded by `KnowledgeQueryExpander` to `["onboarding", "authentication", "release process"]` and routed to `EXPLAIN_FLOW` via `DetectAssistantIntentUseCase` FLOW_MARKERS, so a new collaborator gets a step-by-step walkthrough grounded on the Authentication and Release Process docs.
+
+## Welcome Message
+
+- `BuildWelcomeMessageUseCase` returns a localized (EN/ES/FR, default ES) greeting shown by `AssistantViewModel` whenever `messages` is empty — on `Initialize` and on `StartNewConversation`.
+- The greeting tells the user it can: open/show a document, point to where to find documentation on a topic, share documentation analytics, walk through a guided KT for new collaborators, or create a new draft document.
+- No DI wiring needed: `BuildWelcomeMessageUseCase` has a no-arg constructor and `AssistantViewModel`'s `buildWelcomeMessage` param defaults to `BuildWelcomeMessageUseCase()`.
+
+## Multilingual Replies (EN/ES/FR)
+
+- `DetectAssistantLanguageUseCase` detects EN/ES/FR from diacritics and common function words (defaults to English; falls back to a caller-supplied default when no hints match).
+- `GroundedAssistantEngine` and `CreateDocumentFromAssistantUseCase` each hold a localized `Copy` table (EN/ES/FR) for every template string — questions, flow walkthroughs, improvement advice, summaries, "not enough information", and document-creation confirmations.
+- `OllamaAssistantEngine`'s prompt instructs the LLM to reply in the same language the user wrote in (EN/ES/FR), defaulting to English if unsure.
+
 ## Mermaid Diagram
 
 - [[KMM Recovery Flow]]
@@ -36,3 +56,4 @@ Question -> intent detection -> grounding retrieval -> assistant engine -> cited
 ## Development Notes
 
 - Alias expansion from the recovered Swift search logic is reused for grounding and search.
+- When no documents match, the assistant replies in the user's detected language (EN/ES/FR) with alternative search terms and offers to create a draft instead of returning a flat "no information" message.

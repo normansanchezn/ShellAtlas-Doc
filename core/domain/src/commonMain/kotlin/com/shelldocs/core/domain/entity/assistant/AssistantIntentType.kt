@@ -10,4 +10,5 @@ enum class AssistantIntentType {
     EXPLAIN_FLOW,
     IMPROVE_DOCUMENT,
     SUMMARIZE,
+    CREATE_DOCUMENT,
 }
