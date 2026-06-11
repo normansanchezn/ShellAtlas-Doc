@@ -1,0 +1,153 @@
+package com.shelldocs.feature.settings.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellRadius
+import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.settings.presentation.SettingsEffect
+import com.shelldocs.feature.settings.presentation.SettingsIntent
+import com.shelldocs.feature.settings.presentation.SettingsSection
+import com.shelldocs.feature.settings.presentation.SettingsViewModel
+
+/** Settings: section rail + the selected section's panel. */
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    isWide: Boolean,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+    onSignedOut: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val state by viewModel.state.collectAsState()
+    val colors = ShellTheme.colors
+
+    LaunchedEffect(viewModel) {
+        viewModel.onIntent(SettingsIntent.Initialize)
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                SettingsEffect.SignedOut -> onSignedOut()
+            }
+        }
+    }
+
+    Column(modifier = modifier.fillMaxSize().background(colors.background)) {
+        Column(modifier = Modifier.padding(ShellSpacing.lg)) {
+            Text("Settings", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
+            Text(
+                "Platform configuration and preferences",
+                style = ShellTheme.typography.caption,
+                color = colors.textMuted,
+            )
+        }
+        Row(modifier = Modifier.weight(1f)) {
+            if (isWide) {
+                SectionRail(
+                    selected = state.selectedSection,
+                    onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
+                    modifier = Modifier.width(180.dp).fillMaxHeight().padding(horizontal = ShellSpacing.lg),
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ShellSpacing.xl, vertical = ShellSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                if (!isWide) {
+                    SectionChipsRow(
+                        selected = state.selectedSection,
+                        onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
+                    )
+                }
+                when (state.selectedSection) {
+                    SettingsSection.GENERAL -> GeneralSection(
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        onSignOut = { viewModel.onIntent(SettingsIntent.SignOut) },
+                    )
+                    SettingsSection.AI_ASSISTANT -> AiAssistantSection()
+                    SettingsSection.TEAM_AND_ACCESS -> TeamAccessSection(
+                        state = state,
+                        onIntent = viewModel::onIntent,
+                    )
+                    SettingsSection.NOTIFICATIONS -> NotificationsSection(
+                        state = state,
+                        onIntent = viewModel::onIntent,
+                    )
+                    SettingsSection.INTEGRATIONS -> IntegrationsSection()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionRail(
+    selected: SettingsSection,
+    onSelect: (SettingsSection) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ShellTheme.colors
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        SettingsSection.entries.forEach { section ->
+            val isActive = section == selected
+            Text(
+                text = section.displayName,
+                style = ShellTheme.typography.label,
+                color = if (isActive) colors.brand else colors.textSecondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(ShellRadius.sm))
+                    .background(if (isActive) colors.surfaceSelected else colors.background)
+                    .clickable { onSelect(section) }
+                    .padding(horizontal = ShellSpacing.md, vertical = ShellSpacing.sm),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionChipsRow(
+    selected: SettingsSection,
+    onSelect: (SettingsSection) -> Unit,
+) {
+    val colors = ShellTheme.colors
+    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
+        SettingsSection.entries.forEach { section ->
+            val isActive = section == selected
+            Text(
+                text = section.displayName,
+                style = ShellTheme.typography.caption,
+                color = if (isActive) colors.onBrand else colors.textSecondary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(ShellRadius.full))
+                    .background(if (isActive) colors.brand else colors.surfaceSubtle)
+                    .clickable { onSelect(section) }
+                    .padding(horizontal = ShellSpacing.sm, vertical = ShellSpacing.xs),
+            )
+        }
+    }
+}

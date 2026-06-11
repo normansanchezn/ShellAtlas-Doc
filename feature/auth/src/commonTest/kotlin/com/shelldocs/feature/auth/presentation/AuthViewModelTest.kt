@@ -1,0 +1,129 @@
+package com.shelldocs.feature.auth.presentation
+
+import com.shelldocs.core.common.coroutines.DispatcherProvider
+import com.shelldocs.core.common.error.AppError
+import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.domain.entity.auth.AuthSession
+import com.shelldocs.core.domain.entity.auth.SignInCredentials
+import com.shelldocs.core.domain.entity.auth.UserProfile
+import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.repository.AuthRepository
+import com.shelldocs.core.domain.usecase.auth.SignInUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+private class StubAuthRepository(var result: DomainResult<AuthSession>) : AuthRepository {
+    private val mutableSession = MutableStateFlow<AuthSession?>(null)
+    override val session: StateFlow<AuthSession?> = mutableSession
+    override suspend fun signIn(credentials: SignInCredentials) = result
+    override suspend fun signOut() = DomainResult.success(Unit)
+    override suspend fun restoreSession(): DomainResult<AuthSession?> = DomainResult.success(null)
+}
+
+private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
+    override val main = dispatcher
+    override val default = dispatcher
+    override val io = dispatcher
+}
+
+private fun sampleSession() = AuthSession(
+    accessToken = "at",
+    refreshToken = "rt",
+    expiresAt = Instant.parse("2026-06-12T00:00:00Z"),
+    user = UserProfile("user-1", "elena.vargas@shell.com", "Elena Vargas", "iOS Shell App", UserRole.OWNER),
+)
+
+class AuthViewModelTest {
+
+    private fun viewModel(
+        repository: StubAuthRepository,
+        scheduler: kotlinx.coroutines.test.TestCoroutineScheduler,
+    ) = AuthViewModel(
+        signIn = SignInUseCase(repository),
+        dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
+    )
+
+    @Test
+    fun typingUpdatesStateAndClearsErrors() = runTest {
+        val viewModel = viewModel(StubAuthRepository(DomainResult.success(sampleSession())), testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("elena.vargas@shell.com"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret-123"))
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("elena.vargas@shell.com", viewModel.currentState.email)
+        assertTrue(viewModel.currentState.canSubmit)
+        viewModel.clear()
+    }
+
+    @Test
+    fun successfulSubmitEmitsNavigationEffect() = runTest {
+        val viewModel = viewModel(StubAuthRepository(DomainResult.success(sampleSession())), testScheduler)
+        var navigated: AuthEffect? = null
+        val job = launch { navigated = viewModel.effects.first() }
+        testScheduler.runCurrent()
+
+        viewModel.onIntent(AuthIntent.EmailChanged("elena.vargas@shell.com"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret-123"))
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+        job.join()
+
+        assertEquals(AuthEffect.NavigateToWorkspace, navigated)
+        assertFalse(viewModel.currentState.isLoading)
+        assertNull(viewModel.currentState.errorMessage)
+        viewModel.clear()
+    }
+
+    @Test
+    fun validationFailureSurfacesErrorWithoutNavigation() = runTest {
+        val viewModel = viewModel(StubAuthRepository(DomainResult.success(sampleSession())), testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("not-an-email"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret-123"))
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorMessage)
+        assertFalse(viewModel.currentState.isLoading)
+        viewModel.clear()
+    }
+
+    @Test
+    fun unauthorizedFailureShowsRepositoryMessage() = runTest {
+        val repository = StubAuthRepository(DomainResult.failure(AppError.Unauthorized("Invalid credentials")))
+        val viewModel = viewModel(repository, testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("elena.vargas@shell.com"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret-123"))
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("Invalid credentials", viewModel.currentState.errorMessage)
+        viewModel.clear()
+    }
+
+    @Test
+    fun submitIsIgnoredWhileFieldsAreEmpty() = runTest {
+        val viewModel = viewModel(StubAuthRepository(DomainResult.success(sampleSession())), testScheduler)
+
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.currentState.isLoading)
+        assertNull(viewModel.currentState.errorMessage)
+        viewModel.clear()
+    }
+}

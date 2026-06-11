@@ -1,0 +1,18 @@
+*.iml
+.gradle/
+.idea/
+.kotlin/
+build/
+captures/
+local.properties
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/
+.DS_Store
+*.hprof
+.konan/
+kotlin-js-store/
+
+# local env files
+.env*.local
+.env
