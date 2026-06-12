@@ -18,11 +18,14 @@ GITHUB_PRIVATE_KEY=
 ENCRYPTION_MASTER_KEY=
 ```
 
-The SwiftUI app may be configured with:
+The app shell now uses a shared profile contract:
 
 ```env
-SHELLDOC_API_BASE_URL=https://api.example.com
-SHELLDOC_API_BEARER_TOKEN=optional-user-session-token
+SHELLDOC_APP_ENVIRONMENT=DEV
+SHELLDOC_DEV_API_BASE_URL=http://127.0.0.1:8787
+SHELLDOC_DEV_API_BEARER_TOKEN=optional-user-session-token
+SHELLDOC_PROD_API_BASE_URL=https://api.example.com
+SHELLDOC_PROD_API_BEARER_TOKEN=optional-user-session-token
 ```
 
 Do not put `SUPABASE_SERVICE_ROLE_KEY`, Atlassian secrets, GitHub private keys, or encryption keys in the app.

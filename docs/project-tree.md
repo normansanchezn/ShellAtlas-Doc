@@ -1,6 +1,6 @@
 # ShellDoc Project Tree
 
-Updated: 2026-06-11
+Updated: 2026-06-12
 
 ## Overview
 
@@ -17,11 +17,11 @@ UI (Compose/SwiftUI host) -> Presentation (MVI) -> Domain <- Data
 ```text
 ShelEnterpriseDoc/
 ├── composeApp/                      ← Main multiplatform app shell
-│   ├── src/androidMain/             ← Android entrypoints
-│   ├── src/commonMain/              ← Shared app container + navigation
-│   ├── src/desktopMain/             ← Desktop host
-│   ├── src/iosMain/                 ← iOS bridge
-│   └── src/wasmJsMain/              ← Web/Wasm host
+│   ├── src/androidMain/             ← Android entrypoints + BuildConfig profile loader
+│   ├── src/commonMain/              ← Shared app container, navigation + runtime config contract
+│   ├── src/desktopMain/             ← Desktop host + .env/profile loader
+│   ├── src/iosMain/                 ← iOS bridge + process-env loader
+│   └── src/wasmJsMain/              ← Web/Wasm host + query-param loader
 ├── core/
 │   ├── common/                      ← Dispatchers, errors, MVI primitives, result types
 │   ├── domain/                      ← Entities, repository interfaces, use cases
@@ -128,7 +128,8 @@ Current feature responsibilities:
 
 Shared UX feedback pattern:
 
-- Async actions now surface progress through blocking loaders from `core/designsystem/molecules/ShellLoadingOverlay.kt`.
+- Async actions now surface progress through modal progress dialogs from `core/designsystem/molecules/ShellLoadingOverlay.kt`.
+- Empty and loading placeholders share the same feedback card frame through `core/designsystem/molecules/ShellFeedbackCard.kt`.
 - User-facing failures are translated from `AppError` into descriptive modal dialogs through `core/common/error/ErrorDialogState.kt` and `core/designsystem/molecules/ShellErrorDialog.kt`.
 - Base controls now keep full click targets (`ShellPrimaryButton`, `ShellGhostButton`) and higher-contrast cursors / Enter-submit behaviors (`ShellTextField`, assistant chat input, login form).
 

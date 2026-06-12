@@ -20,6 +20,9 @@ import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 class AssistantViewModel(
     private val askAssistant: AskAssistantUseCase,
@@ -55,9 +58,16 @@ class AssistantViewModel(
 
     private suspend fun initialize() {
         setState { copy(isInitializing = true, errorDialog = null) }
-        val availability = checkAvailability()
-        val conversations = getConversations().getOrDefault(emptyList())
-        val documents = getDocuments().getOrDefault(emptyList())
+        val (availability, conversations, documents) = coroutineScope {
+            val availabilityDeferred = async(dispatchers.io) { checkAvailability() }
+            val conversationsDeferred = async(dispatchers.io) { getConversations() }
+            val documentsDeferred = async(dispatchers.io) { getDocuments() }
+            Triple(
+                availabilityDeferred.await(),
+                conversationsDeferred.await().getOrDefault(emptyList()),
+                documentsDeferred.await().getOrDefault(emptyList()),
+            )
+        }
         setState {
             copy(
                 isInitializing = false,
@@ -111,7 +121,9 @@ class AssistantViewModel(
         }
         sendEffect(AssistantEffect.ScrollToLatestMessage)
 
-        askAssistant(question, language)
+        withContext(dispatchers.default) {
+            askAssistant(question, language)
+        }
             .onSuccess { answer ->
                 val assistantMessage = AssistantMessage(
                     id = idGenerator.newId(),
@@ -146,8 +158,12 @@ class AssistantViewModel(
             messages = snapshot.messages,
             updatedAt = timeProvider.now(),
         )
-        saveConversation(conversation)
-        val refreshed = getConversations().getOrDefault(snapshot.conversations)
+        withContext(dispatchers.io) {
+            saveConversation(conversation)
+        }
+        val refreshed = withContext(dispatchers.io) {
+            getConversations().getOrDefault(snapshot.conversations)
+        }
         setState { copy(activeConversationId = conversation.id, conversations = refreshed) }
     }
 

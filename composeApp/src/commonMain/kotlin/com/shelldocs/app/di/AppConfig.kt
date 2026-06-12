@@ -10,10 +10,11 @@ import com.shelldocs.core.data.supabase.SupabaseConfig
  * exactly like the Mock* sources of the original ShellEnterpriseDoc.
  */
 data class AppConfig(
+    val environment: AppEnvironment = AppEnvironment.DEV,
     val supabase: SupabaseConfig? = null,
     val api: ApiConfig? = null,
     val ollama: OllamaConfig = OllamaConfig(),
     val useOllama: Boolean = false,
 ) {
-    val isDemoMode: Boolean = supabase == null && api == null
+    val isDemoMode: Boolean = environment == AppEnvironment.DEV && supabase == null && api == null
 }

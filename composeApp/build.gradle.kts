@@ -120,14 +120,36 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0.0"
+    }
 
-        buildConfigField("String", "SUPABASE_URL", "\"${envOrDotEnv("SHELLDOC_SUPABASE_URL")}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${envOrDotEnv("SHELLDOC_SUPABASE_ANON_KEY")}\"")
-        buildConfigField("String", "API_BASE_URL", "\"${envOrDotEnv("SHELLDOC_API_BASE_URL")}\"")
-        buildConfigField("String", "API_BEARER_TOKEN", "\"${envOrDotEnv("SHELLDOC_API_BEARER_TOKEN")}\"")
-        buildConfigField("boolean", "USE_OLLAMA", envOrDotEnv("SHELLDOC_USE_OLLAMA").equals("true", ignoreCase = true).toString())
-        buildConfigField("String", "OLLAMA_BASE_URL", "\"${envOrDotEnv("SHELLDOC_OLLAMA_BASE_URL").ifBlank { "http://10.0.2.2:11434" }}\"")
-        buildConfigField("String", "OLLAMA_MODEL", "\"${envOrDotEnv("SHELLDOC_OLLAMA_MODEL").ifBlank { "llama3.1" }}\"")
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+
+            buildConfigField("String", "APP_ENVIRONMENT", "\"DEV\"")
+            buildConfigField("String", "SUPABASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_SUPABASE_URL").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_URL") }}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${envOrDotEnv("SHELLDOC_DEV_SUPABASE_ANON_KEY").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_ANON_KEY") }}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_API_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_API_BASE_URL") }}\"")
+            buildConfigField("String", "API_BEARER_TOKEN", "\"${envOrDotEnv("SHELLDOC_DEV_API_BEARER_TOKEN").ifBlank { envOrDotEnv("SHELLDOC_API_BEARER_TOKEN") }}\"")
+            buildConfigField("boolean", "USE_OLLAMA", envOrDotEnv("SHELLDOC_DEV_USE_OLLAMA").ifBlank { envOrDotEnv("SHELLDOC_USE_OLLAMA") }.equals("true", ignoreCase = true).toString())
+            buildConfigField("String", "OLLAMA_BASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_OLLAMA_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_BASE_URL").ifBlank { "http://10.0.2.2:11434" } }}\"")
+            buildConfigField("String", "OLLAMA_MODEL", "\"${envOrDotEnv("SHELLDOC_DEV_OLLAMA_MODEL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_MODEL").ifBlank { "llama3.1" } }}\"")
+        }
+        create("prod") {
+            dimension = "environment"
+
+            buildConfigField("String", "APP_ENVIRONMENT", "\"PROD\"")
+            buildConfigField("String", "SUPABASE_URL", "\"${envOrDotEnv("SHELLDOC_PROD_SUPABASE_URL").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_URL") }}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${envOrDotEnv("SHELLDOC_PROD_SUPABASE_ANON_KEY").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_ANON_KEY") }}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${envOrDotEnv("SHELLDOC_PROD_API_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_API_BASE_URL") }}\"")
+            buildConfigField("String", "API_BEARER_TOKEN", "\"${envOrDotEnv("SHELLDOC_PROD_API_BEARER_TOKEN").ifBlank { envOrDotEnv("SHELLDOC_API_BEARER_TOKEN") }}\"")
+            buildConfigField("boolean", "USE_OLLAMA", envOrDotEnv("SHELLDOC_PROD_USE_OLLAMA").ifBlank { envOrDotEnv("SHELLDOC_USE_OLLAMA") }.equals("true", ignoreCase = true).toString())
+            buildConfigField("String", "OLLAMA_BASE_URL", "\"${envOrDotEnv("SHELLDOC_PROD_OLLAMA_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_BASE_URL").ifBlank { "http://10.0.2.2:11434" } }}\"")
+            buildConfigField("String", "OLLAMA_MODEL", "\"${envOrDotEnv("SHELLDOC_PROD_OLLAMA_MODEL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_MODEL").ifBlank { "llama3.1" } }}\"")
+        }
     }
     buildTypes {
         release {

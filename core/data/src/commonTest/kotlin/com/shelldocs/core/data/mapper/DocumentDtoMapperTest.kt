@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.core.data.mapper
 
 import com.shelldocs.core.data.network.dto.ContentBlockDto

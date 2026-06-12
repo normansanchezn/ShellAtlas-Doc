@@ -65,4 +65,5 @@ When the detected intent is a flow/process explanation, `GroundedAssistantEngine
 - When no documents match, the assistant replies in the user's detected language (EN/ES/FR) with alternative search terms and offers to create a draft instead of returning a flat "no information" message.
 - `GroundedAssistantEngine` now answers with sections like overview, detailed explanation, key details, related documents and next steps, so the assistant no longer feels overly terse.
 - `AssistantMermaidBuilder` chooses `flowchart`, `sequenceDiagram` or `gantt` heuristically from the question and top grounding document.
+- Flow/process questions now explicitly prefer `flowchart`; `gantt` is reserved for requests that clearly ask for timeline/schedule/milestone style output.
 - `AssistantRichContent` parses Mermaid fences and renders a responsive Compose representation for flow, sequence and timeline diagrams inside `ChatMessageBubble`.

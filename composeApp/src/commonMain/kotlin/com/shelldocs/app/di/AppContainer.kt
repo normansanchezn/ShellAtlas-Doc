@@ -81,6 +81,12 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
 
     val navigator = AppNavigator()
 
+    init {
+        if (config.environment == AppEnvironment.PROD && config.api == null && config.supabase == null) {
+            error("ShellDoc PROD requires API or Supabase configuration")
+        }
+    }
+
     private val httpClient: HttpClient by lazy {
         HttpClient {
             install(ContentNegotiation) {

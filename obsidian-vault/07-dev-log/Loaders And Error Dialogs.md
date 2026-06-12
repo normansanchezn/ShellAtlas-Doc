@@ -13,14 +13,15 @@ tags:
 
 ## What changed
 
-- Added shared loading and error dialog primitives.
+- Added a shared modal progress dialog and a reusable feedback card surface.
 - Replaced inline error text in interactive features with modal dialogs.
-- Added blocking progress overlays for async actions.
+- Added blocking progress dialogs for strict async actions.
 - Disabled action buttons while operations are in flight.
 
 ## Files created
 
 - `core/common/.../ErrorDialogState.kt`
+- `core/designsystem/.../ShellFeedbackCard.kt`
 - `core/designsystem/.../ShellErrorDialog.kt`
 - `core/designsystem/.../ShellLoadingOverlay.kt`
 - `obsidian-vault/03-features/User Feedback Loaders and Error Dialogs.md`
@@ -40,6 +41,7 @@ tags:
 - User-facing failures should be modal and descriptive.
 - Error translation belongs in shared presentation/common code, not in repositories.
 - Loaders should be consistent across screens to avoid per-feature reinvention.
+- Placeholder states should share the same container so only the copy changes between loading, empty and error situations.
 
 ## Issues found
 

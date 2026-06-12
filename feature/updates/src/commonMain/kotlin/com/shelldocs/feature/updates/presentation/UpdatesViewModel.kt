@@ -7,6 +7,7 @@ import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
+import kotlinx.coroutines.withContext
 
 class UpdatesViewModel(
     private val getPendingUpdates: GetPendingUpdatesUseCase,
@@ -26,7 +27,9 @@ class UpdatesViewModel(
 
     private suspend fun load() {
         setState { copy(isLoading = true, errorDialog = null) }
-        getPendingUpdates()
+        withContext(dispatchers.default) {
+            getPendingUpdates()
+        }
             .onSuccess { updates -> setState { copy(isLoading = false, updates = updates) } }
             .onFailure { error ->
                 setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("load pending updates")) }
@@ -35,7 +38,9 @@ class UpdatesViewModel(
 
     private suspend fun scan() {
         setState { copy(isScanning = true, errorDialog = null) }
-        scanForUpdates()
+        withContext(dispatchers.default) {
+            scanForUpdates()
+        }
             .onSuccess { updates -> setState { copy(isScanning = false, updates = updates) } }
             .onFailure { error ->
                 setState { copy(isScanning = false, errorDialog = error.toErrorDialogState("scan for updates")) }

@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Base class of the unidirectional MVI loop:
@@ -28,6 +30,7 @@ abstract class MviViewModel<I : MviIntent, S : MviState, E : MviEffect>(
     protected val dispatchers: DispatcherProvider,
 ) {
     protected val scope: CoroutineScope = CoroutineScope(SupervisorJob() + dispatchers.main)
+    private val intentMutex = Mutex()
 
     private val mutableState = MutableStateFlow(initialState)
     val state: StateFlow<S> = mutableState.asStateFlow()
@@ -42,7 +45,11 @@ abstract class MviViewModel<I : MviIntent, S : MviState, E : MviEffect>(
 
     /** Single entry point used by the UI to dispatch intents. */
     fun onIntent(intent: I) {
-        scope.launch { handleIntent(intent) }
+        scope.launch {
+            intentMutex.withLock {
+                handleIntent(intent)
+            }
+        }
     }
 
     /** Translates an intent into state reductions and/or effects. */

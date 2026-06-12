@@ -21,10 +21,10 @@ import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
 import com.shelldocs.core.designsystem.icons.IconBookmark
-import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.icons.IconHistory
 import com.shelldocs.core.designsystem.icons.IconShare
+import com.shelldocs.core.designsystem.icons.IconLayers
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.Document
@@ -134,7 +134,7 @@ fun DocumentReaderPanel(
                         )
                     }
                     else -> CollapsedPanelRail(
-                        icon = IconChevronLeft,
+                        icon = IconLayers,
                         contentDescription = "Show attributes",
                         onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
                         modifier = Modifier.fillMaxHeight(),

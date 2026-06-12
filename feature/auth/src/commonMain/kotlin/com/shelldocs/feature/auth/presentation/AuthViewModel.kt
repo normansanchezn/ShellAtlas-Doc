@@ -7,6 +7,7 @@ import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.SignInCredentials
 import com.shelldocs.core.domain.usecase.auth.SignInUseCase
+import kotlinx.coroutines.withContext
 
 /**
  * MVI loop of the AUTH feature — the reference implementation of the
@@ -33,7 +34,9 @@ class AuthViewModel(
         val snapshot = currentState
         if (!snapshot.canSubmit) return
         setState { copy(isLoading = true, errorDialog = null) }
-        signIn(SignInCredentials(email = snapshot.email, password = snapshot.password))
+        withContext(dispatchers.io) {
+            signIn(SignInCredentials(email = snapshot.email, password = snapshot.password))
+        }
             .onSuccess {
                 setState { copy(isLoading = false) }
                 sendEffect(AuthEffect.NavigateToWorkspace)

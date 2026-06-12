@@ -25,10 +25,14 @@ internal object AssistantMermaidBuilder {
     }
 
     private fun detectType(question: String, document: Document): DiagramType {
-        val normalized = "$question ${document.title} ${document.summary}".lowercase()
+        val normalizedQuestion = question.lowercase()
+        val normalizedDocument = "${document.title} ${document.summary}".lowercase()
         return when {
-            TIMELINE_MARKERS.any { it in normalized } -> DiagramType.GANTT
-            INTERACTION_MARKERS.any { it in normalized } -> DiagramType.SEQUENCE
+            FLOW_MARKERS.any { it in normalizedQuestion } -> DiagramType.FLOWCHART
+            TIMELINE_MARKERS.any { it in normalizedQuestion } -> DiagramType.GANTT
+            INTERACTION_MARKERS.any { it in normalizedQuestion } -> DiagramType.SEQUENCE
+            INTERACTION_MARKERS.any { it in normalizedDocument } -> DiagramType.SEQUENCE
+            TIMELINE_MARKERS.any { it in normalizedDocument } -> DiagramType.GANTT
             else -> DiagramType.FLOWCHART
         }
     }
@@ -91,12 +95,18 @@ internal object AssistantMermaidBuilder {
         .take(42)
 
     private val TIMELINE_MARKERS = listOf(
-        "release", "timeline", "schedule", "calendar", "phase", "rollout", "pilot", "qa", "cutoff",
+        "timeline", "schedule", "calendar", "phase", "rollout", "cutoff", "roadmap", "milestone",
+        "cronograma", "calendario", "fechas", "fase", "fases", "hitos", "linea de tiempo",
     )
 
     private val INTERACTION_MARKERS = listOf(
         "auth", "authentication", "token", "api", "request", "response", "integration", "secret",
         "sync", "assistant", "service", "webhook",
+    )
+
+    private val FLOW_MARKERS = listOf(
+        "flow", "workflow", "process", "step by step", "how it works",
+        "flujo", "proceso", "paso a paso", "como funciona", "cómo funciona",
     )
 
     private const val MAX_STEPS = 5

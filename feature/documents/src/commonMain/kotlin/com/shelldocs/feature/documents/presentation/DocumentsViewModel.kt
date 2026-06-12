@@ -20,6 +20,9 @@ import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
 import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 class DocumentsViewModel(
@@ -102,8 +105,11 @@ class DocumentsViewModel(
 
     private suspend fun initialize() {
         setState { copy(isLoading = true, loadingMessage = "Loading documents...", role = roleProvider(), errorDialog = null) }
-        val documentsResult = getDocuments()
-        val treeResult = getDocumentTree()
+        val (documentsResult, treeResult) = coroutineScope {
+            val documentsDeferred = async(dispatchers.io) { getDocuments() }
+            val treeDeferred = async(dispatchers.default) { getDocumentTree() }
+            documentsDeferred.await() to treeDeferred.await()
+        }
         val documents = documentsResult.getOrDefault(emptyList())
         val tree = treeResult.getOrDefault(null)
         setState {
@@ -194,7 +200,7 @@ class DocumentsViewModel(
                 isEditing = false,
                 selectedDocument = null,
                 newDocumentTitle = "",
-                newDocumentMarkdown = "# Untitled document\n\n",
+                newDocumentMarkdown = "",
                 errorDialog = null,
             )
         }
@@ -203,7 +209,9 @@ class DocumentsViewModel(
     private suspend fun persistDraft() {
         val document = currentState.selectedDocument ?: return
         setState { copy(loadingMessage = "Saving draft...", errorDialog = null, draftMessage = null) }
-        saveDraft(document.id, currentState.editorMarkdown)
+        withContext(dispatchers.io) {
+            saveDraft(document.id, currentState.editorMarkdown)
+        }
             .onSuccess { receipt ->
                 setState {
                     copy(
@@ -225,7 +233,9 @@ class DocumentsViewModel(
     private suspend fun publish(changeSummary: String) {
         val document = currentState.selectedDocument ?: return
         setState { copy(loadingMessage = "Publishing document...", errorDialog = null) }
-        publishDocument(currentState.role, document.id, currentState.editorMarkdown, changeSummary)
+        withContext(dispatchers.io) {
+            publishDocument(currentState.role, document.id, currentState.editorMarkdown, changeSummary)
+        }
             .onSuccess { published ->
                 refreshAfterMutation(selectedId = published.id)
                 setState {
@@ -251,7 +261,9 @@ class DocumentsViewModel(
     private suspend fun showHistory() {
         val document = currentState.selectedDocument ?: return
         setState { copy(loadingMessage = "Loading version history...", errorDialog = null) }
-        getVersions(document.id)
+        withContext(dispatchers.default) {
+            getVersions(document.id)
+        }
             .onSuccess { versions ->
                 setState { copy(loadingMessage = null, isHistoryVisible = true, versions = versions) }
             }
@@ -268,7 +280,9 @@ class DocumentsViewModel(
     private suspend fun restore(versionId: String) {
         val document = currentState.selectedDocument ?: return
         setState { copy(loadingMessage = "Restoring version...", errorDialog = null) }
-        restoreVersion(currentState.role, document.id, versionId)
+        withContext(dispatchers.io) {
+            restoreVersion(currentState.role, document.id, versionId)
+        }
             .onSuccess { restored ->
                 refreshAfterMutation(selectedId = restored.id)
                 setState { copy(loadingMessage = null, isHistoryVisible = false) }
@@ -286,7 +300,9 @@ class DocumentsViewModel(
 
     private suspend fun create(title: String) {
         setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
-        createDocument(currentState.role, title, "# $title\n\n")
+        withContext(dispatchers.io) {
+            createDocument(currentState.role, title, "# $title\n\n")
+        }
             .onSuccess { created ->
                 refreshAfterMutation(selectedId = created.id)
                 setState {
@@ -308,10 +324,12 @@ class DocumentsViewModel(
     }
 
     private suspend fun submitNewDocument() {
-        val title = currentState.newDocumentTitle.trim().ifBlank { "Untitled document" }
-        val markdown = currentState.newDocumentMarkdown.trim().ifBlank { "# $title\n\n" }
+        val title = currentState.newDocumentTitle.trim()
+        val markdown = currentState.newDocumentMarkdown.trim().ifBlank { buildMarkdownForTitle(title) }
         setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
-        createDocument(currentState.role, title, markdown)
+        withContext(dispatchers.io) {
+            createDocument(currentState.role, title, markdown)
+        }
             .onSuccess { created ->
                 refreshAfterMutation(selectedId = created.id)
                 setState {
@@ -334,6 +352,12 @@ class DocumentsViewModel(
                     )
                 }
             }
+    }
+
+    private fun buildMarkdownForTitle(title: String): String = buildString {
+        append("# ")
+        append(title)
+        append("\n\n")
     }
 
     private fun openAttributesEditor() {
@@ -364,7 +388,9 @@ class DocumentsViewModel(
             tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
         )
         setState { copy(loadingMessage = "Saving attributes...", errorDialog = null) }
-        updateAttributes(currentState.role, document.id, attributes)
+        withContext(dispatchers.io) {
+            updateAttributes(currentState.role, document.id, attributes)
+        }
             .onSuccess { updated ->
                 setState {
                     copy(
@@ -387,8 +413,12 @@ class DocumentsViewModel(
     }
 
     private suspend fun refreshAfterMutation(selectedId: String) {
-        val documents = getDocuments().getOrDefault(currentState.documents)
-        val tree = getDocumentTree().getOrDefault(currentState.tree)
+        val documents = withContext(dispatchers.io) {
+            getDocuments().getOrDefault(currentState.documents)
+        }
+        val tree = withContext(dispatchers.default) {
+            getDocumentTree().getOrDefault(currentState.tree)
+        }
         setState {
             copy(
                 documents = documents,

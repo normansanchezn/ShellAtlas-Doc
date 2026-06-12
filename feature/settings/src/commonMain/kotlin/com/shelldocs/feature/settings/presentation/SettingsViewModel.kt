@@ -10,6 +10,7 @@ import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.usecase.auth.AssignRoleUseCase
 import com.shelldocs.core.domain.usecase.auth.GetTeamMembersUseCase
 import com.shelldocs.core.domain.usecase.auth.SignOutUseCase
+import kotlinx.coroutines.withContext
 
 class SettingsViewModel(
     private val getTeamMembers: GetTeamMembersUseCase,
@@ -43,7 +44,9 @@ class SettingsViewModel(
 
     private suspend fun initialize() {
         setState { copy(loadingMessage = "Loading settings...", errorDialog = null) }
-        getTeamMembers()
+        withContext(dispatchers.io) {
+            getTeamMembers()
+        }
             .onSuccess { members ->
                 setState {
                     copy(
@@ -66,9 +69,13 @@ class SettingsViewModel(
 
     private suspend fun delegateRole(userId: String, newRole: UserRole) {
         setState { copy(loadingMessage = "Updating team access...", errorDialog = null, saveMessage = null) }
-        assignRole(actorRole = currentState.role, targetUserId = userId, newRole = newRole)
+        withContext(dispatchers.io) {
+            assignRole(actorRole = currentState.role, targetUserId = userId, newRole = newRole)
+        }
             .onSuccess {
-                val members = getTeamMembers().getOrDefault(currentState.members)
+                val members = withContext(dispatchers.io) {
+                    getTeamMembers().getOrDefault(currentState.members)
+                }
                 setState { copy(loadingMessage = null, members = members) }
             }
             .onFailure { error ->
@@ -88,7 +95,9 @@ class SettingsViewModel(
 
     private suspend fun signOut() {
         setState { copy(loadingMessage = "Signing out...", errorDialog = null) }
-        signOut.invoke()
+        withContext(dispatchers.io) {
+            signOut.invoke()
+        }
             .onSuccess {
                 setState { copy(loadingMessage = null) }
                 sendEffect(SettingsEffect.SignedOut)

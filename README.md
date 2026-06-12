@@ -85,27 +85,52 @@ open iosApp/iosApp.xcodeproj                       # iOS (run the iosApp scheme)
 ```
 
 Without configuration the app boots in **demo mode** (seeded in-memory data, any valid
-credentials sign in as the workspace owner). Point it at real services by passing an
-`AppConfig(supabase = SupabaseConfig(...), api = ApiConfig(...), useOllama = true)` to `App()`.
+credentials sign in as the workspace owner). Runtime configuration is now normalized through
+`AppEnvironment`:
 
-For the desktop app you can also use a root `.env` file:
+- `DEV` or `PROD` are resolved on every target.
+- `DEV` prefers local URLs and local API endpoints.
+- `PROD` prefers release URLs and release tokens.
+
+The shared example file is:
 
 ```bash
 cp .env.example .env
 ```
 
-Set at least:
+Minimum local setup:
 
 ```bash
-SHELLDOC_SUPABASE_URL=http://127.0.0.1:54321
-SHELLDOC_SUPABASE_ANON_KEY=your-local-anon-key
+SHELLDOC_APP_ENVIRONMENT=DEV
+SHELLDOC_DEV_SUPABASE_URL=http://127.0.0.1:54321
+SHELLDOC_DEV_SUPABASE_ANON_KEY=your-local-anon-key
+SHELLDOC_DEV_API_BASE_URL=http://127.0.0.1:8787
 ```
 
-If those values are absent, the app stays in demo mode and accepts any valid email plus an
-8+ character password.
+Platform loaders:
+
+- Android reads Gradle `BuildConfig` values and uses `dev` / `prod` flavors.
+- Desktop reads `.env` or process env.
+- iOS reads process env from the Xcode scheme or archive configuration.
+- Web/Wasm reads query parameters from the app URL.
+
+If those values are absent, `DEV` stays in demo mode and accepts any valid email plus an
+8+ character password. `PROD` expects release config and fails fast if the backend endpoints
+are missing.
 
 On Android emulators, `127.0.0.1` / `localhost` are rewritten automatically to `10.0.2.2`
-so the app can reach the host machine's local Supabase services.
+so the app can reach the host machine's local services.
+
+Android release bundles are split by flavor:
+
+```bash
+./gradlew :composeApp:bundleDevRelease
+./gradlew :composeApp:bundleProdRelease
+```
+
+Desktop releases should ship with an `.env` or launcher-supplied environment values.
+iOS releases should ship with the same variables in the scheme or archive configuration.
+Web releases should inject the variables in the deployment URL or host config.
 
 Project documentation and ADRs live in `obsidian-vault/` and `docs/project-tree.md`.
 

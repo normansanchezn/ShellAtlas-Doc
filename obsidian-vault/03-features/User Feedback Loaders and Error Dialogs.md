@@ -30,16 +30,18 @@ Users could trigger saves, refreshes, scans, syncs or assistant requests without
 
 ## Expected Behavior
 
-- Every async action shows a visible loader.
+- Every strict async action shows a modal progress dialog.
 - Every failure opens a modal dialog with product-language copy.
 - Buttons are disabled while the related action is in progress.
 - Inline error text is removed from feature screens.
+- Empty, loading and error placeholders share the same visual frame; only the copy changes per state.
 - Interactive controls feel reliable: the whole button surface is clickable, cursor contrast is visible, and Enter submits high-intent forms like login and assistant chat.
 
 ## Related Files
 
 - `core/common/src/commonMain/kotlin/com/shelldocs/core/common/error/ErrorDialogState.kt`
 - `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/molecules/ShellLoadingOverlay.kt`
+- `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/molecules/ShellFeedbackCard.kt`
 - `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/molecules/ShellErrorDialog.kt`
 - `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth`
 - `feature/dashboard/src/commonMain/kotlin/com/shelldocs/feature/dashboard`
@@ -86,6 +88,7 @@ Not applicable in the current KMM implementation. The product uses Compose Multi
 
 - `ShellGhostButton`
 - `ShellPrimaryButton`
+- `ShellFeedbackCard`
 - `ShellDialog`
 - `ShellLoadingOverlay`
 - `ShellErrorDialog`
@@ -105,7 +108,8 @@ Referenced note: `obsidian-vault/08-diagrams/User Feedback Flow.md`
 ## Development Notes
 
 - `AppError` is translated to `ErrorDialogState` through a shared mapper.
-- Long-running actions use a screen overlay so the user always sees that the request is still active.
+- Long-running actions use a blocking progress dialog so the user always sees that the request is still active when interaction must pause.
+- Empty states reuse the same feedback card container as loading states to keep placeholder treatment uniform across screens.
 - Assistant answering keeps the typing indicator and also gets dialog-based failure handling.
 - `ShellPrimaryButton` and `ShellGhostButton` now center content and keep the full visible button area clickable.
 - `ShellTextField` now exposes a stronger cursor color, focused border state and optional submit callback so login and single-line actions can react to Enter.

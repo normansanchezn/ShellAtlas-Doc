@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.core.data.assistant
 
 import com.shelldocs.core.common.result.getOrNull
@@ -22,6 +24,7 @@ class GroundedAssistantEngineTest {
     )
 
     private val authDoc = DemoSeed.documents.first { it.id == "doc-authentication" }
+    private val eosbDoc = DemoSeed.documents.first { it.id == "doc-release-process" }
     private val loyaltyDoc = DemoSeed.documents.first { it.id == "doc-loyalty" }
 
     @Test
@@ -51,6 +54,19 @@ class GroundedAssistantEngineTest {
         assertTrue("step by step" in answer.markdown)
         assertTrue("1. **" in answer.markdown)
         assertTrue("Token Lifecycle" in answer.markdown)
+    }
+
+    @Test
+    fun processQuestionsPreferFlowchartOverTimelineDiagram() = runTest {
+        val answer = engine.answer(
+            question = "Explica el flujo del proceso EoSB1 paso a paso",
+            intent = AssistantIntentType.EXPLAIN_FLOW,
+            grounding = listOf(ScoredDocument(eosbDoc, 0.9)),
+        ).getOrNull()
+
+        assertNotNull(answer)
+        assertTrue("```mermaid\nflowchart TD" in answer.markdown)
+        assertTrue("gantt" !in answer.markdown)
     }
 
     @Test

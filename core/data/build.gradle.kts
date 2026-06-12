@@ -1,3 +1,5 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
@@ -24,6 +26,11 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
+        }
+        commonTest {
+            languageSettings {
+                optIn("kotlin.time.ExperimentalTime")
+            }
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

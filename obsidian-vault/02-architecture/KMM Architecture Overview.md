@@ -31,6 +31,8 @@ ShellDoc uses Clean Architecture and MVI in a Kotlin Multiplatform layout.
 
 Domain rules own search, retrieval and health heuristics. Data repositories provide deterministic demo content today and can be replaced by remote adapters later.
 
+Runtime configuration is now normalized through `AppEnvironment` and platform loaders so the same app can ship DEV and PROD bundles without duplicating business logic.
+
 ## Mermaid Diagram
 
 - [[Architecture Diagram]]
@@ -40,3 +42,4 @@ Domain rules own search, retrieval and health heuristics. Data repositories prov
 ## Open Questions
 
 - Which future live integrations should land first after the demo phase?
+- Should the release config contract move to a signed manifest after the MVP?

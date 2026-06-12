@@ -69,7 +69,7 @@ private class FakeDocsRepository : DocumentRepository {
     override suspend fun search(query: String) =
         DomainResult.success(docs.values.filter { it.title.contains(query, true) })
     override suspend fun create(title: String, markdown: String, parentFolderId: String?): DomainResult<Document> {
-        val created = document("doc-created", title)
+        val created = document("doc-created", title).copy(rawMarkdown = markdown)
         docs[created.id] = created
         return DomainResult.success(created)
     }
@@ -217,6 +217,24 @@ class DocumentsViewModelTest {
         viewModel.onIntent(DocumentsIntent.ToggleFolder("root"))
         testScheduler.advanceUntilIdle()
         assertFalse("root" in viewModel.currentState.expandedFolders)
+        viewModel.clear()
+    }
+
+    @Test
+    fun submitNewDocumentUsesTypedTitle() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DocumentsIntent.Initialize)
+        testScheduler.advanceUntilIdle()
+        viewModel.onIntent(DocumentsIntent.StartCreatingDocument)
+        testScheduler.advanceUntilIdle()
+        viewModel.onIntent(DocumentsIntent.NewDocumentTitleChanged("Project playbook"))
+        testScheduler.advanceUntilIdle()
+        viewModel.onIntent(DocumentsIntent.SubmitNewDocument)
+        testScheduler.advanceUntilIdle()
+
+        val created = repository.docs.getValue("doc-created")
+        assertEquals("Project playbook", created.title)
+        assertTrue(created.rawMarkdown.startsWith("# Project playbook"))
         viewModel.clear()
     }
 }

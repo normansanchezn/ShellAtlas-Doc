@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellRadius
 
 /** Thin draggable divider between two side-by-side panels. */
 @Composable
@@ -26,15 +27,25 @@ fun ResizeHandle(onDrag: (Float) -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .width(4.dp)
+            .width(10.dp)
+            .resizeHorizontalPointer()
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
                     onDrag(dragAmount.x)
                 }
             }
-            .background(colors.border),
-    )
+            .background(colors.background),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(2.dp)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(ShellRadius.full))
+                .background(colors.border.copy(alpha = 0.14f)),
+        )
+    }
 }
 
 /** Narrow rail shown instead of a collapsed panel, with a button to expand it again. */
@@ -49,19 +60,23 @@ fun CollapsedPanelRail(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .width(28.dp)
-            .background(colors.surface),
-        contentAlignment = Alignment.TopCenter,
+            .width(22.dp)
+            .background(colors.surfaceSubtle),
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .padding(top = 12.dp)
-                .size(24.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .size(20.dp)
+                .clip(RoundedCornerShape(ShellRadius.sm))
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(imageVector = icon, contentDescription = contentDescription, tint = colors.textMuted)
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = colors.textMuted,
+                modifier = Modifier.size(13.dp),
+            )
         }
     }
 }

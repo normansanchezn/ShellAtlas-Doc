@@ -17,12 +17,13 @@ flowchart TD
     A["User action"] --> B["ViewModel intent handler"]
     B --> C["UseCase execution"]
     C --> D{"Result"}
-    D -->|Success| E["Clear loader state"]
+    D -->|Success| E["Clear loading state"]
     D -->|Failure| F["Map AppError to ErrorDialogState"]
-    B --> G["Set loading message"]
-    G --> H["ShellLoadingOverlay"]
+    B --> G["Set blocking progress state when needed"]
+    G --> H["ShellLoadingOverlay as modal dialog"]
     F --> I["ShellErrorDialog"]
     E --> J["Updated UI state"]
     H --> J
     I --> J
+    J --> K["Shared placeholder frame for empty/loading/error states"]
 ```

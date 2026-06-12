@@ -29,5 +29,5 @@ Authentication and role management entry flow for ShellDoc.
 
 - Current behavior remains safe demo auth by default.
 - Future Supabase-backed auth stays behind the same repository contracts.
-- Desktop runtime can now read `SHELLDOC_SUPABASE_URL` and `SHELLDOC_SUPABASE_ANON_KEY` from a root `.env` file.
+- Desktop runtime can now read `SHELLDOC_DEV_SUPABASE_URL` and `SHELLDOC_DEV_SUPABASE_ANON_KEY` from a root `.env` file, with `SHELLDOC_APP_ENVIRONMENT=DEV` selecting the local profile.
 - The sign-in screen now explains demo-mode credentials when live config is absent.

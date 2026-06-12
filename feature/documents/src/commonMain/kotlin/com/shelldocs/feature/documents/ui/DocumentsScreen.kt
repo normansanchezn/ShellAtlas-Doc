@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.shelldocs.core.designsystem.icons.IconChevronRight
+import com.shelldocs.core.designsystem.icons.IconFolder
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.molecules.ShellEmptyState
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
@@ -71,33 +71,28 @@ fun DocumentsScreen(
             )
         } else {
             Row(modifier = Modifier.fillMaxSize()) {
-                if (isWide) {
-                    if (state.isExplorerExpanded) {
-                        ExplorerTreePanel(
-                            state = state,
-                            onIntent = viewModel::onIntent,
-                            modifier = Modifier.width(explorerWidth).fillMaxHeight(),
-                        )
+                if (state.isExplorerExpanded) {
+                    ExplorerTreePanel(
+                        state = state,
+                        onIntent = viewModel::onIntent,
+                        modifier = Modifier.width(if (isWide) explorerWidth else EXPLORER_DEFAULT_WIDTH).fillMaxHeight(),
+                    )
+                    if (isWide) {
                         ResizeHandle(
                             onDrag = { deltaPx ->
                                 explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
                             },
                         )
+                    }
                     } else {
                         CollapsedPanelRail(
-                            icon = IconChevronRight,
+                            icon = IconFolder,
                             contentDescription = "Show explorer",
                             onClick = { viewModel.onIntent(DocumentsIntent.ToggleExplorerPanel) },
                             modifier = Modifier.fillMaxHeight(),
                         )
                     }
-                }
-                DocumentListPanel(
-                    state = state,
-                    onIntent = viewModel::onIntent,
-                    modifier = Modifier.width(if (isWide) 250.dp else 230.dp).fillMaxHeight(),
-                )
-                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     val selected = state.selectedDocument
                     if (selected == null) {
                         ShellEmptyState(

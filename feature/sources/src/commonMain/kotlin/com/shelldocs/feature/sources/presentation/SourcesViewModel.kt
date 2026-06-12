@@ -11,6 +11,9 @@ import com.shelldocs.core.domain.repository.SourcesRepository
 import com.shelldocs.core.domain.usecase.source.GetSourcesUseCase
 import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
 import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class SourcesViewModel(
     private val getSources: GetSourcesUseCase,
@@ -32,8 +35,11 @@ class SourcesViewModel(
 
     private suspend fun load() {
         setState { copy(isLoading = true, errorDialog = null) }
-        val sourcesResult = getSources()
-        val logResult = getSyncLog()
+        val (sourcesResult, logResult) = coroutineScope {
+            val sourcesDeferred = async(dispatchers.io) { getSources() }
+            val logDeferred = async(dispatchers.io) { getSyncLog() }
+            sourcesDeferred.await() to logDeferred.await()
+        }
         setState {
             copy(
                 isLoading = false,
@@ -59,7 +65,9 @@ class SourcesViewModel(
                 errorDialog = null,
             )
         }
-        syncSource(roleProvider(), sourceId)
+        withContext(dispatchers.io) {
+            syncSource(roleProvider(), sourceId)
+        }
             .onSuccess { synced ->
                 refreshSource(synced.id)
                 sendEffect(SourcesEffect.ShowNotice("${synced.kind.displayName} synced"))
@@ -77,7 +85,9 @@ class SourcesViewModel(
     private suspend fun reconnect(sourceId: String) {
         val sourceName = currentState.sources.firstOrNull { it.id == sourceId }?.kind?.displayName ?: "integration"
         setState { copy(loadingMessage = "Reconnecting $sourceName...", errorDialog = null) }
-        sourcesRepository.reconnect(sourceId)
+        withContext(dispatchers.io) {
+            sourcesRepository.reconnect(sourceId)
+        }
             .onSuccess { reconnected ->
                 refreshSource(reconnected.id)
                 sendEffect(SourcesEffect.ShowNotice("${reconnected.kind.displayName} reconnected"))
@@ -93,8 +103,8 @@ class SourcesViewModel(
     }
 
     private suspend fun refreshSource(sourceId: String) {
-        val sources = getSources().getOrDefault(currentState.sources)
-        val log = getSyncLog().getOrDefault(currentState.syncLog)
+        val sources = withContext(dispatchers.io) { getSources().getOrDefault(currentState.sources) }
+        val log = withContext(dispatchers.io) { getSyncLog().getOrDefault(currentState.syncLog) }
         setState { copy(sources = sources, syncLog = log) }
     }
 }
