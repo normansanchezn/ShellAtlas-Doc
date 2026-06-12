@@ -35,7 +35,7 @@ fun ShellMetricCard(
     deltaColor: Color = ShellTheme.colors.success,
 ) {
     val colors = ShellTheme.colors
-    ShellCard(modifier = modifier) {
+    ShellCard(elevated = true, modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth().padding(ShellSpacing.lg)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

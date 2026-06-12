@@ -28,9 +28,11 @@ import com.shelldocs.feature.sources.ui.SourcesScreen
 import com.shelldocs.feature.updates.ui.UpdatesScreen
 
 /**
- * Authenticated workspace. Above [WIDE_LAYOUT_MIN_WIDTH_DP] the Figma
- * desktop shell renders (sidebar + content); below it the layout collapses
- * to content + bottom navigation for phones.
+ * Authenticated workspace with three layouts: above [WIDE_LAYOUT_MIN_WIDTH_DP]
+ * the full desktop shell renders (sidebar + content); between
+ * [RAIL_LAYOUT_MIN_WIDTH_DP] and that, a compact icon rail for tablets;
+ * below [RAIL_LAYOUT_MIN_WIDTH_DP] the layout collapses to content + bottom
+ * navigation for phones.
  */
 @Composable
 fun WorkspaceShell(
@@ -45,48 +47,81 @@ fun WorkspaceShell(
     val route by container.navigator.route.collectAsState()
     val session by container.authRepository.session.collectAsState()
     val isWide = availableWidthDp >= WIDE_LAYOUT_MIN_WIDTH_DP
+    val isRail = !isWide && availableWidthDp >= RAIL_LAYOUT_MIN_WIDTH_DP
+    // Content next to the rail counts as "wide" once it has room for a
+    // multi-column layout on its own (rail takes 72dp off the width).
+    val isRailContentWide = isRail && (availableWidthDp - 72) >= CONTENT_WIDE_MIN_WIDTH_DP
     var searchQuery by remember { mutableStateOf("") }
 
-    if (isWide) {
-        Row(modifier = modifier.fillMaxSize().background(colors.background)) {
-            WorkspaceSidebar(
-                activeRoute = route,
-                pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
-                user = session?.user,
-                isDarkTheme = isDarkTheme,
-                searchQuery = searchQuery,
-                onSearchChange = { searchQuery = it },
-                onNavigate = container.navigator::navigate,
-                onToggleTheme = onToggleTheme,
-            )
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight()
-                    .background(colors.border),
-            )
-            RouteContent(
-                container = container,
-                route = route,
-                isWide = true,
-                isDarkTheme = isDarkTheme,
-                onToggleTheme = onToggleTheme,
-                onSignedOut = onSignedOut,
-                modifier = Modifier.fillMaxSize(),
-            )
+    when {
+        isWide -> {
+            Row(modifier = modifier.fillMaxSize().background(colors.background)) {
+                WorkspaceSidebar(
+                    activeRoute = route,
+                    pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                    user = session?.user,
+                    isDarkTheme = isDarkTheme,
+                    searchQuery = searchQuery,
+                    onSearchChange = { searchQuery = it },
+                    onNavigate = container.navigator::navigate,
+                    onToggleTheme = onToggleTheme,
+                )
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(colors.border),
+                )
+                RouteContent(
+                    container = container,
+                    route = route,
+                    isWide = true,
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = onToggleTheme,
+                    onSignedOut = onSignedOut,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
-    } else {
-        Column(modifier = modifier.fillMaxSize().background(colors.background)) {
-            RouteContent(
-                container = container,
-                route = route,
-                isWide = false,
-                isDarkTheme = isDarkTheme,
-                onToggleTheme = onToggleTheme,
-                onSignedOut = onSignedOut,
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            )
-            WorkspaceBottomBar(activeRoute = route, onNavigate = container.navigator::navigate)
+        isRail -> {
+            Row(modifier = modifier.fillMaxSize().background(colors.background)) {
+                WorkspaceRail(
+                    activeRoute = route,
+                    pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                    isDarkTheme = isDarkTheme,
+                    onNavigate = container.navigator::navigate,
+                    onToggleTheme = onToggleTheme,
+                )
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(colors.border),
+                )
+                RouteContent(
+                    container = container,
+                    route = route,
+                    isWide = isRailContentWide,
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = onToggleTheme,
+                    onSignedOut = onSignedOut,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        else -> {
+            Column(modifier = modifier.fillMaxSize().background(colors.background)) {
+                RouteContent(
+                    container = container,
+                    route = route,
+                    isWide = false,
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = onToggleTheme,
+                    onSignedOut = onSignedOut,
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                )
+                WorkspaceBottomBar(activeRoute = route, onNavigate = container.navigator::navigate)
+            }
         }
     }
 }
@@ -148,5 +183,11 @@ private fun RouteContent(
 }
 
 const val WIDE_LAYOUT_MIN_WIDTH_DP = 840
+
+/** Below this, phones get the bottom bar; at/above it, tablets get the icon rail. */
+const val RAIL_LAYOUT_MIN_WIDTH_DP = 600
+
+/** Minimum content width (next to the rail) for screens to use multi-column layouts. */
+private const val CONTENT_WIDE_MIN_WIDTH_DP = 700
 
 private const val PENDING_BADGE_PLACEHOLDER = 12

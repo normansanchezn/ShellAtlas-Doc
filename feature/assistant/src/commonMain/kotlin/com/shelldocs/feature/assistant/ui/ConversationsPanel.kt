@@ -1,5 +1,7 @@
 package com.shelldocs.feature.assistant.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +22,7 @@ import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.IconPlus
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.assistant.Conversation
@@ -51,19 +55,29 @@ fun ConversationsPanel(
             items(conversations.size, key = { conversations[it].id }) { index ->
                 val conversation = conversations[index]
                 val isActive = conversation.id == activeConversationId
+                val background by animateColorAsState(
+                    targetValue = if (isActive) colors.surfaceSelected else colors.surface,
+                    animationSpec = tween(ShellMotion.durationMedium),
+                    label = "conversationItemBackground",
+                )
+                val titleColor by animateColorAsState(
+                    targetValue = if (isActive) colors.brand else colors.textSecondary,
+                    animationSpec = tween(ShellMotion.durationMedium),
+                    label = "conversationItemTitle",
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = ShellSpacing.sm, vertical = 1.dp)
                         .clip(RoundedCornerShape(ShellRadius.sm))
-                        .background(if (isActive) colors.surfaceSelected else colors.surface)
+                        .background(background)
                         .clickable { onSelect(conversation.id) }
                         .padding(horizontal = ShellSpacing.sm, vertical = 6.dp),
                 ) {
                     Text(
                         text = conversation.title,
                         style = ShellTheme.typography.label,
-                        color = if (isActive) colors.brand else colors.textSecondary,
+                        color = titleColor,
                         maxLines = 1,
                     )
                     Text(

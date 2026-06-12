@@ -1,8 +1,13 @@
 package com.shelldocs.core.designsystem.atoms
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
@@ -14,12 +19,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
@@ -33,14 +42,32 @@ fun ShellGhostButton(
     enabled: Boolean = true,
 ) {
     val colors = ShellTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) ShellMotion.pressedScale else 1f,
+        animationSpec = tween(ShellMotion.durationFast),
+        label = "ghostButtonScale",
+    )
+    val background by animateColorAsState(
+        targetValue = if (isPressed && enabled) colors.surfaceSelected else colors.surfaceSubtle,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "ghostButtonBackground",
+    )
     Box(
         modifier = modifier
+            .scale(scale)
             .defaultMinSize(minWidth = 72.dp)
-            .height(28.dp)
+            .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(colors.surfaceSubtle)
+            .background(background)
             .border(1.dp, colors.border, RoundedCornerShape(ShellRadius.sm))
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            )
             .padding(horizontal = ShellSpacing.sm + 2.dp),
         contentAlignment = Alignment.Center,
     ) {

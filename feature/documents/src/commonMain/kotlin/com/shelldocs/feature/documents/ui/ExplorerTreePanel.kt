@@ -1,5 +1,7 @@
 package com.shelldocs.feature.documents.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +29,7 @@ import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconPlus
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.DocumentNode
@@ -81,12 +85,17 @@ private fun TreeNode(
     val colors = ShellTheme.colors
     val isExpanded = node.id in state.expandedFolders
     val isSelected = node.documentId != null && node.documentId == state.selectedDocument?.id
+    val background by animateColorAsState(
+        targetValue = if (isSelected) colors.surfaceSelected else colors.surface,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "treeNodeBackground",
+    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(if (isSelected) colors.surfaceSelected else colors.surface)
+            .background(background)
             .clickable {
                 when (node.type) {
                     DocumentNodeType.FOLDER -> onIntent(DocumentsIntent.ToggleFolder(node.id))

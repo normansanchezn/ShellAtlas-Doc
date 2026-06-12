@@ -298,6 +298,109 @@ object DemoSeed {
             """.trimIndent(),
         ),
         document(
+            id = "doc-onboarding-welcome",
+            title = "Llega a Shell",
+            summary = "Bienvenida al equipo: estructura, documentación y cómo usar el asistente de IA.",
+            status = DocumentStatus.PUBLISHED,
+            owner = sofia,
+            module = "Onboarding",
+            platform = "Onboarding",
+            team = "Platform Team",
+            tags = listOf("onboarding", "bienvenida", "knowledge-transfer"),
+            updatedAt = Instant.parse("2026-06-10T00:00:00Z"),
+            markdown = """
+                # Llega a Shell
+
+                ¡Bienvenido/a a Shell App! Esta guía es tu punto de partida para conocer el proyecto.
+
+                ## Equipo
+
+                - **iOS Shell App**: Elena Vargas (owner), Priya Sharma.
+                - **Android Shell App**: James O'Brien.
+                - **Loyalty Squad**: Marcus Chen.
+                - **Platform Team**: Sofia Reyes.
+
+                ## Dónde vive la documentación
+
+                Toda la documentación del proyecto está organizada por carpetas en **Documentos**, agrupada por plataforma (iOS, Android, Cross-platform, Process, Onboarding). Cada documento tiene un owner, un módulo y un estado (Published, Draft, Outdated, Updates Pending).
+
+                ## Cómo usar el asistente de IA
+
+                El asistente responde preguntas sobre la documentación indexada y cita las fuentes que usó. También puede guiarte paso a paso por un recorrido de **Knowledge Transfer (KT)**: te indica un documento para revisar y, cuando le dices "listo", avanza al siguiente paso y actualiza tu progreso.
+
+                ## Knowledge Transfer
+
+                Para empezar tu recorrido guiado, abre el Asistente y pulsa **"Iniciar Knowledge Transfer"**. Tu progreso se refleja en el Dashboard como **Project Knowledge**.
+
+                ## Siguiente paso
+
+                Continúa con "Android Developer Setup" para preparar tu computadora.
+            """.trimIndent(),
+        ),
+        document(
+            id = "doc-onboarding-android-setup",
+            title = "Android Developer Setup",
+            summary = "Guía para preparar tu computadora: clonar el repo, variables de entorno y primer build (MOCK).",
+            status = DocumentStatus.PUBLISHED,
+            owner = james,
+            module = "Onboarding",
+            platform = "Onboarding",
+            team = "Android Shell App",
+            tags = listOf("onboarding", "android", "setup", "secrets"),
+            updatedAt = Instant.parse("2026-06-10T00:00:00Z"),
+            markdown = """
+                # Android Developer Setup
+
+                Guía para preparar tu entorno de desarrollo Android. **Todos los valores de esta guía son MOCK / TODO** y deben reemplazarse por los reales al incorporarte.
+
+                ## Requisitos
+
+                - Android Studio (última versión estable).
+                - JDK 17.
+                - Git configurado con tu cuenta corporativa.
+
+                ## 1. Clonar el repositorio
+
+                ```bash
+                git clone git@github.com:shell/shell-app-android.git
+                cd shell-app-android
+                ```
+
+                ## 2. Configurar `local.properties`
+
+                Crea un archivo `local.properties` en la raíz del proyecto (no se versiona):
+
+                ```properties
+                # TODO: MOCK — reemplaza con tu SDK real
+                sdk.dir=/Users/TU_USUARIO/Library/Android/sdk
+
+                # TODO: MOCK — obtener de Azure Secrets, ver "Azure Secrets Management for Mobile"
+                API_BASE_URL=https://api.mock.shell.internal
+                API_CLIENT_ID=mock-client-id
+                API_CLIENT_SECRET=mock-client-secret
+                LOKALISE_API_TOKEN=mock-lokalise-token
+                ```
+
+                ## 3. Variables de entorno
+
+                ```bash
+                # TODO: MOCK — valores reales en Azure Key Vault
+                export SHELL_ANDROID_SIGNING_KEY_ALIAS="mock-alias"
+                export SHELL_ANDROID_SIGNING_KEY_PASSWORD="mock-password"
+                ```
+
+                ## 4. Primer build
+
+                ```bash
+                ./gradlew :composeApp:assembleDebug
+                ```
+
+                ## 5. Siguiente paso
+
+                Cuando termines, vuelve al asistente y dile "listo" para continuar el Knowledge Transfer.
+            """.trimIndent(),
+        ),
+        document(
             id = "doc-push-notifications",
             title = "Push Notifications",
             summary = "APNS integration, token management, and notification categories.",

@@ -1,5 +1,7 @@
 package com.shelldocs.app.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +43,7 @@ import com.shelldocs.core.designsystem.icons.IconSun
 import com.shelldocs.core.designsystem.molecules.ShellKbdHint
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.auth.UserProfile
@@ -179,12 +183,22 @@ private fun SidebarItem(
 ) {
     val colors = ShellTheme.colors
     val isActive = route == activeRoute
+    val background by animateColorAsState(
+        targetValue = if (isActive) colors.surfaceSelected else colors.surface,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "sidebarItemBackground",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isActive) colors.brand else colors.textSecondary,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "sidebarItemContent",
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(if (isActive) colors.surfaceSelected else colors.surface)
+            .background(background)
             .clickable { onNavigate(route) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -193,13 +207,13 @@ private fun SidebarItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isActive) colors.brand else colors.textMuted,
+            tint = contentColor,
             modifier = Modifier.size(15.dp),
         )
         Text(
             text = route.title,
             style = if (isActive) ShellTheme.typography.bodyStrong else ShellTheme.typography.body,
-            color = if (isActive) colors.brand else colors.textSecondary,
+            color = contentColor,
             modifier = Modifier.weight(1f),
         )
         if (badgeCount > 0) {
@@ -224,7 +238,7 @@ private fun SidebarSourceItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .clickable { onNavigate(AppRoute.SOURCES) }
             .padding(horizontal = ShellSpacing.sm),
@@ -251,7 +265,7 @@ private fun SidebarActionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .clickable(onClick = onClick)
             .padding(horizontal = ShellSpacing.sm),

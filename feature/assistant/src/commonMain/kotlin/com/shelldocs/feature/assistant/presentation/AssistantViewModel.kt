@@ -12,6 +12,7 @@ import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
 import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
+import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.BuildWelcomeMessageUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
@@ -19,6 +20,11 @@ import com.shelldocs.core.domain.usecase.assistant.DetectAssistantLanguageUseCas
 import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
+import com.shelldocs.core.domain.usecase.onboarding.BuildKnowledgeTransferMessageUseCase
+import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
+import com.shelldocs.core.domain.usecase.onboarding.DetectCheckpointCompletionUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -30,11 +36,16 @@ class AssistantViewModel(
     private val getConversations: GetConversationsUseCase,
     private val saveConversation: SaveConversationUseCase,
     private val getDocuments: GetDocumentsUseCase,
+    private val getKnowledgeCheckpoints: GetKnowledgeCheckpointsUseCase,
+    private val getKnowledgeProgress: GetKnowledgeProgressUseCase,
+    private val completeKnowledgeCheckpoint: CompleteKnowledgeCheckpointUseCase,
     private val timeProvider: TimeProvider,
     private val idGenerator: IdGenerator,
     dispatchers: DispatcherProvider,
     private val buildWelcomeMessage: BuildWelcomeMessageUseCase = BuildWelcomeMessageUseCase(),
     private val detectLanguage: DetectAssistantLanguageUseCase = DetectAssistantLanguageUseCase(),
+    private val buildKnowledgeTransferMessage: BuildKnowledgeTransferMessageUseCase = BuildKnowledgeTransferMessageUseCase(),
+    private val detectCheckpointCompletion: DetectCheckpointCompletionUseCase = DetectCheckpointCompletionUseCase(),
 ) : MviViewModel<AssistantIntent, AssistantState, AssistantEffect>(AssistantState(), dispatchers) {
 
     override suspend fun handleIntent(intent: AssistantIntent) {
@@ -51,21 +62,27 @@ class AssistantViewModel(
                         messages = listOf(welcomeMessage()),
                         errorDialog = null,
                         conversationLanguage = AssistantLanguage.SPANISH,
+                        activeCheckpointId = null,
                     )
                 }
+            AssistantIntent.StartKnowledgeTransfer -> startKnowledgeTransfer()
         }
     }
 
     private suspend fun initialize() {
         setState { copy(isInitializing = true, errorDialog = null) }
-        val (availability, conversations, documents) = coroutineScope {
+        val (availability, conversations, documents, checkpoints, progress) = coroutineScope {
             val availabilityDeferred = async(dispatchers.io) { checkAvailability() }
             val conversationsDeferred = async(dispatchers.io) { getConversations() }
             val documentsDeferred = async(dispatchers.io) { getDocuments() }
-            Triple(
+            val checkpointsDeferred = async(dispatchers.io) { getKnowledgeCheckpoints() }
+            val progressDeferred = async(dispatchers.io) { getKnowledgeProgress() }
+            ResultBundle(
                 availabilityDeferred.await(),
                 conversationsDeferred.await().getOrDefault(emptyList()),
                 documentsDeferred.await().getOrDefault(emptyList()),
+                checkpointsDeferred.await().getOrDefault(emptyList()),
+                progressDeferred.await().getOrDefault(KnowledgeProgress(0, 0)),
             )
         }
         setState {
@@ -75,9 +92,69 @@ class AssistantViewModel(
                 conversations = conversations,
                 indexedDocuments = documents.size,
                 messages = if (messages.isEmpty()) listOf(welcomeMessage()) else messages,
+                checkpoints = checkpoints,
+                knowledgeProgress = progress,
             )
         }
     }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun startKnowledgeTransfer() {
+        val checkpoints = currentState.checkpoints
+        val progress = currentState.knowledgeProgress ?: KnowledgeProgress(0, checkpoints.size)
+        val language = currentState.conversationLanguage
+        val next = checkpoints.getOrNull(progress.completed)
+        val markdown = if (next != null) {
+            buildKnowledgeTransferMessage.step(next, progress, language)
+        } else {
+            buildKnowledgeTransferMessage.completion(progress, language)
+        }
+        val assistantMessage = AssistantMessage(
+            id = idGenerator.newId(),
+            role = MessageRole.ASSISTANT,
+            markdown = markdown,
+            createdAt = timeProvider.now(),
+        )
+        setState { copy(messages = messages + assistantMessage, activeCheckpointId = next?.id) }
+        sendEffect(AssistantEffect.ScrollToLatestMessage)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun advanceKnowledgeTransfer(completedCheckpointId: String) {
+        val language = currentState.conversationLanguage
+        val progress = withContext(dispatchers.io) { completeKnowledgeCheckpoint(completedCheckpointId) }
+            .getOrDefault(currentState.knowledgeProgress ?: KnowledgeProgress(0, 0))
+        val checkpoints = currentState.checkpoints
+        val next = checkpoints.getOrNull(progress.completed)
+        val markdown = if (next != null) {
+            buildKnowledgeTransferMessage.step(next, progress, language)
+        } else {
+            buildKnowledgeTransferMessage.completion(progress, language)
+        }
+        val assistantMessage = AssistantMessage(
+            id = idGenerator.newId(),
+            role = MessageRole.ASSISTANT,
+            markdown = markdown,
+            createdAt = timeProvider.now(),
+        )
+        setState {
+            copy(
+                messages = messages + assistantMessage,
+                knowledgeProgress = progress,
+                activeCheckpointId = next?.id,
+                isAnswering = false,
+            )
+        }
+        sendEffect(AssistantEffect.ScrollToLatestMessage)
+    }
+
+    private data class ResultBundle(
+        val availability: com.shelldocs.core.domain.entity.assistant.AssistantAvailability,
+        val conversations: List<Conversation>,
+        val documents: List<com.shelldocs.core.domain.entity.document.Document>,
+        val checkpoints: List<com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint>,
+        val progress: KnowledgeProgress,
+    )
 
     @OptIn(ExperimentalTime::class)
     private fun welcomeMessage(): AssistantMessage = AssistantMessage(
@@ -110,6 +187,7 @@ class AssistantViewModel(
             createdAt = timeProvider.now(),
         )
         val language = detectLanguage(question, default = currentState.conversationLanguage)
+        val activeCheckpointId = currentState.activeCheckpointId
         setState {
             copy(
                 messages = messages + userMessage,
@@ -120,6 +198,11 @@ class AssistantViewModel(
             )
         }
         sendEffect(AssistantEffect.ScrollToLatestMessage)
+
+        if (activeCheckpointId != null && detectCheckpointCompletion(question)) {
+            advanceKnowledgeTransfer(activeCheckpointId)
+            return
+        }
 
         withContext(dispatchers.default) {
             askAssistant(question, language)

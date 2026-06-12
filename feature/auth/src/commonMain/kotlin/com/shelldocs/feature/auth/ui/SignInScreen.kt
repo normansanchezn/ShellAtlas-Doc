@@ -63,7 +63,7 @@ fun SignInScreen(
         modifier = modifier.fillMaxSize().background(colors.background),
         contentAlignment = Alignment.Center,
     ) {
-        ShellCard(modifier = Modifier.widthIn(max = 360.dp).padding(ShellSpacing.lg)) {
+        ShellCard(elevated = true, modifier = Modifier.widthIn(max = 360.dp).padding(ShellSpacing.lg)) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(ShellSpacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,6 +1,7 @@
 package com.shelldocs.core.data.repository
 
 import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.map
 import com.shelldocs.core.data.demo.DemoActivityFeed
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
@@ -9,8 +10,10 @@ import com.shelldocs.core.domain.entity.dashboard.StatusBreakdown
 import com.shelldocs.core.domain.entity.dashboard.UsagePoint
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentStatus
+import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
 import com.shelldocs.core.domain.repository.DashboardRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
+import com.shelldocs.core.domain.repository.KnowledgeCheckpointRepository
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 
 /**
@@ -20,12 +23,15 @@ import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 class DerivedDashboardRepository(
     private val documentRepository: DocumentRepository,
     private val evaluateHealth: EvaluateDocumentHealthUseCase,
+    private val knowledgeCheckpointRepository: KnowledgeCheckpointRepository,
 ) : DashboardRepository {
 
-    override suspend fun metrics(): DomainResult<DashboardMetrics> =
-        documentRepository.documents().map(::buildMetrics)
+    override suspend fun metrics(): DomainResult<DashboardMetrics> {
+        val progress = knowledgeCheckpointRepository.progress().getOrDefault(KnowledgeProgress(0, 0))
+        return documentRepository.documents().map { documents -> buildMetrics(documents, progress) }
+    }
 
-    private fun buildMetrics(documents: List<Document>): DashboardMetrics {
+    private fun buildMetrics(documents: List<Document>, knowledgeProgress: KnowledgeProgress): DashboardMetrics {
         val total = documents.size
         val outdated = documents.count { it.status == DocumentStatus.OUTDATED }
         val healthScores = documents.map { evaluateHealth(it).score }
@@ -51,6 +57,9 @@ class DerivedDashboardRepository(
             usage = DemoActivityFeed.weeklyUsage,
             recentActivity = DemoActivityFeed.recentActivity,
             attentionItems = DemoActivityFeed.attentionItems,
+            knowledgeCheckpointsCompleted = knowledgeProgress.completed,
+            knowledgeCheckpointsTotal = knowledgeProgress.total,
+            projectKnowledgeScorePercent = knowledgeProgress.percent,
         )
     }
 

@@ -72,6 +72,9 @@ fun AssistantScreen(
             AssistantHeader(
                 indexedDocuments = state.indexedDocuments,
                 availability = state.availability,
+                knowledgeProgress = state.knowledgeProgress,
+                activeCheckpointId = state.activeCheckpointId,
+                onStartKnowledgeTransfer = { viewModel.onIntent(AssistantIntent.StartKnowledgeTransfer) },
             )
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 if (state.messages.isEmpty()) {
@@ -90,6 +93,7 @@ fun AssistantScreen(
                             ChatMessageBubble(
                                 message = state.messages[index],
                                 onSourceClick = { source -> onOpenDocument(source.documentId) },
+                                modifier = Modifier.animateItem(),
                             )
                         }
                         if (state.isAnswering) {

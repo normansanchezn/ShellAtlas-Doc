@@ -20,4 +20,7 @@ data class DashboardMetrics(
     val usage: List<UsagePoint>,
     val recentActivity: List<ActivityEvent>,
     val attentionItems: List<AttentionItem>,
+    val knowledgeCheckpointsCompleted: Int,
+    val knowledgeCheckpointsTotal: Int,
+    val projectKnowledgeScorePercent: Int,
 )

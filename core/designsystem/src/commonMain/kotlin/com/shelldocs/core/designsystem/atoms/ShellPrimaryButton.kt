@@ -1,7 +1,11 @@
 package com.shelldocs.core.designsystem.atoms
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -13,13 +17,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
@@ -33,14 +41,32 @@ fun ShellPrimaryButton(
     enabled: Boolean = true,
 ) {
     val colors = ShellTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) ShellMotion.pressedScale else 1f,
+        animationSpec = tween(ShellMotion.durationFast),
+        label = "primaryButtonScale",
+    )
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (enabled) 1f else 0.5f,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "primaryButtonAlpha",
+    )
     Box(
         modifier = modifier
-            .alpha(if (enabled) 1f else 0.5f)
+            .alpha(contentAlpha)
+            .scale(scale)
             .defaultMinSize(minWidth = 84.dp)
-            .height(30.dp)
+            .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .background(colors.brand)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick,
+            )
             .padding(horizontal = ShellSpacing.md),
         contentAlignment = Alignment.Center,
     ) {

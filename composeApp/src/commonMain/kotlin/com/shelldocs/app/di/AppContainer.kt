@@ -11,6 +11,7 @@ import com.shelldocs.core.data.assistant.OllamaAssistantEngine
 import com.shelldocs.core.data.assistant.OllamaClient
 import com.shelldocs.core.data.demo.DemoAuthRepository
 import com.shelldocs.core.data.demo.DemoDocumentRepository
+import com.shelldocs.core.data.demo.DemoKnowledgeCheckpointRepository
 import com.shelldocs.core.data.demo.DemoRoleRepository
 import com.shelldocs.core.data.demo.DemoSourcesRepository
 import com.shelldocs.core.data.network.ShellDocsApi
@@ -52,6 +53,9 @@ import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
 import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
 import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
+import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
 import com.shelldocs.core.domain.usecase.source.GetSourcesUseCase
 import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
 import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
@@ -173,8 +177,9 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
     private val pendingUpdatesRepository by lazy {
         DerivedPendingUpdatesRepository(documentRepository, evaluateHealth, timeProvider)
     }
+    private val knowledgeCheckpointRepository by lazy { DemoKnowledgeCheckpointRepository() }
     private val dashboardRepository by lazy {
-        DerivedDashboardRepository(documentRepository, evaluateHealth)
+        DerivedDashboardRepository(documentRepository, evaluateHealth, knowledgeCheckpointRepository)
     }
     private val sourcesRepository by lazy { DemoSourcesRepository(timeProvider) }
 
@@ -198,6 +203,9 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
         getConversations = GetConversationsUseCase(conversationRepository),
         saveConversation = SaveConversationUseCase(conversationRepository),
         getDocuments = GetDocumentsUseCase(documentRepository),
+        getKnowledgeCheckpoints = GetKnowledgeCheckpointsUseCase(knowledgeCheckpointRepository),
+        getKnowledgeProgress = GetKnowledgeProgressUseCase(knowledgeCheckpointRepository),
+        completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(knowledgeCheckpointRepository),
         timeProvider = timeProvider,
         idGenerator = idGenerator,
         dispatchers = dispatchers,

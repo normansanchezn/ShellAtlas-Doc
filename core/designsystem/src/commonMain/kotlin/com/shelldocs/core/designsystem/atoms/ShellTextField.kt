@@ -1,5 +1,7 @@
 package com.shelldocs.core.designsystem.atoms
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -29,6 +31,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
@@ -48,6 +51,16 @@ fun ShellTextField(
     val colors = ShellTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) colors.info else colors.border,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "textFieldBorder",
+    )
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isFocused) colors.surface else colors.surfaceSubtle,
+        animationSpec = tween(ShellMotion.durationMedium),
+        label = "textFieldBackground",
+    )
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -55,8 +68,8 @@ fun ShellTextField(
             .fillMaxWidth()
             .heightIn(min = 32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(if (isFocused) colors.surface else colors.surfaceSubtle)
-            .border(1.dp, if (isFocused) colors.info else colors.border, RoundedCornerShape(ShellRadius.sm))
+            .background(backgroundColor)
+            .border(1.dp, borderColor, RoundedCornerShape(ShellRadius.sm))
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyUp && event.key == Key.Enter && singleLine && onSubmit != null) {
                     onSubmit()

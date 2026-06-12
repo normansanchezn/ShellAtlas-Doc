@@ -23,6 +23,7 @@ import com.shelldocs.core.designsystem.icons.IconCheckCircle
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconMessageSquare
 import com.shelldocs.core.designsystem.icons.IconRefresh
+import com.shelldocs.core.designsystem.icons.IconSparkles
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellMetricCard
@@ -147,15 +148,27 @@ private fun MetricCards(
                 delta = "↗ +${metrics.aiQueriesDeltaPercent}%", modifier = m,
             )
         },
+        { m ->
+            ShellMetricCard(
+                icon = IconSparkles, iconTint = colors.success,
+                value = "${metrics.projectKnowledgeScorePercent}%", caption = "Project Knowledge",
+                delta = "${metrics.knowledgeCheckpointsCompleted}/${metrics.knowledgeCheckpointsTotal} checkpoints",
+                deltaColor = colors.textMuted, modifier = m,
+            )
+        },
     )
     if (stacked) {
         Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
             cards.forEach { card -> card(Modifier.fillMaxWidth()) }
         }
     } else {
-        Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
-            cards.forEach { card ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) { card(Modifier.fillMaxWidth()) }
+        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
+            cards.chunked(4).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
+                    row.forEach { card ->
+                        androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) { card(Modifier.fillMaxWidth()) }
+                    }
+                }
             }
         }
     }
