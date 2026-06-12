@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -34,6 +35,7 @@ import com.shelldocs.feature.documents.presentation.DocumentsState
 fun NewDocumentEditorPanel(
     state: DocumentsState,
     onIntent: (DocumentsIntent) -> Unit,
+    isWide: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
@@ -73,37 +75,75 @@ fun NewDocumentEditorPanel(
                 placeholder = "Document title",
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-            ) {
-                BasicTextField(
-                    value = state.newDocumentMarkdown,
-                    onValueChange = { onIntent(DocumentsIntent.NewDocumentMarkdownChanged(it)) },
-                    textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
-                    cursorBrush = SolidColor(colors.info),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(ShellRadius.md))
-                        .background(colors.surfaceSubtle)
-                        .border(1.dp, colors.info.copy(alpha = 0.35f), RoundedCornerShape(ShellRadius.md))
-                        .padding(ShellSpacing.lg)
-                        .verticalScroll(rememberScrollState()),
-                )
+            if (isWide) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+                ) {
+                    BasicTextField(
+                        value = state.newDocumentMarkdown,
+                        onValueChange = { onIntent(DocumentsIntent.NewDocumentMarkdownChanged(it)) },
+                        textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
+                        cursorBrush = SolidColor(colors.info),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(ShellRadius.md))
+                            .background(colors.surfaceSubtle)
+                            .border(1.dp, colors.info.copy(alpha = 0.35f), RoundedCornerShape(ShellRadius.md))
+                            .padding(ShellSpacing.lg)
+                            .verticalScroll(rememberScrollState()),
+                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(
+                            text = "Preview",
+                            style = ShellTheme.typography.label,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(bottom = ShellSpacing.sm),
+                        )
+                        LiveMarkdownPreview(markdown = state.newDocumentMarkdown)
+                    }
+                }
+            } else {
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
                 ) {
-                    Text(
-                        text = "Preview",
-                        style = ShellTheme.typography.label,
-                        color = colors.textMuted,
-                        modifier = Modifier.padding(bottom = ShellSpacing.sm),
+                    BasicTextField(
+                        value = state.newDocumentMarkdown,
+                        onValueChange = { onIntent(DocumentsIntent.NewDocumentMarkdownChanged(it)) },
+                        textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
+                        cursorBrush = SolidColor(colors.info),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 240.dp)
+                            .clip(RoundedCornerShape(ShellRadius.md))
+                            .background(colors.surfaceSubtle)
+                            .border(1.dp, colors.info.copy(alpha = 0.35f), RoundedCornerShape(ShellRadius.md))
+                            .padding(ShellSpacing.lg)
+                            .verticalScroll(rememberScrollState()),
                     )
-                    LiveMarkdownPreview(markdown = state.newDocumentMarkdown)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 220.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        Text(
+                            text = "Preview",
+                            style = ShellTheme.typography.label,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(bottom = ShellSpacing.sm),
+                        )
+                        LiveMarkdownPreview(markdown = state.newDocumentMarkdown)
+                    }
                 }
             }
         }

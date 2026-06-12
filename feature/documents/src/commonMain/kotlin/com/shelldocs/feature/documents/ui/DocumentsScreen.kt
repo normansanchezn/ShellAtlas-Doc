@@ -1,11 +1,17 @@
 package com.shelldocs.feature.documents.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -27,6 +34,10 @@ import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsViewModel
+import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.core.designsystem.tokens.ShellRadius
+import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val EXPLORER_MIN_WIDTH = 180.dp
 private val EXPLORER_MAX_WIDTH = 420.dp
@@ -34,6 +45,11 @@ private val EXPLORER_DEFAULT_WIDTH = 230.dp
 private val ATTRIBUTES_MIN_WIDTH = 200.dp
 private val ATTRIBUTES_MAX_WIDTH = 360.dp
 private val ATTRIBUTES_DEFAULT_WIDTH = 240.dp
+
+private enum class DocumentsMobilePane {
+    Explorer,
+    Reader,
+}
 
 /**
  * Documents workspace. The reading pane always gets the remaining space;
@@ -52,14 +68,24 @@ fun DocumentsScreen(
 
     var explorerWidth by remember { mutableStateOf(EXPLORER_DEFAULT_WIDTH) }
     var attributesWidth by remember { mutableStateOf(ATTRIBUTES_DEFAULT_WIDTH) }
+    var mobilePane by remember { mutableStateOf(DocumentsMobilePane.Explorer) }
 
     LaunchedEffect(viewModel) { viewModel.onIntent(DocumentsIntent.Initialize) }
+    LaunchedEffect(isWide, state.selectedDocument?.id) {
+        if (isWide) return@LaunchedEffect
+        mobilePane = if (state.selectedDocument == null) {
+            DocumentsMobilePane.Explorer
+        } else {
+            DocumentsMobilePane.Reader
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
         if (state.isCreatingDocument) {
             NewDocumentEditorPanel(
                 state = state,
                 onIntent = viewModel::onIntent,
+                isWide = isWide,
                 modifier = Modifier.fillMaxSize(),
             )
         } else if (state.isEditing && state.selectedDocument != null) {
@@ -70,20 +96,19 @@ fun DocumentsScreen(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            Row(modifier = Modifier.fillMaxSize()) {
-                if (state.isExplorerExpanded) {
-                    ExplorerTreePanel(
-                        state = state,
-                        onIntent = viewModel::onIntent,
-                        modifier = Modifier.width(if (isWide) explorerWidth else EXPLORER_DEFAULT_WIDTH).fillMaxHeight(),
-                    )
-                    if (isWide) {
+            if (isWide) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    if (state.isExplorerExpanded) {
+                        ExplorerTreePanel(
+                            state = state,
+                            onIntent = viewModel::onIntent,
+                            modifier = Modifier.width(explorerWidth).fillMaxHeight(),
+                        )
                         ResizeHandle(
                             onDrag = { deltaPx ->
                                 explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
                             },
                         )
-                    }
                     } else {
                         CollapsedPanelRail(
                             icon = IconFolder,
@@ -92,27 +117,73 @@ fun DocumentsScreen(
                             modifier = Modifier.fillMaxHeight(),
                         )
                     }
-                Box(modifier = Modifier.fillMaxSize()) {
-                    val selected = state.selectedDocument
-                    if (selected == null) {
-                        ShellEmptyState(
-                            icon = IconFileText,
-                            title = "Select a document to read",
-                            subtitle = "or create a new document with + New",
-                            modifier = Modifier.align(Alignment.Center),
-                        )
-                    } else {
-                        DocumentReaderPanel(
-                            state = state,
-                            document = selected,
-                            isWide = isWide,
-                            onIntent = viewModel::onIntent,
-                            attributesWidth = attributesWidth,
-                            onResizeAttributes = { deltaPx ->
-                                attributesWidth = withDelta(attributesWidth, -deltaPx, density, ATTRIBUTES_MIN_WIDTH, ATTRIBUTES_MAX_WIDTH)
-                            },
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        val selected = state.selectedDocument
+                        if (selected == null) {
+                            ShellEmptyState(
+                                icon = IconFileText,
+                                title = "Select a document to read",
+                                subtitle = "or create a new document with + New",
+                                modifier = Modifier.align(Alignment.Center),
+                            )
+                        } else {
+                            DocumentReaderPanel(
+                                state = state,
+                                document = selected,
+                                isWide = true,
+                                onIntent = viewModel::onIntent,
+                                attributesWidth = attributesWidth,
+                                onResizeAttributes = { deltaPx ->
+                                    attributesWidth = withDelta(attributesWidth, -deltaPx, density, ATTRIBUTES_MIN_WIDTH, ATTRIBUTES_MAX_WIDTH)
+                                },
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                    }
+                }
+            } else {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    MobilePaneSwitcher(
+                        currentPane = mobilePane,
+                        hasSelection = state.selectedDocument != null,
+                        onExplorerClick = { mobilePane = DocumentsMobilePane.Explorer },
+                        onReaderClick = {
+                            if (state.selectedDocument != null) {
+                                mobilePane = DocumentsMobilePane.Reader
+                            }
+                        },
+                    )
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        when (mobilePane) {
+                            DocumentsMobilePane.Explorer -> ExplorerTreePanel(
+                                state = state,
+                                onIntent = viewModel::onIntent,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            DocumentsMobilePane.Reader -> {
+                                val selected = state.selectedDocument
+                                if (selected == null) {
+                                    ShellEmptyState(
+                                        icon = IconFileText,
+                                        title = "Select a document to read",
+                                        subtitle = "Switch back to Explorer to pick one.",
+                                        modifier = Modifier.align(Alignment.Center),
+                                    )
+                                } else {
+                                    DocumentReaderPanel(
+                                        state = state,
+                                        document = selected,
+                                        isWide = false,
+                                        onIntent = viewModel::onIntent,
+                                        attributesWidth = attributesWidth,
+                                        onResizeAttributes = { deltaPx ->
+                                            attributesWidth = withDelta(attributesWidth, -deltaPx, density, ATTRIBUTES_MIN_WIDTH, ATTRIBUTES_MAX_WIDTH)
+                                        },
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -138,4 +209,60 @@ fun DocumentsScreen(
 private fun withDelta(current: Dp, deltaPx: Float, density: Density, min: Dp, max: Dp): Dp {
     val deltaDp = with(density) { deltaPx.toDp() }
     return (current + deltaDp).coerceIn(min, max)
+}
+
+@Composable
+private fun MobilePaneSwitcher(
+    currentPane: DocumentsMobilePane,
+    hasSelection: Boolean,
+    onExplorerClick: () -> Unit,
+    onReaderClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+    ) {
+        WorkspaceModeButton(
+            text = "Explorer",
+            selected = currentPane == DocumentsMobilePane.Explorer,
+            onClick = onExplorerClick,
+            modifier = Modifier.weight(1f),
+        )
+        WorkspaceModeButton(
+            text = "Reader",
+            selected = currentPane == DocumentsMobilePane.Reader,
+            enabled = hasSelection,
+            onClick = onReaderClick,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun WorkspaceModeButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val colors = ShellTheme.colors
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(ShellRadius.md))
+            .background(if (selected) colors.surfaceSelected else colors.surfaceSubtle)
+            .border(1.dp, if (selected) colors.brand.copy(alpha = 0.4f) else colors.border, RoundedCornerShape(ShellRadius.md))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = ShellSpacing.sm, horizontal = ShellSpacing.md),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = ShellTheme.typography.label,
+            color = if (selected) colors.textPrimary else colors.textSecondary.copy(alpha = if (enabled) 1f else 0.45f),
+        )
+    }
 }

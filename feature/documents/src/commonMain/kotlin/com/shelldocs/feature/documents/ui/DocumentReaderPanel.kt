@@ -11,12 +11,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
@@ -66,6 +71,14 @@ fun DocumentReaderPanel(
                 onClick = { onIntent(DocumentsIntent.ShowHistory) },
                 enabled = !state.isBusy,
             )
+            if (!isWide) {
+                ShellGhostButton(
+                    text = if (state.isAttributesExpanded) "Hide attributes" else "Attributes",
+                    icon = IconLayers,
+                    onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
+                    enabled = !state.isBusy,
+                )
+            }
             if (state.canEdit) {
                 ShellPrimaryButton(
                     text = "Edit",
@@ -75,46 +88,17 @@ fun DocumentReaderPanel(
                 )
             }
         }
-        Row(modifier = Modifier.weight(1f)) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = ShellSpacing.xxxl, vertical = ShellSpacing.xl),
-            ) {
-                ShellStatusBadge(status = document.status)
-                Text(
-                    text = document.title,
-                    style = ShellTheme.typography.displayTitle,
-                    color = colors.textPrimary,
-                    modifier = Modifier.padding(top = ShellSpacing.md),
-                )
-                Text(
-                    text = document.summary,
-                    style = ShellTheme.typography.body,
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(top = ShellSpacing.xs),
-                )
-                Text(
-                    text = "${document.attributes.owner}  ·  Updated ${document.updatedAt.toString().substringBefore('T')}",
-                    style = ShellTheme.typography.caption,
-                    color = colors.textMuted,
-                    modifier = Modifier.padding(top = ShellSpacing.md, bottom = ShellSpacing.lg),
-                )
-                MarkdownBlocksView(
-                    blocks = document.content.blocks,
-                    modifier = Modifier.widthIn(max = 680.dp),
-                )
-                Row(
-                    modifier = Modifier.padding(top = ShellSpacing.xl),
-                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+        if (isWide) {
+            Row(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = ShellSpacing.xxxl, vertical = ShellSpacing.xl),
                 ) {
-                    ShellGhostButton(text = "Share", icon = IconShare, onClick = {}, enabled = !state.isBusy)
-                    ShellGhostButton(text = "Bookmark", icon = IconBookmark, onClick = {}, enabled = !state.isBusy)
+                    documentBody(document = document, state = state, colors = colors)
                 }
-            }
-            if (isWide) {
                 when {
                     state.isHistoryVisible -> {
                         ResizeHandle(onDrag = onResizeAttributes)
@@ -141,6 +125,69 @@ fun DocumentReaderPanel(
                     )
                 }
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                documentBody(document = document, state = state, colors = colors)
+                when {
+                    state.isHistoryVisible -> VersionHistoryPanel(
+                        state = state,
+                        onIntent = onIntent,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    state.isAttributesExpanded -> AttributesPanel(
+                        document = document,
+                        modifier = Modifier.fillMaxWidth(),
+                        canEdit = state.canEdit,
+                        onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalTime::class)
+private fun documentBody(
+    document: Document,
+    state: DocumentsState,
+    colors: com.shelldocs.core.designsystem.tokens.ShellColorScheme,
+) {
+    ShellStatusBadge(status = document.status)
+    Text(
+        text = document.title,
+        style = ShellTheme.typography.displayTitle,
+        color = colors.textPrimary,
+        modifier = Modifier.padding(top = ShellSpacing.md),
+    )
+    Text(
+        text = document.summary,
+        style = ShellTheme.typography.body,
+        color = colors.textSecondary,
+        modifier = Modifier.padding(top = ShellSpacing.xs),
+    )
+    Text(
+        text = "${document.attributes.owner}  ·  Updated ${document.updatedAt.toString().substringBefore('T')}",
+        style = ShellTheme.typography.caption,
+        color = colors.textMuted,
+        modifier = Modifier.padding(top = ShellSpacing.md, bottom = ShellSpacing.lg),
+    )
+    MarkdownBlocksView(
+        blocks = document.content.blocks,
+        modifier = Modifier.widthIn(max = 680.dp),
+    )
+    Row(
+        modifier = Modifier.padding(top = ShellSpacing.xl),
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+    ) {
+        ShellGhostButton(text = "Share", icon = IconShare, onClick = {}, enabled = !state.isBusy)
+        ShellGhostButton(text = "Bookmark", icon = IconBookmark, onClick = {}, enabled = !state.isBusy)
     }
 }

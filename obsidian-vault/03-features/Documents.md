@@ -32,6 +32,8 @@ Explorer, reader and editor flows for the shared documentation corpus, now with 
 ## Layout
 
 - `DocumentsScreen` now shows only one explorer tree on the left and the reader on the right. The redundant list pane was removed to avoid two competing trees/lists in the same workspace.
+- On narrow screens, `DocumentsScreen` switches to a single-column flow with explicit Explorer/Reader mode buttons so Android, iOS and web do not try to render a desktop split view in too little space.
+- `DocumentEditorPanel` and `NewDocumentEditorPanel` stack the editor and preview vertically on narrow screens instead of forcing a two-column layout.
 - Explorer tree and attributes/history rail start **collapsed** (`isExplorerExpanded`/`isAttributesExpanded = false`) whenever a document is selected, via `DocumentsViewModel.select()`. Each shows a slim `CollapsedPanelRail` when collapsed.
 - Both panels are user-resizable by dragging a lighter `ResizeHandle` on their border. On desktop, the handle uses a horizontal resize cursor on hover. Widths clamp: explorer 180-420dp, attributes 200-360dp.
 - Collapse affordances use neutral section icons instead of chevrons so they do not read like back-navigation. The collapsed rail is intentionally compact and low-contrast so it reads as a section toggle, not a primary button.

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -77,41 +78,82 @@ fun DocumentEditorPanel(
                 )
             }
         }
-        Row(
-            modifier = Modifier.weight(1f).padding(top = ShellSpacing.md),
-            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-        ) {
-            BasicTextField(
-                value = state.editorMarkdown,
-                onValueChange = { onIntent(DocumentsIntent.EditorChanged(it)) },
-                textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
-                cursorBrush = SolidColor(colors.brand),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(ShellRadius.md))
-                    .background(colors.surfaceSubtle)
-                    .border(
-                        width = androidx.compose.ui.unit.Dp.Hairline,
-                        color = colors.border,
-                        shape = RoundedCornerShape(ShellRadius.md),
-                    )
-                    .padding(ShellSpacing.lg)
-                    .verticalScroll(rememberScrollState()),
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+        if (isWide) {
+            Row(
+                modifier = Modifier.weight(1f).padding(top = ShellSpacing.md),
+                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
             ) {
-                LiveMarkdownPreview(markdown = state.editorMarkdown)
-            }
-            if (isWide) {
+                BasicTextField(
+                    value = state.editorMarkdown,
+                    onValueChange = { onIntent(DocumentsIntent.EditorChanged(it)) },
+                    textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
+                    cursorBrush = SolidColor(colors.brand),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(ShellRadius.md))
+                        .background(colors.surfaceSubtle)
+                        .border(
+                            width = androidx.compose.ui.unit.Dp.Hairline,
+                            color = colors.border,
+                            shape = RoundedCornerShape(ShellRadius.md),
+                        )
+                        .padding(ShellSpacing.lg)
+                        .verticalScroll(rememberScrollState()),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    LiveMarkdownPreview(markdown = state.editorMarkdown)
+                }
                 state.selectedDocument?.let { document ->
                     AttributesPanel(
                         document = document,
                         modifier = Modifier.width(260.dp).fillMaxHeight(),
+                        canEdit = state.canEdit,
+                        onEdit = { if (!state.isBusy) onIntent(DocumentsIntent.OpenAttributesEditor) },
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(top = ShellSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                BasicTextField(
+                    value = state.editorMarkdown,
+                    onValueChange = { onIntent(DocumentsIntent.EditorChanged(it)) },
+                    textStyle = ShellTheme.typography.code.copy(color = colors.textPrimary),
+                    cursorBrush = SolidColor(colors.brand),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 240.dp)
+                        .clip(RoundedCornerShape(ShellRadius.md))
+                        .background(colors.surfaceSubtle)
+                        .border(
+                            width = androidx.compose.ui.unit.Dp.Hairline,
+                            color = colors.border,
+                            shape = RoundedCornerShape(ShellRadius.md),
+                        )
+                        .padding(ShellSpacing.lg)
+                        .verticalScroll(rememberScrollState()),
+                )
+                LiveMarkdownPreview(
+                    markdown = state.editorMarkdown,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 220.dp),
+                )
+                state.selectedDocument?.let { document ->
+                    AttributesPanel(
+                        document = document,
+                        modifier = Modifier.fillMaxWidth(),
                         canEdit = state.canEdit,
                         onEdit = { if (!state.isBusy) onIntent(DocumentsIntent.OpenAttributesEditor) },
                     )

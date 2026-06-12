@@ -18,6 +18,7 @@ tags:
 - Added a desktop hover cursor for resize handles.
 - Replaced chevron collapse affordances with neutral section icons, and tightened the collapsed rail so it reads as a panel toggle instead of a back action.
 - Removed the redundant document list pane so the workspace only keeps the folder tree.
+- Added a mobile-first fallback for narrow screens: Explorer and Reader now switch as separate panes, and both editor flows stack vertically instead of forcing a desktop split view.
 
 ## Files created
 
@@ -30,6 +31,8 @@ tags:
 
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/DocumentsScreen.kt`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/DocumentReaderPanel.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/DocumentEditorPanel.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/NewDocumentEditorPanel.kt`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/PanelControls.kt`
 - `obsidian-vault/03-features/Documents.md`
 
