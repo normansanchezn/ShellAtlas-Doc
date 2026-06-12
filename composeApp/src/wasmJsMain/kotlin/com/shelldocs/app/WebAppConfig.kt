@@ -8,11 +8,10 @@ import com.shelldocs.core.data.assistant.OllamaConfig
 import com.shelldocs.core.data.network.ApiConfig
 import com.shelldocs.core.data.supabase.SupabaseConfig
 import kotlinx.browser.window
-import org.w3c.dom.url.URLSearchParams
 
 fun loadWebAppConfig(): AppConfig {
-    val params = URLSearchParams(window.location.search)
-    fun setting(name: String): String? = params.get(name)?.takeIf { it.isNotBlank() }
+    val params = parseQueryParams(window.location.search)
+    fun setting(name: String): String? = params[name]?.takeIf { it.isNotBlank() }
 
     val environment = resolveAppEnvironment(::setting)
     val supabaseUrl = resolveProfileSetting(::setting, environment, "SUPABASE_URL")
@@ -41,10 +40,28 @@ fun loadWebAppConfig(): AppConfig {
         useOllama = useOllama,
     )
 
-    console.log(
+    println(
         "[ShellDocsAuth] Web config loaded. env=${config.environment}, demoMode=${config.isDemoMode}, " +
             "supabaseUrl=${config.supabase?.url ?: "none"}",
     )
 
     return config
 }
+
+private fun parseQueryParams(search: String): Map<String, String> {
+    if (search.isBlank()) return emptyMap()
+    return search
+        .removePrefix("?")
+        .split("&")
+        .mapNotNull { pair ->
+            val separator = pair.indexOf('=')
+            if (separator <= 0) return@mapNotNull null
+            val key = decodeComponent(pair.substring(0, separator))
+            val value = decodeComponent(pair.substring(separator + 1))
+            key to value
+        }
+        .toMap()
+}
+
+private fun decodeComponent(value: String): String =
+    value.replace("+", " ")

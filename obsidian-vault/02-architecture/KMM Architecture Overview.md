@@ -33,6 +33,12 @@ Domain rules own search, retrieval and health heuristics. Data repositories prov
 
 Runtime configuration is now normalized through `AppEnvironment` and platform loaders so the same app can ship DEV and PROD bundles without duplicating business logic.
 
+The root `App` composable now applies `WindowInsets.safeDrawing` before handing off to auth or workspace content, so Android devices with notches, iOS devices with home indicators, and other inset-sensitive surfaces keep critical content inside the safe area.
+
+Platform-specific loader code stays isolated: Android, iOS, desktop and wasm all resolve config through their own source sets, while the shared app shell remains portable and does not depend on platform-only APIs.
+
+The iOS host app is now wired correctly for simulator testing: its Xcode project points to the real `Configuration/Config.xcconfig` file and includes the expected Preview Content folder, so the simulator build can complete instead of stopping at project validation.
+
 ## Mermaid Diagram
 
 - [[Architecture Diagram]]

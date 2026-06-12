@@ -2,6 +2,9 @@ package com.shelldocs.app
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -27,7 +30,11 @@ fun App(config: AppConfig = AppConfig()) {
 
     ShellDocsTheme(darkTheme = isDarkTheme) {
         val session by container.authRepository.session.collectAsState()
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        ) {
             if (session == null) {
                 val authViewModel = remember(container) { container.authViewModel() }
                 DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
