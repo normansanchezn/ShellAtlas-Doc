@@ -4,20 +4,26 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +36,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.designsystem.icons.IconEye
+import com.shelldocs.core.designsystem.icons.IconEyeOff
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
@@ -51,6 +59,7 @@ fun ShellTextField(
     val colors = ShellTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    var passwordVisible by remember { mutableStateOf(false) }
     val borderColor by animateColorAsState(
         targetValue = if (isFocused) colors.info else colors.border,
         animationSpec = tween(ShellMotion.durationMedium),
@@ -61,6 +70,11 @@ fun ShellTextField(
         animationSpec = tween(ShellMotion.durationMedium),
         label = "textFieldBackground",
     )
+    val visualTransformation = when {
+        !isPassword -> VisualTransformation.None
+        passwordVisible -> VisualTransformation.None
+        else -> PasswordVisualTransformation()
+    }
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -83,17 +97,30 @@ fun ShellTextField(
         singleLine = singleLine,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        visualTransformation = visualTransformation,
         interactionSource = interactionSource,
         decorationBox = { innerTextField ->
-            Box(
+            Row(
                 modifier = Modifier.padding(horizontal = ShellSpacing.md, vertical = 6.dp),
-                contentAlignment = Alignment.CenterStart,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (value.isEmpty()) {
-                    Text(text = placeholder, style = ShellTheme.typography.body, color = colors.textMuted)
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (value.isEmpty()) {
+                        Text(text = placeholder, style = ShellTheme.typography.body, color = colors.textMuted)
+                    }
+                    innerTextField()
                 }
-                innerTextField()
+                if (isPassword) {
+                    Icon(
+                        imageVector = if (passwordVisible) IconEyeOff else IconEye,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = colors.textMuted,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(ShellRadius.sm))
+                            .clickable { passwordVisible = !passwordVisible },
+                    )
+                }
             }
         },
     )

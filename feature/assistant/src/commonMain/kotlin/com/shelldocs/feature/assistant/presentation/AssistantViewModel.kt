@@ -61,7 +61,7 @@ class AssistantViewModel(
                         activeConversationId = null,
                         messages = listOf(welcomeMessage()),
                         errorDialog = null,
-                        conversationLanguage = AssistantLanguage.SPANISH,
+                        conversationLanguage = AssistantLanguage.ENGLISH,
                         activeCheckpointId = null,
                     )
                 }

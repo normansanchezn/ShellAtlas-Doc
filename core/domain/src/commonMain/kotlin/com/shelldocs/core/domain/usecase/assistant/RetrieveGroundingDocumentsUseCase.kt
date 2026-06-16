@@ -39,7 +39,7 @@ class RetrieveGroundingDocumentsUseCase(private val documentRepository: Document
     }
 
     private companion object {
-        const val DEFAULT_LIMIT = 3
+        const val DEFAULT_LIMIT = 5
         const val TITLE_WEIGHT = 3.0
         const val TAG_WEIGHT = 2.0
         const val BODY_WEIGHT = 1.0

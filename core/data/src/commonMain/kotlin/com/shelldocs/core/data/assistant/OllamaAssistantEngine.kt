@@ -24,12 +24,16 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
         language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> = try {
         val markdown = client.generate(buildPrompt(question, intent, grounding, language))
+        val allPartial = grounding.isNotEmpty() && grounding.all { it.isPartialMatch }
+        val confidence = when {
+            grounding.isEmpty() -> AnswerConfidence.LOW
+            allPartial -> AnswerConfidence.LOW
+            else -> AnswerConfidence.fromRetrievalScore(grounding.first().score)
+        }
         DomainResult.success(
             AssistantAnswer(
                 markdown = markdown.trim(),
-                confidence = grounding.firstOrNull()
-                    ?.let { AnswerConfidence.fromRetrievalScore(it.score) }
-                    ?: AnswerConfidence.NOT_ENOUGH_INFORMATION,
+                confidence = confidence,
                 sources = grounding.map {
                     AnswerSource(
                         documentId = it.document.id,
@@ -61,7 +65,15 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
         language: AssistantLanguage?,
     ): String = buildString {
         appendLine("You are ShellDoc AI, the assistant of an enterprise knowledge platform.")
-        appendLine("Answer ONLY with facts from the documentation excerpts below.")
+        appendLine("You are a Synthesis & Contextual Reasoning Engine, not a simple search tool.")
+        appendLine()
+        appendLine("CORE BEHAVIOR:")
+        appendLine("- Synthesize information across ALL provided documents, not just the top match.")
+        appendLine("- When documents contain complementary information, combine them into a coherent narrative.")
+        appendLine("- When information is incomplete, explicitly state what was found, what is missing, and suggest concrete next steps.")
+        appendLine("- Never give a flat 'not enough information' response. Always provide the best available context.")
+        appendLine("- Identify connections between documents: shared concepts, dependencies, and cross-references.")
+        appendLine()
         if (language != null) {
             appendLine("Reply in ${language.promptName} — this is the language the rest of the conversation has used.")
         } else {
@@ -70,26 +82,28 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
                     "default to English if unsure.",
             )
         }
-        appendLine(
-            "If the excerpts do not contain the answer, say so naturally in that language, suggest other " +
-                "search terms, and offer to create a draft document about the topic instead of a flat error.",
-        )
+        appendLine()
         when (intent) {
             AssistantIntentType.EXPLAIN_FLOW ->
-                appendLine("The user wants a step-by-step explanation of a flow or process; structure the answer as ordered steps.")
+                appendLine("The user wants a step-by-step explanation of a flow or process; structure the answer as ordered steps, pulling from multiple documents if they cover different phases.")
             AssistantIntentType.IMPROVE_DOCUMENT ->
                 appendLine("The user asks whether a document should be improved; judge it honestly and say no when it is healthy.")
             AssistantIntentType.SUMMARIZE ->
-                appendLine("The user wants a concise summary with key points.")
+                appendLine("The user wants a concise summary with key points. If multiple documents are relevant, synthesize them into a unified summary.")
             AssistantIntentType.CREATE_DOCUMENT ->
                 appendLine("The user wants a new document created; explain that you'll set up a draft.")
             AssistantIntentType.QUESTION -> Unit
         }
         appendLine()
-        grounding.forEachIndexed { index, scored ->
-            appendLine("--- Document ${index + 1}: ${scored.document.title} ---")
-            appendLine(scored.document.plainText.take(MAX_EXCERPT_CHARS))
-            appendLine()
+        if (grounding.isEmpty()) {
+            appendLine("No documentation excerpts matched this query.")
+            appendLine("Acknowledge the gap, suggest what kind of documentation would help, and offer to create a draft.")
+        } else {
+            grounding.forEachIndexed { index, scored ->
+                appendLine("--- Document ${index + 1}: ${scored.document.title} (relevance: ${scored.relevancePercent}%) ---")
+                appendLine(scored.document.plainText.take(MAX_EXCERPT_CHARS))
+                appendLine()
+            }
         }
         appendLine("Question: $question")
     }

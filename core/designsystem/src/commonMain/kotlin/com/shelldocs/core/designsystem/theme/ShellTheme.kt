@@ -27,6 +27,7 @@ object ShellTheme {
 @Composable
 fun ShellDocsTheme(
     darkTheme: Boolean = false,
+    textScale: Float = 1f,
     content: @Composable () -> Unit,
 ) {
     val colors: ShellColorScheme = if (darkTheme) ShellDarkColors else ShellLightColors
@@ -57,7 +58,7 @@ fun ShellDocsTheme(
     )
     CompositionLocalProvider(
         LocalShellColors provides colors,
-        LocalShellTypography provides ShellTypography.default(),
+        LocalShellTypography provides ShellTypography.default().scaled(textScale),
         LocalTextSelectionColors provides selectionColors,
     ) {
         MaterialTheme(colorScheme = materialColors, content = content)

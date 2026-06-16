@@ -10,7 +10,7 @@ fun main() = application {
     val config = loadDesktopAppConfig()
     Window(
         onCloseRequest = ::exitApplication,
-        title = "ShellDocs",
+        title = "ShellAtlas",
         state = WindowState(size = DpSize(1440.dp, 900.dp)),
     ) {
         App(config = config)

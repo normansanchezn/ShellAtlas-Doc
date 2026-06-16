@@ -49,7 +49,7 @@ private val EXPLORER_DEFAULT_WIDTH = 230.dp
 private val ATTRIBUTES_MIN_WIDTH = 200.dp
 private val ATTRIBUTES_MAX_WIDTH = 360.dp
 private val ATTRIBUTES_DEFAULT_WIDTH = 240.dp
-internal val COLLAPSED_RAIL_WIDTH = 22.dp
+internal val COLLAPSED_RAIL_WIDTH = 32.dp
 
 private enum class DocumentsMobilePane {
     Explorer,

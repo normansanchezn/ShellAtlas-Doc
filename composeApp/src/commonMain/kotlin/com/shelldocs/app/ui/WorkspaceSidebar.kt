@@ -161,13 +161,13 @@ private fun SidebarHeader() {
         ) {
             Icon(
                 imageVector = IconShellPecten,
-                contentDescription = "ShellDoc",
+                contentDescription = "ShellAtlas",
                 tint = colors.onBrand,
                 modifier = Modifier.size(15.dp),
             )
         }
         Column {
-            Text("ShellDoc", style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
+            Text("ShellAtlas", style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
             Text("Knowledge Platform", style = ShellTheme.typography.caption, color = colors.textMuted)
         }
     }

@@ -62,14 +62,12 @@ fun DocumentReaderPanel(
                 .fillMaxWidth()
                 .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
         ) {
-            Text(
-                text = "Docs  ›  ${document.attributes.platform}  ›  ${document.title}",
-                style = ShellTheme.typography.caption,
-                color = colors.textMuted,
+            DocumentBreadcrumb(
+                document = document,
+                onNavigate = { folderId -> onIntent(DocumentsIntent.BreadcrumbNavigate(folderId)) },
                 modifier = Modifier.weight(1f),
-                maxLines = 1,
             )
             ShellGhostButton(
                 text = "History",
@@ -103,7 +101,7 @@ fun DocumentReaderPanel(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = ShellSpacing.xxxl, vertical = ShellSpacing.xl),
                 ) {
-                    documentBody(document = document, state = state, colors = colors)
+                    documentBody(document = document, state = state, colors = colors, onIntent = onIntent)
                 }
                 if (state.isHistoryVisible) {
                     ResizeHandle(onDrag = onResizeAttributes)
@@ -155,7 +153,7 @@ fun DocumentReaderPanel(
                     .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
             ) {
-                documentBody(document = document, state = state, colors = colors)
+                documentBody(document = document, state = state, colors = colors, onIntent = onIntent)
                 when {
                     state.isHistoryVisible -> VersionHistoryPanel(
                         state = state,
@@ -180,6 +178,7 @@ private fun documentBody(
     document: Document,
     state: DocumentsState,
     colors: com.shelldocs.core.designsystem.tokens.ShellColorScheme,
+    onIntent: (DocumentsIntent) -> Unit = {},
 ) {
     ShellStatusBadge(status = document.status)
     Text(
@@ -208,7 +207,72 @@ private fun documentBody(
         modifier = Modifier.padding(top = ShellSpacing.xl),
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
     ) {
-        ShellGhostButton(text = "Share", icon = IconShare, onClick = {}, enabled = !state.isBusy)
-        ShellGhostButton(text = "Bookmark", icon = IconBookmark, onClick = {}, enabled = !state.isBusy)
+        ShellGhostButton(
+            text = "Share",
+            icon = IconShare,
+            onClick = { onIntent(com.shelldocs.feature.documents.presentation.DocumentsIntent.ExportPdf) },
+            enabled = !state.isBusy,
+        )
+        val isBookmarked = document.id in state.bookmarkedDocumentIds
+        ShellGhostButton(
+            text = if (isBookmarked) "Bookmarked" else "Bookmark",
+            icon = IconBookmark,
+            onClick = { onIntent(com.shelldocs.feature.documents.presentation.DocumentsIntent.ToggleBookmark(document.id)) },
+            enabled = !state.isBusy,
+        )
     }
 }
+
+@OptIn(ExperimentalTime::class)
+@Composable
+private fun DocumentBreadcrumb(
+    document: Document,
+    onNavigate: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ShellTheme.colors
+    val segments = buildList {
+        add(BreadcrumbSegment("Docs", null))
+        val platform = document.attributes.platform
+        if (platform.isNotBlank()) {
+            add(BreadcrumbSegment(platform, "folder-$platform"))
+        }
+        val module = document.attributes.module
+        if (module.isNotBlank() && module != platform) {
+            add(BreadcrumbSegment(module, "folder-$module"))
+        }
+        add(BreadcrumbSegment(document.title, null))
+    }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        segments.forEachIndexed { index, segment ->
+            val isLast = index == segments.lastIndex
+            Text(
+                text = segment.label,
+                style = ShellTheme.typography.caption,
+                color = if (isLast) colors.textPrimary else colors.brand,
+                maxLines = 1,
+                modifier = if (!isLast) {
+                    Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable { onNavigate(segment.folderId) }
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                } else {
+                    Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                },
+            )
+            if (!isLast) {
+                Text(
+                    text = "›",
+                    style = ShellTheme.typography.caption,
+                    color = colors.textMuted,
+                )
+            }
+        }
+    }
+}
+
+private data class BreadcrumbSegment(val label: String, val folderId: String?)

@@ -32,4 +32,7 @@ sealed interface DocumentsIntent : MviIntent {
     data class AttributesTagsChanged(val value: String) : DocumentsIntent
     data object SaveAttributes : DocumentsIntent
     data object DismissError : DocumentsIntent
+    data class ToggleBookmark(val documentId: String) : DocumentsIntent
+    data object ExportPdf : DocumentsIntent
+    data class BreadcrumbNavigate(val folderId: String?) : DocumentsIntent
 }

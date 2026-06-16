@@ -20,7 +20,7 @@ data class AssistantState(
     val availability: AssistantAvailability? = null,
     val indexedDocuments: Int = 0,
     val errorDialog: ErrorDialogState? = null,
-    val conversationLanguage: AssistantLanguage = AssistantLanguage.SPANISH,
+    val conversationLanguage: AssistantLanguage = AssistantLanguage.ENGLISH,
     val checkpoints: List<KnowledgeCheckpoint> = emptyList(),
     val activeCheckpointId: String? = null,
     val knowledgeProgress: KnowledgeProgress? = null,

@@ -144,7 +144,7 @@ class GroundedAssistantEngineTest {
 
         assertNotNull(answer)
         assertEquals(AnswerConfidence.NOT_ENOUGH_INFORMATION, answer.confidence)
-        assertTrue("Todavia no tengo documentacion indexada" in answer.markdown)
+        assertTrue("Aun no tengo documentacion" in answer.markdown)
     }
 
     @Test
@@ -157,7 +157,7 @@ class GroundedAssistantEngineTest {
 
         assertNotNull(answer)
         assertEquals(AnswerConfidence.NOT_ENOUGH_INFORMATION, answer.confidence)
-        assertTrue("Je n'ai pas encore de documentation indexee" in answer.markdown)
+        assertTrue("Je n'ai pas encore de documentation" in answer.markdown)
     }
 
     @Test

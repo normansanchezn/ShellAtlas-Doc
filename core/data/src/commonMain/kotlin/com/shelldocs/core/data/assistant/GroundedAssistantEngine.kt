@@ -41,22 +41,26 @@ class GroundedAssistantEngine(
         grounding: List<ScoredDocument>,
         language: AssistantLanguage?,
     ): DomainResult<AssistantAnswer> {
-        val language = language ?: detectLanguage(question)
+        val lang = language ?: detectLanguage(question)
         if (grounding.isEmpty()) {
-            return DomainResult.success(notEnoughInformation(intent, language))
+            return DomainResult.success(gapArticulation(question, lang, intent))
         }
         val top = grounding.first()
-        val markdown = when (intent) {
-            AssistantIntentType.QUESTION -> answerQuestion(question, grounding, language)
-            AssistantIntentType.EXPLAIN_FLOW -> explainFlow(question, top.document, grounding, language)
-            AssistantIntentType.IMPROVE_DOCUMENT -> adviseOnImprovement(top.document, language)
-            AssistantIntentType.SUMMARIZE -> summarize(top.document, language)
-            AssistantIntentType.CREATE_DOCUMENT -> Copy.of(language).createDocumentHint
+        val allPartial = grounding.all { it.isPartialMatch }
+        val markdown = when {
+            allPartial -> synthesizePartialContext(question, grounding, lang)
+            else -> when (intent) {
+                AssistantIntentType.QUESTION -> synthesizeQuestion(question, grounding, lang)
+                AssistantIntentType.EXPLAIN_FLOW -> explainFlow(question, top.document, grounding, lang)
+                AssistantIntentType.IMPROVE_DOCUMENT -> adviseOnImprovement(top.document, lang)
+                AssistantIntentType.SUMMARIZE -> summarize(top.document, lang)
+                AssistantIntentType.CREATE_DOCUMENT -> Copy.of(lang).createDocumentHint
+            }
         }
         return DomainResult.success(
             AssistantAnswer(
                 markdown = markdown,
-                confidence = AnswerConfidence.fromRetrievalScore(top.score),
+                confidence = if (allPartial) AnswerConfidence.LOW else AnswerConfidence.fromRetrievalScore(top.score),
                 sources = grounding.map { scored ->
                     AnswerSource(
                         documentId = scored.document.id,
@@ -76,21 +80,64 @@ class GroundedAssistantEngine(
         statusMessage = "Grounded engine — answers come strictly from indexed documentation",
     )
 
-    private fun answerQuestion(
+    private fun synthesizeQuestion(
         question: String,
         grounding: List<ScoredDocument>,
         language: AssistantLanguage,
     ): String {
         val copy = Copy.of(language)
-        val document = grounding.first().document
-        val blocks = blocksOf(document)
         val terms = question.lowercase().split(' ').filter { it.length >= 4 }
+        if (grounding.size == 1) {
+            return singleDocAnswer(grounding.first().document, terms, copy)
+        }
+        return buildString {
+            appendLine(copy.synthesisIntro(grounding.size))
+            appendLine()
+            grounding.forEachIndexed { index, scored ->
+                val doc = scored.document
+                val blocks = blocksOf(doc)
+                val paragraphs = blocks
+                    .filterIsInstance<ParagraphBlock>()
+                    .filter { p -> terms.any { it in p.text.lowercase() } || p.text.length > 80 }
+                    .take(2)
+                val listPoints = blocks.filterIsInstance<ListBlock>().flatMap { it.items }.take(3)
+                appendLine("### ${doc.title}")
+                appendLine(doc.summary.ifBlank { firstParagraph(blocks, copy) })
+                if (paragraphs.isNotEmpty()) {
+                    appendLine()
+                    paragraphs.forEach {
+                        appendLine(it.text)
+                        appendLine()
+                    }
+                }
+                if (listPoints.isNotEmpty()) {
+                    listPoints.forEach { appendLine("- $it") }
+                    appendLine()
+                }
+                if (index < grounding.lastIndex) appendLine("---")
+                appendLine()
+            }
+            val sharedTerms = findSharedConcepts(grounding, terms)
+            if (sharedTerms.isNotEmpty()) {
+                appendLine(copy.crossReference)
+                sharedTerms.forEach { appendLine("- $it") }
+                appendLine()
+            }
+            append(copy.questionOutro)
+        }.trim()
+    }
+
+    private fun singleDocAnswer(
+        document: Document,
+        terms: List<String>,
+        copy: Copy,
+    ): String {
+        val blocks = blocksOf(document)
         val relevantParagraphs = blocks
             .filterIsInstance<ParagraphBlock>()
             .filter { paragraph -> terms.any { it in paragraph.text.lowercase() } || paragraph.text.length > 80 }
             .take(3)
         val listPoints = blocks.filterIsInstance<ListBlock>().flatMap { it.items }.take(4)
-        val relatedDocuments = grounding.drop(1).take(2).map { it.document.title }
         return buildString {
             appendLine(copy.questionIntro(document.title))
             appendLine()
@@ -107,13 +154,64 @@ class GroundedAssistantEngine(
                 listPoints.forEach { appendLine("- $it") }
                 appendLine()
             }
-            if (relatedDocuments.isNotEmpty()) {
-                append(copy.alsoSee)
-                appendLine(relatedDocuments.joinToString(", "))
-                appendLine()
-            }
             append(copy.questionOutro)
         }.trim()
+    }
+
+    private fun synthesizePartialContext(
+        question: String,
+        grounding: List<ScoredDocument>,
+        language: AssistantLanguage,
+    ): String {
+        val copy = Copy.of(language)
+        return buildString {
+            appendLine(copy.partialMatchIntro)
+            appendLine()
+            grounding.take(3).forEach { scored ->
+                val blocks = blocksOf(scored.document)
+                val summary = scored.document.summary.ifBlank { firstParagraph(blocks, copy) }
+                appendLine("- **${scored.document.title}** (${scored.relevancePercent}%): $summary")
+            }
+            appendLine()
+            appendLine(copy.gapDetected)
+            appendLine()
+            appendLine(copy.gapActions)
+        }.trim()
+    }
+
+    private fun gapArticulation(
+        question: String,
+        language: AssistantLanguage,
+        intent: AssistantIntentType,
+    ): AssistantAnswer {
+        val copy = Copy.of(language)
+        val markdown = buildString {
+            appendLine(copy.gapIntro(question))
+            appendLine()
+            appendLine(copy.gapActions)
+        }.trim()
+        return AssistantAnswer(
+            markdown = markdown,
+            confidence = AnswerConfidence.NOT_ENOUGH_INFORMATION,
+            sources = emptyList(),
+            intent = intent,
+        )
+    }
+
+    private fun findSharedConcepts(grounding: List<ScoredDocument>, terms: List<String>): List<String> {
+        val docTexts = grounding.map { scored ->
+            val blocks = blocksOf(scored.document)
+            blocks.filterIsInstance<ParagraphBlock>().joinToString(" ") { it.text.lowercase() }
+        }
+        return terms.filter { term ->
+            docTexts.count { term in it } >= 2
+        }.take(3).map { term ->
+            val mentioningDocs = grounding.filter { scored ->
+                val text = blocksOf(scored.document).filterIsInstance<ParagraphBlock>().joinToString(" ") { it.text.lowercase() }
+                term in text
+            }.map { it.document.title }
+            "${mentioningDocs.joinToString(" & ")} → *$term*"
+        }
     }
 
     private fun explainFlow(
@@ -216,13 +314,6 @@ class GroundedAssistantEngine(
         }.trim()
     }
 
-    private fun notEnoughInformation(intent: AssistantIntentType, language: AssistantLanguage) = AssistantAnswer(
-        markdown = Copy.of(language).notEnoughInformation,
-        confidence = AnswerConfidence.NOT_ENOUGH_INFORMATION,
-        sources = emptyList(),
-        intent = intent,
-    )
-
     private fun blocksOf(document: Document) =
         document.content.blocks.ifEmpty { markdownParser.parse(document.rawMarkdown).content.blocks }
 
@@ -250,8 +341,13 @@ class GroundedAssistantEngine(
         val keyPoints: String,
         val noNarrativeContent: String,
         val createDocumentHint: String,
-        val notEnoughInformation: String,
         val alsoSee: String,
+        val synthesisIntro: (Int) -> String,
+        val crossReference: String,
+        val partialMatchIntro: String,
+        val gapDetected: String,
+        val gapActions: String,
+        val gapIntro: (String) -> String,
     ) {
         companion object {
             fun of(language: AssistantLanguage): Copy = when (language) {
@@ -275,11 +371,16 @@ class GroundedAssistantEngine(
                 noNarrativeContent = "The document has no narrative content yet.",
                 createDocumentHint = "I can draft that for you — just say " +
                     "\"create a document about ...\" and I'll set up a new draft.",
-                notEnoughInformation = "I don't have anything indexed on that yet. Try other terms " +
-                    "(for example *authentication*, *loyalty rewards*, *release process*), or if you'd " +
-                    "rather start from scratch I can create a draft for you right now — just say " +
-                    "\"create a document about ...\" and I'll set up the initial structure.",
                 alsoSee = "You might also find this useful: ",
+                synthesisIntro = { count -> "I found relevant information across **$count documents**. Here's a synthesis:" },
+                crossReference = "**Connections across documents:**",
+                partialMatchIntro = "I couldn't find an exact match, but here's what I found that may be related:",
+                gapDetected = "**What's missing:** The documentation doesn't fully cover this topic yet. The information above is the closest context available.",
+                gapActions = "**Suggested next steps:**\n" +
+                    "- Ask your team if there's undocumented knowledge about this topic\n" +
+                    "- Check Confluence for recent pages that haven't been synced yet\n" +
+                    "- Say \"create a document about ...\" and I'll set up a draft for you",
+                gapIntro = { question -> "I don't have documentation that directly answers \"*$question*\" yet." },
             )
 
             private val SPANISH = Copy(
@@ -297,11 +398,16 @@ class GroundedAssistantEngine(
                 noNarrativeContent = "El documento aun no tiene contenido narrativo.",
                 createDocumentHint = "Puedo crear ese borrador por ti — pidemelo de nuevo con " +
                     "\"crea un documento sobre ...\" y te armo la estructura inicial.",
-                notEnoughInformation = "Todavia no tengo documentacion indexada sobre eso. Puedes intentar con otros " +
-                    "terminos (por ejemplo *autenticacion*, *recompensas*, *proceso de release*), o si quieres " +
-                    "puedo crearte un borrador nuevo ahora mismo — solo dime \"crea un documento sobre ...\" y " +
-                    "te armo la estructura inicial para que la completes.",
                 alsoSee = "Tambien te puede servir: ",
+                synthesisIntro = { count -> "Encontre informacion relevante en **$count documentos**. Aqui va una sintesis:" },
+                crossReference = "**Conexiones entre documentos:**",
+                partialMatchIntro = "No encontre una coincidencia exacta, pero esto es lo mas relacionado que tengo:",
+                gapDetected = "**Lo que falta:** La documentacion aun no cubre este tema completamente. La informacion de arriba es el contexto mas cercano disponible.",
+                gapActions = "**Proximos pasos sugeridos:**\n" +
+                    "- Pregunta a tu equipo si hay conocimiento no documentado sobre este tema\n" +
+                    "- Revisa Confluence por paginas recientes que no se hayan sincronizado\n" +
+                    "- Dime \"crea un documento sobre ...\" y te preparo un borrador",
+                gapIntro = { question -> "Aun no tengo documentacion que responda directamente \"*$question*\"." },
             )
 
             private val FRENCH = Copy(
@@ -319,11 +425,16 @@ class GroundedAssistantEngine(
                 noNarrativeContent = "Le document n'a pas encore de contenu narratif.",
                 createDocumentHint = "Je peux rediger ce document pour toi — redemande avec " +
                     "\"cree un document sur ...\" et je preparerai un brouillon.",
-                notEnoughInformation = "Je n'ai pas encore de documentation indexee sur ce sujet. Tu peux essayer " +
-                    "d'autres termes (par exemple *authentification*, *recompenses*, *processus de release*), ou " +
-                    "si tu preferes je peux creer un brouillon des maintenant — dis simplement " +
-                    "\"cree un document sur ...\" et je prepare la structure initiale.",
                 alsoSee = "Tu pourrais aussi regarder : ",
+                synthesisIntro = { count -> "J'ai trouve des informations pertinentes dans **$count documents**. Voici une synthese :" },
+                crossReference = "**Connexions entre documents :**",
+                partialMatchIntro = "Je n'ai pas trouve de correspondance exacte, mais voici ce qui pourrait etre lie :",
+                gapDetected = "**Ce qui manque :** La documentation ne couvre pas encore completement ce sujet. Les informations ci-dessus sont le contexte le plus proche disponible.",
+                gapActions = "**Prochaines etapes suggerees :**\n" +
+                    "- Demande a ton equipe s'il y a des connaissances non documentees sur ce sujet\n" +
+                    "- Verifie Confluence pour les pages recentes qui n'ont pas encore ete synchronisees\n" +
+                    "- Dis \"cree un document sur ...\" et je te prepare un brouillon",
+                gapIntro = { question -> "Je n'ai pas encore de documentation qui repond directement a \"*$question*\"." },
             )
         }
     }

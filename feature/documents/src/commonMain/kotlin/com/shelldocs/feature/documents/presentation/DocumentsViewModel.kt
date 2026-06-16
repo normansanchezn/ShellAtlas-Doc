@@ -100,6 +100,9 @@ class DocumentsViewModel(
                 setState { copy(attributesDraft = attributesDraft.copy(tagsText = intent.value)) }
             DocumentsIntent.SaveAttributes -> persistAttributes()
             DocumentsIntent.DismissError -> setState { copy(errorDialog = null) }
+            is DocumentsIntent.ToggleBookmark -> toggleBookmark(intent.documentId)
+            DocumentsIntent.ExportPdf -> exportPdf()
+            is DocumentsIntent.BreadcrumbNavigate -> breadcrumbNavigate(intent.folderId)
         }
     }
 
@@ -118,7 +121,7 @@ class DocumentsViewModel(
                 loadingMessage = null,
                 documents = documents,
                 tree = tree,
-                expandedFolders = tree?.children?.map { it.id }?.toSet().orEmpty() + setOfNotNull(tree?.id),
+                expandedFolders = tree?.allFolderIds().orEmpty(),
                 errorDialog = when {
                     documentsResult is DomainResult.Failure ->
                         documentsResult.error.toErrorDialogState("load the documents")
@@ -410,6 +413,49 @@ class DocumentsViewModel(
                     )
                 }
             }
+    }
+
+    private fun toggleBookmark(documentId: String) {
+        setState {
+            val updated = if (documentId in bookmarkedDocumentIds) {
+                bookmarkedDocumentIds - documentId
+            } else {
+                bookmarkedDocumentIds + documentId
+            }
+            copy(bookmarkedDocumentIds = updated)
+        }
+    }
+
+    private suspend fun exportPdf() {
+        val document = currentState.selectedDocument ?: return
+        sendEffect(DocumentsEffect.ExportDocumentAsPdf(document.id, document.title, document.rawMarkdown))
+    }
+
+    private fun breadcrumbNavigate(folderId: String?) {
+        if (folderId == null) {
+            setState {
+                copy(
+                    selectedDocument = null,
+                    isEditing = false,
+                    isHistoryVisible = false,
+                    isExplorerExpanded = true,
+                )
+            }
+        } else {
+            setState { copy(expandedFolders = expandedFolders + folderId, isExplorerExpanded = true) }
+        }
+    }
+
+    private fun DocumentNode.allFolderIds(): Set<String> {
+        val ids = mutableSetOf<String>()
+        fun collect(node: DocumentNode) {
+            if (node.type == com.shelldocs.core.domain.entity.document.DocumentNodeType.FOLDER) {
+                ids.add(node.id)
+            }
+            node.children.forEach { collect(it) }
+        }
+        collect(this)
+        return ids
     }
 
     private suspend fun refreshAfterMutation(selectedId: String) {

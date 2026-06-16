@@ -3,6 +3,7 @@ import {Hono} from "hono";
 import {cors} from "hono/cors";
 import {createClient} from "@supabase/supabase-js";
 import {parseMarkdown} from "./markdown-parser.ts";
+import {confluenceConfigFromEnv, syncConfluence, fetchPageTree} from "./confluence-sync.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase client
@@ -842,6 +843,32 @@ app.post("/v1/assistant/intelligence", async (c) => {
 
     if (error) return c.json({error: error.message}, 500);
     return c.json({saved: true});
+});
+
+// ---------------------------------------------------------------------------
+// POST /v1/sources/confluence/sync
+// ---------------------------------------------------------------------------
+
+app.post("/v1/sources/confluence/sync", async (c) => {
+    const confluenceConfig = confluenceConfigFromEnv();
+    if (!confluenceConfig) {
+        return c.json({error: "Confluence is not configured (missing CONFLUENCE_BASE_URL, CONFLUENCE_API_TOKEN, or CONFLUENCE_USER_EMAIL)"}, 400);
+    }
+    const result = await syncConfluence(confluenceConfig, db);
+    return c.json(result);
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/sources/confluence/tree
+// ---------------------------------------------------------------------------
+
+app.get("/v1/sources/confluence/tree", async (c) => {
+    const confluenceConfig = confluenceConfigFromEnv();
+    if (!confluenceConfig) {
+        return c.json({error: "Confluence is not configured"}, 400);
+    }
+    const tree = await fetchPageTree(confluenceConfig);
+    return c.json({pages: tree, total: tree.length});
 });
 
 // ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ data class ScoredDocument(
     val document: Document,
     val score: Double,
 ) {
-    /** Relevance as shown next to each source citation (e.g. "97%"). */
     val relevancePercent: Int = (score * 100).toInt().coerceIn(1, 99)
+    val isHighConfidence: Boolean get() = score >= 0.62
+    val isPartialMatch: Boolean get() = score in 0.01..0.31
 }

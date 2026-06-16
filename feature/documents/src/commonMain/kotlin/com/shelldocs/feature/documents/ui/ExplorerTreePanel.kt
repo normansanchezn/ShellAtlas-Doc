@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
+import com.shelldocs.core.designsystem.icons.IconBookmark
 import com.shelldocs.core.designsystem.icons.IconChevronDown
 import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.icons.IconChevronRight
@@ -78,8 +79,59 @@ fun ExplorerTreePanel(
             placeholder = "Search...",
         )
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            if (state.bookmarkedDocumentIds.isNotEmpty()) {
+                BookmarksSection(state = state, onIntent = onIntent)
+            }
             state.tree?.let { root ->
                 TreeNode(node = root, depth = 0, state = state, onIntent = onIntent)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BookmarksSection(
+    state: DocumentsState,
+    onIntent: (DocumentsIntent) -> Unit,
+) {
+    val colors = ShellTheme.colors
+    val bookmarkedDocs = state.documents.filter { it.id in state.bookmarkedDocumentIds }
+    if (bookmarkedDocs.isEmpty()) return
+
+    Column(modifier = Modifier.padding(bottom = ShellSpacing.sm)) {
+        ShellSectionLabel(
+            text = "Bookmarks",
+            modifier = Modifier.padding(start = 6.dp, bottom = 4.dp),
+        )
+        bookmarkedDocs.forEach { doc ->
+            val isSelected = doc.id == state.selectedDocument?.id
+            val background by animateColorAsState(
+                targetValue = if (isSelected) colors.surfaceSelected else colors.surface,
+                animationSpec = tween(ShellMotion.durationMedium),
+                label = "bookmarkNodeBackground",
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(ShellRadius.sm))
+                    .background(background)
+                    .clickable { onIntent(DocumentsIntent.SelectDocument(doc.id)) }
+                    .padding(start = 6.dp, top = 5.dp, bottom = 5.dp, end = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    imageVector = IconBookmark,
+                    contentDescription = null,
+                    tint = if (isSelected) colors.brand else colors.textMuted,
+                    modifier = Modifier.size(12.dp),
+                )
+                Text(
+                    text = doc.title,
+                    style = ShellTheme.typography.label,
+                    color = if (isSelected) colors.brand else colors.textSecondary,
+                    maxLines = 1,
+                )
             }
         }
     }

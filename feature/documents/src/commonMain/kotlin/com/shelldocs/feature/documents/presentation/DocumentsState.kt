@@ -41,6 +41,7 @@ data class DocumentsState(
     val isAttributesExpanded: Boolean = true,
     val isAttributesDialogOpen: Boolean = false,
     val attributesDraft: AttributesDraft = AttributesDraft(),
+    val bookmarkedDocumentIds: Set<String> = emptySet(),
 ) : MviState {
 
     val filteredDocuments: List<Document> =

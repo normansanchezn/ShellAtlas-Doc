@@ -23,6 +23,19 @@ data class ShellTypography(
     val metricValue: TextStyle,
     val code: TextStyle,
 ) {
+    fun scaled(factor: Float): ShellTypography = if (factor == 1f) this else ShellTypography(
+        displayTitle = displayTitle.scale(factor),
+        pageTitle = pageTitle.scale(factor),
+        sectionTitle = sectionTitle.scale(factor),
+        body = body.scale(factor),
+        bodyStrong = bodyStrong.scale(factor),
+        label = label.scale(factor),
+        caption = caption.scale(factor),
+        sectionLabel = sectionLabel.scale(factor),
+        metricValue = metricValue.scale(factor),
+        code = code.scale(factor),
+    )
+
     companion object {
         fun default(
             sans: FontFamily = FontFamily.SansSerif,
@@ -38,6 +51,11 @@ data class ShellTypography(
             sectionLabel = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = 0.5.sp),
             metricValue = TextStyle(fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
             code = TextStyle(fontFamily = mono, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp),
+        )
+
+        private fun TextStyle.scale(factor: Float): TextStyle = copy(
+            fontSize = fontSize * factor,
+            lineHeight = lineHeight * factor,
         )
     }
 }

@@ -77,13 +77,13 @@ fun SignInScreen(
                 ) {
                     Icon(
                         imageVector = IconShellPecten,
-                        contentDescription = "ShellDoc",
+                        contentDescription = "ShellAtlas",
                         tint = colors.onBrand,
                         modifier = Modifier.size(22.dp),
                     )
                 }
                 Spacer(Modifier.height(ShellSpacing.md))
-                Text("ShellDoc", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
+                Text("ShellAtlas", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
                 Text(
                     "Knowledge Platform",
                     style = ShellTheme.typography.caption,
