@@ -17,10 +17,14 @@ tags:
 - Added Android instrumented tests for demo walkthroughs.
 - Added shared Compose test tags for sign-in, navigation and assistant input.
 - Documented how to run the demo flows and record videos with `adb screenrecord`.
+- Replaced `UiDevice` orientation control with Activity-managed landscape orientation.
+- Added automatic final snapshots for each flow and optional on-device `.mp4` recording.
+- Forced a newer Espresso version in `androidTest` to avoid the `InputManager.getInstance()` crash path from the older transitive stack.
 
 ## Files created
 
 - `composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt`
+- `composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/DemoArtifacts.kt`
 - `core/common/src/commonMain/kotlin/com/shelldocs/core/common/testing/DemoTestTags.kt`
 - `obsidian-vault/03-features/Android Demo Tests.md`
 - `obsidian-vault/08-diagrams/Android Demo Test Flow.md`
@@ -44,18 +48,24 @@ tags:
 
 - Keep recording outside the test process and make the UI flow deterministic inside the test.
 - Use landscape orientation so phone-size devices can expose the wider workspace navigation.
+- Prefer built-in Compose snapshots plus device `screenrecord` over Paparazzi for end-to-end demo flows.
 
 ## Issues found
 
 - The app needed stable semantics tags before Android UI automation would be reliable.
+- The instrumented stack was resolving `espresso-core:3.5.0`, which is too old for the current emulator/device API combination that throws `NoSuchMethodException` on `InputManager.getInstance()`.
 
 ## Tests added
 
 - `demo_authAssistantAndDashboardWalkthrough`
-- `demo_documentsAndUpdatesWalkthrough`
-- `demo_sourcesAndSettingsWalkthrough`
+- `demo_documentsBrowseHistoryAndBookmarkWalkthrough`
+- `demo_documentsCreateWalkthrough`
+- `demo_documentsEditAndPublishWalkthrough`
+- `demo_updatesScanAndFilterWalkthrough`
+- `demo_sourcesSyncAndReconnectWalkthrough`
+- `demo_settingsSectionsAndSignOutWalkthrough`
 
 ## Next steps
 
-- Run the suite on a connected emulator/device and capture the first demo clips.
-- Add richer document editing flows if product demos need authoring scenarios too.
+- Run the suite on a connected emulator/device and pull the generated `.mp4` / `.png` artifacts.
+- If screenshot regression becomes a priority, add Paparazzi separately for static states, not for video.

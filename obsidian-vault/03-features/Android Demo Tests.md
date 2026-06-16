@@ -33,10 +33,13 @@ Manual demos are inconsistent and slow to reproduce when recording stakeholder v
 - Demo tests sign in using demo mode.
 - Tests navigate the main app surfaces in a repeatable order.
 - Optional pauses make it easier to capture clean screen recordings.
+- Each flow can save a final snapshot automatically.
+- Each flow can save an `.mp4` automatically when `recordDemoVideo=true`.
 
 ## Related Files
 
 - `composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt`
+- `composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/DemoArtifacts.kt`
 - `composeApp/build.gradle.kts`
 - `core/common/src/commonMain/kotlin/com/shelldocs/core/common/testing/DemoTestTags.kt`
 - `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth/ui/SignInScreen.kt`
@@ -99,7 +102,10 @@ Manual demos are inconsistent and slow to reproduce when recording stakeholder v
 
 - Route-level tags are centralized in `DemoTestTags`.
 - Recording pauses are configurable with `demoPauseMs`.
-- Videos are recorded externally with `adb shell screenrecord` while the test runs.
+- Instrumented flows now force landscape via the Activity instead of depending on `UiDevice`.
+- Final snapshots are saved automatically from the Compose root.
+- Demo videos can be saved automatically to `/sdcard/Movies/ShellAtlasDemo/`.
+- Paparazzi was intentionally not used for video capture because it is a screenshot tool, not an end-to-end recorder.
 
 ## Open Questions
 

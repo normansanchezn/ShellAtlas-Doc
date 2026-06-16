@@ -96,7 +96,8 @@ kotlin {
             implementation("androidx.compose.ui:ui-test-junit4:1.9.0")
             implementation("androidx.test.ext:junit:1.2.1")
             implementation("androidx.test:runner:1.6.2")
-            implementation("androidx.test.uiautomator:uiautomator:2.3.0")
+            implementation("androidx.test.espresso:espresso-core:3.7.0")
+            implementation("androidx.test.espresso:espresso-idling-resource:3.7.0")
         }
         val desktopMain by getting {
             dependencies {
@@ -164,6 +165,9 @@ android {
         release {
             isMinifyEnabled = false
         }
+    }
+    testOptions {
+        animationsDisabled = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

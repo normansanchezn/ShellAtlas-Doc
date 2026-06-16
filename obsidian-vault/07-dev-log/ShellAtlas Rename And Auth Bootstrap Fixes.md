@@ -19,6 +19,7 @@ tags:
 - Improved sign-in error feedback for local development failures.
 - Hardened runtime config parsing to ignore placeholder values from copied example env files.
 - Confirmed the password field exposes a reliable show/hide eye control.
+- Neutralized the destructive `20260612044949_remote_schema.sql` snapshot so `supabase start` no longer drops canonical local tables before `seed.sql`.
 
 ## Files created
 
@@ -50,11 +51,13 @@ tags:
 - Keep package names and module names stable for now, but rename user-facing product strings to ShellAtlas.
 - Ignore placeholder env values instead of attempting broken local auth requests.
 - Repair the Supabase bootstrap order directly in the schema snapshot instead of hiding the migration failure.
+- Treat hand-authored local migrations as the source of truth for bootstrap, and keep remote snapshot migrations non-destructive unless they are reviewed and rewritten.
 
 ## Issues found
 
 - `.env.example` contained a sensitive-looking Confluence token and personal email, so both were replaced with placeholders.
 - The local Supabase stack is currently not running, which matches the sign-in failure shown in the screenshot.
+- The later remote snapshot migration dropped `assistant_intelligence`, `profiles`, `roles` and `user_roles`, which caused `supabase start` to stop containers after `seed.sql` hit `SQLSTATE 42P01`.
 
 ## Tests added
 
@@ -64,3 +67,4 @@ tags:
 
 - Start Supabase again after the migration fix and verify local sign-in against the repaired stack.
 - Continue renaming remaining secondary references if internal code-level branding also needs to change later.
+- Verify `supabase db pull` again now that local bootstrap succeeds cleanly.

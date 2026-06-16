@@ -134,6 +134,27 @@ Web releases should inject the variables in the deployment URL or host config.
 
 Project documentation and ADRs live in `obsidian-vault/` and `docs/project-tree.md`.
 
+## Supabase Local
+
+Start the local stack with:
+
+```bash
+supabase start
+```
+
+Pull the linked remote schema with:
+
+```bash
+supabase db pull
+```
+
+Important notes:
+
+- The repo keeps the hand-authored migrations in `0001_*`, `0002_*` and `0003_*` as the canonical local schema.
+- The previous remote snapshot migration `20260612044949_remote_schema.sql` was neutralized because it dropped `assistant_intelligence`, `profiles`, `roles` and `user_roles` after they had already been created locally, which caused `supabase start` to fail during `seed.sql`.
+- `supabase/seed.sql` now seeds only project-owned `public` tables. It intentionally does not import `auth`, `storage` or other Supabase-managed internal schemas from a raw dump.
+- If Docker is running and `supabase start` still fails, rerun with `--debug` to inspect the exact migration or seed statement that broke bootstrap.
+
 ## Android Demo Videos
 
 Instrumented demo walkthroughs live in [composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt](/Volumes/Mac%20mini%20extended/Development/KMM/ShelEnterpriseDoc/composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt:1).
@@ -143,14 +164,28 @@ Useful commands:
 ```bash
 ./gradlew :composeApp:connectedDevDebugAndroidTest
 ./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_authAssistantAndDashboardWalkthrough
-./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_documentsAndUpdatesWalkthrough -Pandroid.testInstrumentationRunnerArguments.demoPauseMs=2200
+./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_documentsEditAndPublishWalkthrough -Pandroid.testInstrumentationRunnerArguments.demoPauseMs=2200
+./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_sourcesSyncAndReconnectWalkthrough -Pandroid.testInstrumentationRunnerArguments.recordDemoVideo=true
 ```
 
-To record a demo clip while the test runs:
+The demo tests can now save two artifacts automatically:
 
-1. Start screen recording from `adb` on the emulator or device.
-2. Run one demo test method.
-3. Stop recording and pull the `.mp4`.
+- a final `.png` snapshot in the app's external pictures directory
+- an optional `.mp4` per flow when `recordDemoVideo=true`
+
+Video files are written on-device to:
+
+```text
+/sdcard/Movies/ShellAtlasDemo/
+```
+
+Snapshots are written on-device to:
+
+```text
+Android/data/com.shelldocs.app.dev/files/Pictures/shellatlas-demo/
+```
+
+If you prefer host-side capture, you can still record manually with `adb`:
 
 Example:
 
@@ -158,6 +193,11 @@ Example:
 adb shell screenrecord /sdcard/shellatlas-demo.mp4
 adb pull /sdcard/shellatlas-demo.mp4
 ```
+
+Important note:
+
+- Paparazzi is great for screenshot regression, but it does not generate end-to-end demo videos.
+- For ShellAtlas flows, instrumented Compose tests + `screenrecord` are the right tool for video artifacts.
 
 ## Tests
 

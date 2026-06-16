@@ -23,5 +23,6 @@ flowchart LR
     C --> D["Navigate ShellAtlas screens"]
     D --> E["Exercise existing ViewModels and UseCases"]
     D --> F["Pause between steps for recording"]
-    F --> G["adb screenrecord captures demo clip"]
+    F --> G["Optional device screenrecord captures demo clip"]
+    D --> H["Capture final Compose root snapshot"]
 ```
