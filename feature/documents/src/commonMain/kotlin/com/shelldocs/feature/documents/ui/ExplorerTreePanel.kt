@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.IconChevronDown
+import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.icons.IconChevronRight
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconPlus
@@ -43,6 +44,7 @@ fun ExplorerTreePanel(
     state: DocumentsState,
     onIntent: (DocumentsIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onCollapse: (() -> Unit)? = null,
 ) {
     val colors = ShellTheme.colors
     Column(
@@ -52,6 +54,7 @@ fun ExplorerTreePanel(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
         ) {
             ShellSectionLabel(text = "Explorer", modifier = Modifier.weight(1f))
             if (state.canEdit) {
@@ -59,6 +62,13 @@ fun ExplorerTreePanel(
                     text = "New",
                     icon = IconPlus,
                     onClick = { onIntent(DocumentsIntent.StartCreatingDocument) },
+                )
+            }
+            if (onCollapse != null) {
+                PanelCollapseButton(
+                    icon = IconChevronLeft,
+                    contentDescription = "Collapse explorer",
+                    onClick = onCollapse,
                 )
             }
         }

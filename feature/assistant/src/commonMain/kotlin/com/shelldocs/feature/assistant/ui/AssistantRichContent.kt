@@ -104,11 +104,6 @@ private fun MermaidDiagramCard(diagram: MermaidDiagram) {
             .padding(ShellSpacing.md),
         verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
     ) {
-        Text(
-            text = diagram.title,
-            style = ShellTheme.typography.label,
-            color = colors.textMuted,
-        )
         when (diagram) {
             is MermaidDiagram.Flowchart -> FlowchartDiagram(diagram)
             is MermaidDiagram.Sequence -> SequenceDiagram(diagram)
@@ -272,26 +267,16 @@ private sealed interface AssistantBlock {
 }
 
 private sealed interface MermaidDiagram {
-    val title: String
-
-    data class Flowchart(val nodes: List<String>) : MermaidDiagram {
-        override val title: String = "Flow diagram"
-    }
+    data class Flowchart(val nodes: List<String>) : MermaidDiagram
 
     data class Sequence(
         val participants: List<String>,
         val messages: List<Message>,
-    ) : MermaidDiagram {
-        override val title: String = "Sequence diagram"
-    }
+    ) : MermaidDiagram
 
-    data class Gantt(val tasks: List<Task>) : MermaidDiagram {
-        override val title: String = "Timeline diagram"
-    }
+    data class Gantt(val tasks: List<Task>) : MermaidDiagram
 
-    data class Unsupported(val source: String) : MermaidDiagram {
-        override val title: String = "Mermaid source"
-    }
+    data class Unsupported(val source: String) : MermaidDiagram
 
     data class Message(
         val fromIndex: Int,

@@ -15,7 +15,7 @@ class DocumentTreeBuilderTest {
         assertEquals(DocumentTreeBuilder.ROOT_TITLE, tree.title)
         assertEquals(DocumentNodeType.FOLDER, tree.type)
         val folderTitles = tree.children.map { it.title }
-        assertEquals(listOf("Android", "Cross-platform", "iOS", "Process"), folderTitles)
+        assertEquals(listOf("Android", "Cross-platform", "iOS", "Onboarding", "Process"), folderTitles)
     }
 
     @Test

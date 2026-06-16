@@ -48,6 +48,31 @@ fun ResizeHandle(onDrag: (Float) -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+/** Small icon button used in panel headers to collapse that panel to a rail. */
+@Composable
+fun PanelCollapseButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ShellTheme.colors
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .clip(RoundedCornerShape(ShellRadius.sm))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.textMuted,
+            modifier = Modifier.size(14.dp),
+        )
+    }
+}
+
 /** Narrow rail shown instead of a collapsed panel, with a button to expand it again. */
 @Composable
 fun CollapsedPanelRail(

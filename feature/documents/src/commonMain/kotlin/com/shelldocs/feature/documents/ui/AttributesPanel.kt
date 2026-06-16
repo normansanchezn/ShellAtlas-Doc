@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
+import com.shelldocs.core.designsystem.icons.IconChevronRight
 import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -26,6 +28,7 @@ fun AttributesPanel(
     modifier: Modifier = Modifier,
     canEdit: Boolean = false,
     onEdit: () -> Unit = {},
+    onCollapse: (() -> Unit)? = null,
 ) {
     val colors = ShellTheme.colors
     Column(
@@ -34,11 +37,19 @@ fun AttributesPanel(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            ShellSectionLabel(text = "Attributes")
+            ShellSectionLabel(text = "Attributes", modifier = Modifier.weight(1f))
             if (canEdit) {
                 ShellGhostButton(text = "Edit", icon = IconEdit, onClick = onEdit)
+            }
+            if (onCollapse != null) {
+                PanelCollapseButton(
+                    icon = IconChevronRight,
+                    contentDescription = "Collapse attributes",
+                    onClick = onCollapse,
+                )
             }
         }
 

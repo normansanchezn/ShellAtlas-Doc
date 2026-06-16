@@ -1,6 +1,9 @@
 package com.shelldocs.feature.documents.ui
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,9 +17,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
@@ -31,6 +36,7 @@ import com.shelldocs.core.designsystem.icons.IconHistory
 import com.shelldocs.core.designsystem.icons.IconShare
 import com.shelldocs.core.designsystem.icons.IconLayers
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
@@ -99,30 +105,45 @@ fun DocumentReaderPanel(
                 ) {
                     documentBody(document = document, state = state, colors = colors)
                 }
-                when {
-                    state.isHistoryVisible -> {
-                        ResizeHandle(onDrag = onResizeAttributes)
-                        VersionHistoryPanel(
-                            state = state,
-                            onIntent = onIntent,
-                            modifier = Modifier.width(attributesWidth).fillMaxHeight(),
-                        )
-                    }
-                    state.isAttributesExpanded -> {
-                        ResizeHandle(onDrag = onResizeAttributes)
-                        AttributesPanel(
-                            document = document,
-                            modifier = Modifier.width(attributesWidth).fillMaxHeight(),
-                            canEdit = state.canEdit,
-                            onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
-                        )
-                    }
-                    else -> CollapsedPanelRail(
-                        icon = IconLayers,
-                        contentDescription = "Show attributes",
-                        onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
-                        modifier = Modifier.fillMaxHeight(),
+                if (state.isHistoryVisible) {
+                    ResizeHandle(onDrag = onResizeAttributes)
+                    VersionHistoryPanel(
+                        state = state,
+                        onIntent = onIntent,
+                        modifier = Modifier.width(attributesWidth).fillMaxHeight(),
                     )
+                } else {
+                    val attributesPanelWidth by animateDpAsState(
+                        targetValue = if (state.isAttributesExpanded) attributesWidth else COLLAPSED_RAIL_WIDTH,
+                        animationSpec = tween(ShellMotion.durationMedium, easing = ShellMotion.standard),
+                        label = "attributesPanelWidth",
+                    )
+                    if (state.isAttributesExpanded) {
+                        ResizeHandle(onDrag = onResizeAttributes)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(attributesPanelWidth)
+                            .fillMaxHeight()
+                            .clipToBounds(),
+                    ) {
+                        if (state.isAttributesExpanded) {
+                            AttributesPanel(
+                                document = document,
+                                modifier = Modifier.width(attributesWidth).fillMaxHeight(),
+                                canEdit = state.canEdit,
+                                onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
+                                onCollapse = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
+                            )
+                        } else {
+                            CollapsedPanelRail(
+                                icon = IconLayers,
+                                contentDescription = "Show attributes",
+                                onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
+                                modifier = Modifier.fillMaxHeight(),
+                            )
+                        }
+                    }
                 }
             }
         } else {

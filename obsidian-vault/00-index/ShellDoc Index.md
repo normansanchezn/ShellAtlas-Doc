@@ -34,6 +34,7 @@ Project brain for the Kotlin Multiplatform implementation of ShellDoc.
 - [[Assistant Welcome Message And Multilingual Replies]]
 - [[Assistant Source Navigation And Documents Layout Resize]]
 - [[Onboarding Documents And Knowledge Transfer Checkpoints]]
+- [[Mermaid Title Tone Ollama And Documents Panel Collapse Fixes]]
 
 ## Diagrams
 

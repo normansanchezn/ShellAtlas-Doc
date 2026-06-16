@@ -5,6 +5,7 @@ package com.shelldocs.core.data.repository
 import com.shelldocs.core.common.result.getOrNull
 import com.shelldocs.core.common.time.TimeProvider
 import com.shelldocs.core.data.demo.DemoDocumentRepository
+import com.shelldocs.core.data.demo.DemoKnowledgeCheckpointRepository
 import com.shelldocs.core.data.demo.DemoSeed
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 import kotlinx.coroutines.test.runTest
@@ -19,6 +20,7 @@ class DerivedDashboardRepositoryTest {
     private val repository = DerivedDashboardRepository(
         documentRepository = DemoDocumentRepository(timeProvider),
         evaluateHealth = EvaluateDocumentHealthUseCase(timeProvider),
+        knowledgeCheckpointRepository = DemoKnowledgeCheckpointRepository(),
     )
 
     @Test
