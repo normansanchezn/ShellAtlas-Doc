@@ -232,6 +232,8 @@ alter table "public"."user_roles" drop constraint "user_roles_role_key_fkey";
 
 alter table "public"."user_roles" drop constraint "user_roles_user_id_fkey";
 
+drop trigger if exists "on_auth_user_created" on "auth"."users";
+
 drop function if exists "public"."handle_new_user"();
 
 drop function if exists "public"."role_of"(uid uuid);
@@ -307,7 +309,3 @@ alter table "public"."documents" alter column "source_type" set not null;
 alter table "public"."sync_runs" alter column "status" drop default;
 
 CREATE UNIQUE INDEX document_versions_hash_idx ON public.document_versions USING btree (document_id, content_hash);
-
-drop trigger if exists "on_auth_user_created" on "auth"."users";
-
-

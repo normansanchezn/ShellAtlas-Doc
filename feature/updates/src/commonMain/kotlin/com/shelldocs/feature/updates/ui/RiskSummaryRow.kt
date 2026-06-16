@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.shelldocs.core.designsystem.atoms.ShellCard
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.RiskLevel
@@ -39,6 +41,7 @@ fun RiskSummaryRow(
             ShellCard(
                 modifier = Modifier
                     .weight(1f)
+                    .testTag(DemoTestTags.updatesRisk(risk.displayName))
                     .clickable { onIntent(UpdatesIntent.ToggleRiskFilter(risk)) },
             ) {
                 Column(modifier = Modifier.padding(ShellSpacing.lg)) {

@@ -21,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.icons.IconChevronLeft
@@ -69,12 +71,14 @@ fun DocumentEditorPanel(
                 text = if (state.loadingMessage == "Saving draft...") "Saving..." else "Save draft",
                 onClick = { onIntent(DocumentsIntent.SaveDraft) },
                 enabled = !state.isBusy,
+                modifier = Modifier.testTag(DemoTestTags.DocumentsSaveDraft),
             )
             if (state.canPublish) {
                 ShellPrimaryButton(
                     text = if (state.loadingMessage == "Publishing document...") "Publishing..." else "Publish",
                     onClick = { onIntent(DocumentsIntent.Publish("Updated content")) },
                     enabled = !state.isBusy,
+                    modifier = Modifier.testTag(DemoTestTags.DocumentsPublish),
                 )
             }
         }
@@ -91,6 +95,7 @@ fun DocumentEditorPanel(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxSize()
+                        .testTag(DemoTestTags.DocumentsEditorMarkdown)
                         .clip(RoundedCornerShape(ShellRadius.md))
                         .background(colors.surfaceSubtle)
                         .border(
@@ -134,6 +139,7 @@ fun DocumentEditorPanel(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 240.dp)
+                        .testTag(DemoTestTags.DocumentsEditorMarkdown)
                         .clip(RoundedCornerShape(ShellRadius.md))
                         .background(colors.surfaceSubtle)
                         .border(

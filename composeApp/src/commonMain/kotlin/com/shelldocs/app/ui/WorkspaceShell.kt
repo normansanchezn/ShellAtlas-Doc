@@ -16,9 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.feature.assistant.ui.AssistantScreen
 import com.shelldocs.feature.dashboard.ui.DashboardScreen
@@ -144,28 +146,44 @@ private fun RouteContent(
                 viewModel = viewModel,
                 isWide = isWide,
                 onOpenDocument = container.navigator::openDocument,
-                modifier = modifier,
+                modifier = modifier.testTag(DemoTestTags.AssistantScreen),
             )
         }
         AppRoute.DOCUMENTS -> {
             val viewModel = remember(container) { container.documentsViewModel() }
             DisposableEffect(viewModel) { onDispose(viewModel::clear) }
-            DocumentsScreen(viewModel = viewModel, isWide = isWide, modifier = modifier)
+            DocumentsScreen(
+                viewModel = viewModel,
+                isWide = isWide,
+                modifier = modifier.testTag(DemoTestTags.DocumentsScreen),
+            )
         }
         AppRoute.UPDATES -> {
             val viewModel = remember(container) { container.updatesViewModel() }
             DisposableEffect(viewModel) { onDispose(viewModel::clear) }
-            UpdatesScreen(viewModel = viewModel, isWide = isWide, modifier = modifier)
+            UpdatesScreen(
+                viewModel = viewModel,
+                isWide = isWide,
+                modifier = modifier.testTag(DemoTestTags.UpdatesScreen),
+            )
         }
         AppRoute.DASHBOARD -> {
             val viewModel = remember(container) { container.dashboardViewModel() }
             DisposableEffect(viewModel) { onDispose(viewModel::clear) }
-            DashboardScreen(viewModel = viewModel, isWide = isWide, modifier = modifier)
+            DashboardScreen(
+                viewModel = viewModel,
+                isWide = isWide,
+                modifier = modifier.testTag(DemoTestTags.DashboardScreen),
+            )
         }
         AppRoute.SOURCES -> {
             val viewModel = remember(container) { container.sourcesViewModel() }
             DisposableEffect(viewModel) { onDispose(viewModel::clear) }
-            SourcesScreen(viewModel = viewModel, isWide = isWide, modifier = modifier)
+            SourcesScreen(
+                viewModel = viewModel,
+                isWide = isWide,
+                modifier = modifier.testTag(DemoTestTags.SourcesScreen),
+            )
         }
         AppRoute.SETTINGS -> {
             val viewModel = remember(container) { container.settingsViewModel() }
@@ -176,7 +194,7 @@ private fun RouteContent(
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme,
                 onSignedOut = onSignedOut,
-                modifier = modifier,
+                modifier = modifier.testTag(DemoTestTags.SettingsScreen),
             )
         }
     }

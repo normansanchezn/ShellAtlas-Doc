@@ -20,7 +20,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.IconBookmark
@@ -63,6 +65,7 @@ fun ExplorerTreePanel(
                     text = "New",
                     icon = IconPlus,
                     onClick = { onIntent(DocumentsIntent.StartCreatingDocument) },
+                    modifier = Modifier.testTag(DemoTestTags.DocumentsNew),
                 )
             }
             if (onCollapse != null) {

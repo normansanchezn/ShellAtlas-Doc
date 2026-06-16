@@ -20,7 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
@@ -61,6 +63,7 @@ fun NewDocumentEditorPanel(
                 text = if (state.loadingMessage == "Creating document...") "Creating..." else "Create document",
                 onClick = { onIntent(DocumentsIntent.SubmitNewDocument) },
                 enabled = !state.isBusy,
+                modifier = Modifier.testTag(DemoTestTags.DocumentsCreate),
             )
         }
         Column(
@@ -73,7 +76,7 @@ fun NewDocumentEditorPanel(
                 value = state.newDocumentTitle,
                 onValueChange = { onIntent(DocumentsIntent.NewDocumentTitleChanged(it)) },
                 placeholder = "Document title",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.DocumentsNewTitle),
             )
             if (isWide) {
                 Row(
@@ -88,6 +91,7 @@ fun NewDocumentEditorPanel(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
+                            .testTag(DemoTestTags.DocumentsNewMarkdown)
                             .clip(RoundedCornerShape(ShellRadius.md))
                             .background(colors.surfaceSubtle)
                             .border(1.dp, colors.info.copy(alpha = 0.35f), RoundedCornerShape(ShellRadius.md))
@@ -124,6 +128,7 @@ fun NewDocumentEditorPanel(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 240.dp)
+                            .testTag(DemoTestTags.DocumentsNewMarkdown)
                             .clip(RoundedCornerShape(ShellRadius.md))
                             .background(colors.surfaceSubtle)
                             .border(1.dp, colors.info.copy(alpha = 0.35f), RoundedCornerShape(ShellRadius.md))

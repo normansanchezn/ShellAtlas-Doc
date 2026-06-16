@@ -1,10 +1,10 @@
-# ShellDoc Project Tree
+# ShellAtlas Project Tree
 
-Updated: 2026-06-12
+Updated: 2026-06-16
 
 ## Overview
 
-ShellDoc now uses the Kotlin Multiplatform codebase as the only product implementation. The prior Swift recovery was treated as a temporary recovery source for logic and documentation, not as a second app to keep in the repository.
+ShellAtlas now uses the Kotlin Multiplatform codebase as the only product implementation. The prior Swift recovery was treated as a temporary recovery source for logic and documentation, not as a second app to keep in the repository.
 
 Primary architecture:
 
@@ -18,6 +18,7 @@ UI (Compose/SwiftUI host) -> Presentation (MVI) -> Domain <- Data
 ShelEnterpriseDoc/
 ├── composeApp/                      ← Main multiplatform app shell
 │   ├── src/androidMain/             ← Android entrypoints + BuildConfig profile loader
+│   ├── src/androidInstrumentedTest/ ← Instrumented Compose demo walkthroughs for recording product videos
 │   ├── src/commonMain/              ← Shared app container, navigation + runtime config contract
 │   ├── src/desktopMain/             ← Desktop host + .env/profile loader
 │   ├── src/iosMain/                 ← iOS bridge + process-env loader
@@ -131,7 +132,7 @@ Shared UX feedback pattern:
 - Async actions now surface progress through modal progress dialogs from `core/designsystem/molecules/ShellLoadingOverlay.kt`.
 - Empty and loading placeholders share the same feedback card frame through `core/designsystem/molecules/ShellFeedbackCard.kt`.
 - User-facing failures are translated from `AppError` into descriptive modal dialogs through `core/common/error/ErrorDialogState.kt` and `core/designsystem/molecules/ShellErrorDialog.kt`.
-- Base controls now keep full click targets (`ShellPrimaryButton`, `ShellGhostButton`) and higher-contrast cursors / Enter-submit behaviors (`ShellTextField`, assistant chat input, login form).
+- Base controls now keep full click targets (`ShellPrimaryButton`, `ShellGhostButton`) and higher-contrast cursors / Enter-submit behaviors (`ShellTextField`, assistant chat input, login form). The auth password field now includes a dedicated show/hide eye toggle.
 
 ## Removed Duplicate Structure
 

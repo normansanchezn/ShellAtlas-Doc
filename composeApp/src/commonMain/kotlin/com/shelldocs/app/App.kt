@@ -21,9 +21,11 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.testTag
 import com.shelldocs.app.di.AppConfig
 import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.ui.WorkspaceShell
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellDocsTheme
 import com.shelldocs.feature.auth.ui.SignInScreen
 
@@ -42,6 +44,7 @@ fun App(config: AppConfig = AppConfig()) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
+                .testTag(DemoTestTags.WorkspaceRoot)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false

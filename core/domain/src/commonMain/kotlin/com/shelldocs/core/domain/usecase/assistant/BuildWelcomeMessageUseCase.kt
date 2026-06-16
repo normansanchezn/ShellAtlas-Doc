@@ -18,7 +18,7 @@ class BuildWelcomeMessageUseCase {
 
     private companion object {
         val ENGLISH = """
-            Hi, I'm the ShellDoc assistant. I can help you:
+            Hi, I'm the ShellAtlas assistant. I can help you:
 
             - Open or show you a specific document
             - Find where to look for documentation on a topic
@@ -29,7 +29,7 @@ class BuildWelcomeMessageUseCase {
         """.trimIndent()
 
         val SPANISH = """
-            Hola, soy el asistente de ShellDoc. Puedo ayudarte a:
+            Hola, soy el asistente de ShellAtlas. Puedo ayudarte a:
 
             - Mostrarte un documento o archivo especifico
             - Decirte donde encontrar documentacion sobre un tema
@@ -40,7 +40,7 @@ class BuildWelcomeMessageUseCase {
         """.trimIndent()
 
         val FRENCH = """
-            Bonjour, je suis l'assistant ShellDoc. Je peux t'aider a :
+            Bonjour, je suis l'assistant ShellAtlas. Je peux t'aider a :
 
             - T'afficher un document ou fichier specifique
             - T'indiquer ou trouver la documentation sur un sujet

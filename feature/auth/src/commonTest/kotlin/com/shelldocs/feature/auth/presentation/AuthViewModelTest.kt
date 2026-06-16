@@ -113,7 +113,26 @@ class AuthViewModelTest {
         viewModel.onIntent(AuthIntent.Submit)
         testScheduler.advanceUntilIdle()
 
-        assertEquals("You don't have access to do that", viewModel.currentState.errorDialog?.title)
+        assertEquals("We couldn't sign you in", viewModel.currentState.errorDialog?.title)
+        assertEquals("Check your email and password and try again.", viewModel.currentState.errorDialog?.message)
+        viewModel.clear()
+    }
+
+    @Test
+    fun networkFailureExplainsLocalSupabaseFallback() = runTest {
+        val repository = StubAuthRepository(DomainResult.failure(AppError.Network("Could not reach Supabase")))
+        val viewModel = viewModel(repository, testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("elena.vargas@shell.com"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret-123"))
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("We couldn't sign you in", viewModel.currentState.errorDialog?.title)
+        assertEquals(
+            "The sign-in service is unavailable right now. If you're working locally, start Supabase or clear the Supabase env vars to use demo mode.",
+            viewModel.currentState.errorDialog?.message,
+        )
         viewModel.clear()
     }
 

@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.icons.IconAlertTriangle
 import com.shelldocs.core.designsystem.icons.IconFileText
@@ -68,7 +70,7 @@ fun WorkspaceRail(
         ) {
             Icon(
                 imageVector = IconShellPecten,
-                contentDescription = "ShellDoc",
+                contentDescription = "ShellAtlas",
                 tint = colors.onBrand,
                 modifier = Modifier.size(18.dp),
             )
@@ -115,6 +117,7 @@ private fun RailItem(
             .size(48.dp)
             .clip(RoundedCornerShape(ShellRadius.lg))
             .background(background)
+            .testTag(DemoTestTags.navRoute(route.title))
             .clickable { onNavigate(route) },
         contentAlignment = Alignment.Center,
     ) {

@@ -17,6 +17,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.icons.IconAlertTriangle
 import com.shelldocs.core.designsystem.icons.IconCheckCircle
@@ -66,6 +68,7 @@ fun DashboardScreen(
                     icon = IconRefresh,
                     onClick = { viewModel.onIntent(DashboardIntent.Refresh) },
                     enabled = !state.isLoading,
+                    modifier = Modifier.testTag(DemoTestTags.DashboardRefresh),
                 )
             }
 

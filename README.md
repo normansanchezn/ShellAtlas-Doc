@@ -1,4 +1,4 @@
-# ShellDocs
+# ShellAtlas
 
 Kotlin Multiplatform implementation of **ShellEnterpriseDoc** — an enterprise knowledge platform
 with an embedded, documentation-grounded AI assistant. One codebase, four targets:
@@ -30,7 +30,7 @@ The bundled demo data now includes Shell mobile process terminology such as:
 - `Lokalise Strings Update Process`
 - `Azure Secrets Management for Mobile`
 
-This keeps search, assistant grounding and updates triage aligned with the recovered ShellDoc concept while staying fully deterministic.
+This keeps search, assistant grounding and updates triage aligned with the recovered ShellAtlas concept while staying fully deterministic.
 
 ## Roles
 
@@ -72,7 +72,7 @@ data-source implementation.
 Recovered Swift-only logic that proved useful was absorbed into this structure, mainly:
 
 - semantic alias expansion for search and assistant grounding
-- ShellDoc-specific demo corpus terminology
+- ShellAtlas-specific demo corpus terminology
 - documentation and architecture decisions restored into `obsidian-vault/`
 
 ## Running
@@ -133,6 +133,31 @@ iOS releases should ship with the same variables in the scheme or archive config
 Web releases should inject the variables in the deployment URL or host config.
 
 Project documentation and ADRs live in `obsidian-vault/` and `docs/project-tree.md`.
+
+## Android Demo Videos
+
+Instrumented demo walkthroughs live in [composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt](/Volumes/Mac%20mini%20extended/Development/KMM/ShelEnterpriseDoc/composeApp/src/androidInstrumentedTest/kotlin/com/shelldocs/app/demo/ShellAtlasDemoTest.kt:1).
+
+Useful commands:
+
+```bash
+./gradlew :composeApp:connectedDevDebugAndroidTest
+./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_authAssistantAndDashboardWalkthrough
+./gradlew :composeApp:connectedDevDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.shelldocs.app.demo.ShellAtlasDemoTest#demo_documentsAndUpdatesWalkthrough -Pandroid.testInstrumentationRunnerArguments.demoPauseMs=2200
+```
+
+To record a demo clip while the test runs:
+
+1. Start screen recording from `adb` on the emulator or device.
+2. Run one demo test method.
+3. Stop recording and pull the `.mp4`.
+
+Example:
+
+```bash
+adb shell screenrecord /sdcard/shellatlas-demo.mp4
+adb pull /sdcard/shellatlas-demo.mp4
+```
 
 ## Tests
 

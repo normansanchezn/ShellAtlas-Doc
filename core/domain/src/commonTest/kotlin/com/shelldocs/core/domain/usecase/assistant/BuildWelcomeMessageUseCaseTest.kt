@@ -34,6 +34,6 @@ class BuildWelcomeMessageUseCaseTest {
 
     @Test
     fun defaultsToSpanish() {
-        assertTrue(buildWelcomeMessage().contains("Hola, soy el asistente de ShellDoc"))
+        assertTrue(buildWelcomeMessage().contains("Hola, soy el asistente de ShellAtlas"))
     }
 }

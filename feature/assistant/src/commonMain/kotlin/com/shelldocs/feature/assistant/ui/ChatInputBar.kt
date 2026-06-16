@@ -29,8 +29,10 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconSend
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
@@ -84,6 +86,7 @@ fun ChatInputBar(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .testTag(DemoTestTags.AssistantInput)
                         .onPreviewKeyEvent { event ->
                             if (
                                 event.type == KeyEventType.KeyUp &&
@@ -103,6 +106,7 @@ fun ChatInputBar(
                     .size(32.dp)
                     .alpha(if (canSend) 1f else 0.6f)
                     .clip(RoundedCornerShape(10.dp))
+                    .testTag(DemoTestTags.AssistantSend)
                     .clickable(enabled = canSend, onClick = onSend),
                 contentAlignment = Alignment.Center,
             ) {

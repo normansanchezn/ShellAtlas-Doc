@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
@@ -30,6 +31,7 @@ import androidx.compose.foundation.clickable
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconBookmark
 import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.icons.IconHistory
@@ -74,6 +76,7 @@ fun DocumentReaderPanel(
                 icon = IconHistory,
                 onClick = { onIntent(DocumentsIntent.ShowHistory) },
                 enabled = !state.isBusy,
+                modifier = Modifier.testTag(DemoTestTags.DocumentsHistory),
             )
             if (!isWide) {
                 ShellGhostButton(
@@ -89,6 +92,7 @@ fun DocumentReaderPanel(
                     icon = IconEdit,
                     onClick = { onIntent(DocumentsIntent.StartEditing) },
                     enabled = !state.isBusy,
+                    modifier = Modifier.testTag(DemoTestTags.DocumentsEdit),
                 )
             }
         }
@@ -219,6 +223,7 @@ private fun documentBody(
             icon = IconBookmark,
             onClick = { onIntent(com.shelldocs.feature.documents.presentation.DocumentsIntent.ToggleBookmark(document.id)) },
             enabled = !state.isBusy,
+            modifier = Modifier.testTag(DemoTestTags.DocumentsBookmark),
         )
     }
 }

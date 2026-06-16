@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,9 +33,11 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconEye
 import com.shelldocs.core.designsystem.icons.IconEyeOff
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -111,15 +113,17 @@ fun ShellTextField(
                     innerTextField()
                 }
                 if (isPassword) {
-                    Icon(
-                        imageVector = if (passwordVisible) IconEyeOff else IconEye,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                        tint = colors.textMuted,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(RoundedCornerShape(ShellRadius.sm))
-                            .clickable { passwordVisible = !passwordVisible },
-                    )
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible },
+                        modifier = Modifier.size(20.dp).testTag(DemoTestTags.PasswordToggle),
+                    ) {
+                        Icon(
+                            imageVector = if (passwordVisible) IconEyeOff else IconEye,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = colors.textMuted,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
         },

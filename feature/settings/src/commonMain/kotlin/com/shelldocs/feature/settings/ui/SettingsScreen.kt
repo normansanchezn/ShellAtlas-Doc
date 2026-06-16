@@ -24,7 +24,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -149,6 +151,7 @@ private fun SectionRail(
                 style = ShellTheme.typography.label,
                 color = contentColor,
                 modifier = Modifier
+                    .testTag(DemoTestTags.settingsSection(section.displayName))
                     .fillMaxWidth()
                     .heightIn(min = 32.dp)
                     .clip(RoundedCornerShape(ShellRadius.sm))
@@ -184,6 +187,7 @@ private fun SectionChipsRow(
                 style = ShellTheme.typography.caption,
                 color = contentColor,
                 modifier = Modifier
+                    .testTag(DemoTestTags.settingsSection(section.displayName))
                     .clip(RoundedCornerShape(ShellRadius.full))
                     .background(background)
                     .clickable { onSelect(section) }

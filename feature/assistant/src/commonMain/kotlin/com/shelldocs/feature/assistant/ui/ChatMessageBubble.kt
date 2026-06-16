@@ -75,7 +75,7 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
                 tint = colors.brand,
                 modifier = Modifier.size(13.dp),
             )
-            Text("ShellDoc AI", style = ShellTheme.typography.label, color = colors.textSecondary)
+            Text("ShellAtlas AI", style = ShellTheme.typography.label, color = colors.textSecondary)
             message.confidence?.let { confidence ->
                 ConfidenceChip(confidence)
                 if (message.sources.isNotEmpty()) {

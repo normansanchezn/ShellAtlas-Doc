@@ -17,6 +17,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.icons.IconRefresh
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
@@ -63,6 +65,7 @@ fun UpdatesScreen(
                     icon = IconRefresh,
                     onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
                     enabled = !state.isScanning && !state.isLoading,
+                    modifier = Modifier.testTag(DemoTestTags.UpdatesScan),
                 )
             }
 

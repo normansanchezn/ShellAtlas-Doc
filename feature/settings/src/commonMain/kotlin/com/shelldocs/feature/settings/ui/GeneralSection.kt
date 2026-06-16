@@ -9,7 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.icons.IconLogOut
@@ -50,7 +52,7 @@ fun GeneralSection(
             text = "Sign out",
             icon = IconLogOut,
             onClick = onSignOut,
-            modifier = Modifier.padding(top = ShellSpacing.lg),
+            modifier = Modifier.padding(top = ShellSpacing.lg).testTag(DemoTestTags.SettingsSignOut),
         )
     }
 }

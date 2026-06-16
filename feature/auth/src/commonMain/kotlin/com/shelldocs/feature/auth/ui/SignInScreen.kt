@@ -27,6 +27,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
@@ -40,7 +42,7 @@ import com.shelldocs.feature.auth.presentation.AuthEffect
 import com.shelldocs.feature.auth.presentation.AuthIntent
 import com.shelldocs.feature.auth.presentation.AuthViewModel
 
-/** Centered sign-in card with the ShellDoc brand mark. */
+/** Centered sign-in card with the ShellAtlas brand mark. */
 @Composable
 fun SignInScreen(
     viewModel: AuthViewModel,
@@ -60,7 +62,7 @@ fun SignInScreen(
     }
 
     Box(
-        modifier = modifier.fillMaxSize().background(colors.background),
+        modifier = modifier.fillMaxSize().background(colors.background).testTag(DemoTestTags.SignInRoot),
         contentAlignment = Alignment.Center,
     ) {
         ShellCard(elevated = true, modifier = Modifier.widthIn(max = 360.dp).padding(ShellSpacing.lg)) {
@@ -105,6 +107,7 @@ fun SignInScreen(
                     ShellTextField(
                         value = state.email,
                         onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
+                        modifier = Modifier.testTag(DemoTestTags.SignInEmail),
                         placeholder = "Work email",
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -114,6 +117,7 @@ fun SignInScreen(
                     ShellTextField(
                         value = state.password,
                         onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
+                        modifier = Modifier.testTag(DemoTestTags.SignInPassword),
                         placeholder = "Password",
                         isPassword = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -128,7 +132,7 @@ fun SignInScreen(
                     text = if (state.isLoading) "Signing in..." else "Sign in",
                     onClick = { viewModel.onIntent(AuthIntent.Submit) },
                     enabled = state.canSubmit,
-                    modifier = Modifier.width(160.dp),
+                    modifier = Modifier.width(160.dp).testTag(DemoTestTags.SignInSubmit),
                 )
             }
         }

@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconAlertTriangle
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconLayoutGrid
@@ -71,6 +73,7 @@ fun WorkspaceBottomBar(
                 modifier = Modifier
                     .width(64.dp)
                     .height(48.dp)
+                    .testTag(DemoTestTags.navRoute(route.title))
                     .clickable { onNavigate(route) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,

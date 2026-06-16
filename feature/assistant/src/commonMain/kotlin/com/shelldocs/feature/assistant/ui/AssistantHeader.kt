@@ -59,7 +59,7 @@ fun AssistantHeader(
             Column(modifier = Modifier.weight(1f).padding(start = ShellSpacing.sm)) {
                 Text("AI Assistant", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
                 Text(
-                    text = "Grounded on ShellDoc knowledge · $indexedDocuments documents indexed",
+                    text = "Grounded on ShellAtlas knowledge · $indexedDocuments documents indexed",
                     style = ShellTheme.typography.caption,
                     color = colors.textMuted,
                 )

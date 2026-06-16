@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
@@ -110,12 +112,14 @@ fun IntegrationRow(
                         icon = IconRefresh,
                         onClick = onSync,
                         enabled = actionsEnabled && !isSyncing,
+                        modifier = Modifier.testTag(DemoTestTags.sourceSync(source.kind.displayName)),
                     )
                     if (source.status == SourceStatus.ERROR) {
                         ShellPrimaryButton(
                             text = "Reconnect",
                             onClick = onReconnect,
                             enabled = actionsEnabled && !isSyncing,
+                            modifier = Modifier.testTag(DemoTestTags.sourceReconnect(source.kind.displayName)),
                         )
                     }
                 }

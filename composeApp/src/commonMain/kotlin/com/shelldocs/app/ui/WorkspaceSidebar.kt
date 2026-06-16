@@ -24,8 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
@@ -199,6 +201,7 @@ private fun SidebarItem(
             .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .background(background)
+            .testTag(DemoTestTags.navRoute(route.title))
             .clickable { onNavigate(route) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -240,6 +243,7 @@ private fun SidebarSourceItem(
             .fillMaxWidth()
             .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
+            .testTag(DemoTestTags.navRoute(AppRoute.SOURCES.title))
             .clickable { onNavigate(AppRoute.SOURCES) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,

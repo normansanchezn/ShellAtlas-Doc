@@ -1,5 +1,7 @@
 package com.shelldocs.feature.auth.presentation
 
+import com.shelldocs.core.common.error.AppError
+import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.mvi.MviViewModel
@@ -42,7 +44,19 @@ class AuthViewModel(
                 sendEffect(AuthEffect.NavigateToWorkspace)
             }
             .onFailure { error ->
-                setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("sign you in")) }
+                setState { copy(isLoading = false, errorDialog = error.toSignInErrorDialogState()) }
             }
+    }
+
+    private fun AppError.toSignInErrorDialogState(): ErrorDialogState = when (this) {
+        is AppError.Network -> ErrorDialogState(
+            title = "We couldn't sign you in",
+            message = "The sign-in service is unavailable right now. If you're working locally, start Supabase or clear the Supabase env vars to use demo mode.",
+        )
+        is AppError.Unauthorized -> ErrorDialogState(
+            title = "We couldn't sign you in",
+            message = "Check your email and password and try again.",
+        )
+        else -> toErrorDialogState("sign you in")
     }
 }

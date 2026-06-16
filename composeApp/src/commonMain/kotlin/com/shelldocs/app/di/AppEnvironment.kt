@@ -8,6 +8,12 @@ enum class AppEnvironment {
     PROD,
 }
 
+private val placeholderMarkers = listOf(
+    "your-",
+    "example.com",
+    "your-project.supabase.co",
+)
+
 fun parseAppEnvironment(rawValue: String?): AppEnvironment =
     when (rawValue?.trim()?.uppercase()) {
         "PROD", "PRODUCTION" -> AppEnvironment.PROD
@@ -40,8 +46,19 @@ internal fun resolveSetting(
     vararg keys: String,
 ): String? =
     keys.asSequence()
-        .mapNotNull { readSetting(it)?.trim()?.takeIf(String::isNotBlank) }
+        .mapNotNull { normalizeRuntimeSetting(readSetting(it)) }
         .firstOrNull()
+
+internal fun normalizeRuntimeSetting(value: String?): String? =
+    value
+        ?.trim()
+        ?.takeIf(String::isNotBlank)
+        ?.takeUnless(::isPlaceholderSetting)
+
+internal fun isPlaceholderSetting(value: String): Boolean {
+    val normalized = value.trim().lowercase()
+    return placeholderMarkers.any(normalized::contains)
+}
 
 internal fun resolveBooleanSetting(
     readSetting: (String) -> String?,

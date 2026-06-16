@@ -1,23 +1,23 @@
 ---
-title: "ShellDoc Index"
+title: "ShellAtlas Index"
 type: "index"
 status: "active"
 platform: "Android/iOS/Desktop/Web"
-area: "ShellDoc"
+area: "ShellAtlas"
 owner: "Product Engineering"
 created: 2026-06-11
-updated: 2026-06-11
+updated: 2026-06-16
 tags:
-  - shelldoc
+  - shellatlas
   - index
   - kmm
 ---
 
-# ShellDoc Index
+# ShellAtlas Index
 
 ## Summary
 
-Project brain for the Kotlin Multiplatform implementation of ShellDoc.
+Project brain for the Kotlin Multiplatform implementation of ShellAtlas.
 
 ## Key Notes
 
