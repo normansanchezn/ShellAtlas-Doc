@@ -7,5 +7,6 @@ import platform.UIKit.UIViewController
 /** Entry point consumed by the SwiftUI host in iosApp. */
 fun MainViewController(): UIViewController = ComposeUIViewController {
     val config = remember { loadIosAppConfig() }
-    App(config = config)
+    val themePrefs = remember { IosThemePreferences() }
+    App(config = config, themePrefs = themePrefs)
 }

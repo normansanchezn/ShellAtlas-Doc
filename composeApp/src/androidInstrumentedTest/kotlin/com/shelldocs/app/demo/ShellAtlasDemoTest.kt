@@ -160,6 +160,38 @@ class ShellAtlasDemoTest {
     }
 
     @Test
+    fun demo_portraitAuthAndDashboardWalkthrough() {
+        composeRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        signIn()
+        waitForTag(DemoTestTags.AssistantScreen)
+        pauseForRecording()
+
+        navigateTo("Dashboard")
+        waitForTag(DemoTestTags.DashboardScreen)
+        waitForText("Knowledge operations overview")
+        pauseForRecording()
+    }
+
+    @Test
+    fun demo_signInValidationAndErrorDialog() {
+        waitForTag(DemoTestTags.SignInRoot)
+
+        // Malformed email: submit stays disabled — sign-in screen must remain
+        composeRule.onNodeWithTag(DemoTestTags.SignInEmail).performTextInput("not-an-email")
+        composeRule.onNodeWithTag(DemoTestTags.SignInPassword).performTextInput("somepassword")
+        composeRule.onNodeWithTag(DemoTestTags.SignInSubmit).performClick()
+        composeRule.onNodeWithTag(DemoTestTags.SignInRoot).assertExists()
+
+        // Clear + submit with empty fields: no crash, screen stays
+        composeRule.onNodeWithTag(DemoTestTags.SignInEmail).performTextClearance()
+        composeRule.onNodeWithTag(DemoTestTags.SignInPassword).performTextClearance()
+        composeRule.onNodeWithTag(DemoTestTags.SignInSubmit).performClick()
+        composeRule.onNodeWithTag(DemoTestTags.SignInRoot).assertExists()
+
+        pauseForRecording()
+    }
+
+    @Test
     fun demo_settingsSectionsAndSignOutWalkthrough() {
         signIn()
 

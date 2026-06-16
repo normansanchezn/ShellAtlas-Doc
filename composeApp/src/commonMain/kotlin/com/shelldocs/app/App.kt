@@ -1,10 +1,13 @@
 package com.shelldocs.app
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import com.shelldocs.app.ui.RAIL_LAYOUT_MIN_WIDTH_DP
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -32,20 +35,31 @@ import com.shelldocs.feature.auth.ui.SignInScreen
 /**
  * Multiplatform root: theme, auth gate (the AUTH clean-architecture example)
  * and the adaptive workspace shell.
+ *
+ * [themePrefs] is injected by each platform entry point so the preference can
+ * be stored in the appropriate native key-value store.  On first launch (or
+ * when [themePrefs] returns null) the initial theme is read from the host
+ * OS via [isSystemInDarkTheme].
  */
 @Composable
-fun App(config: AppConfig = AppConfig()) {
+fun App(
+    config: AppConfig = AppConfig(),
+    themePrefs: ThemePreferences = NoOpThemePreferences,
+) {
     val container = remember(config) { AppContainer(config) }
-    var isDarkTheme by remember { mutableStateOf(false) }
+    val systemDark = isSystemInDarkTheme()
+    var isDarkTheme by remember { mutableStateOf(themePrefs.load() ?: systemDark) }
     var textScale by remember { mutableFloatStateOf(1f) }
 
     ShellDocsTheme(darkTheme = isDarkTheme, textScale = textScale) {
         val session by container.authRepository.session.collectAsState()
+        // BoxWithConstraints intentionally has NO windowInsetsPadding here.
+        // The login screen background bleeds edge-to-edge (behind Dynamic Island
+        // and home indicator).  WorkspaceShell owns its own inset padding.
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag(DemoTestTags.WorkspaceRoot)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     val mod = event.isMetaPressed || event.isCtrlPressed
@@ -58,22 +72,35 @@ fun App(config: AppConfig = AppConfig()) {
                     }
                 },
         ) {
+            val widthDp = maxWidth.value.toInt()
+            val isMobile = widthDp < RAIL_LAYOUT_MIN_WIDTH_DP
             if (session == null) {
                 val authViewModel = remember(container) { container.authViewModel() }
                 DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
                 SignInScreen(
                     viewModel = authViewModel,
                     isDemoMode = config.isDemoMode,
+                    isMobile = isMobile,
                     onSignedIn = { /* session flow drives the switch */ },
                 )
             } else {
-                WorkspaceShell(
-                    container = container,
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = { isDarkTheme = !isDarkTheme },
-                    onSignedOut = { /* session flow drives the switch */ },
-                    availableWidthDp = maxWidth.value.toInt(),
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                ) {
+                    WorkspaceShell(
+                        container = container,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = {
+                            val next = !isDarkTheme
+                            isDarkTheme = next
+                            themePrefs.save(next)
+                        },
+                        onSignedOut = { /* session flow drives the switch */ },
+                        availableWidthDp = widthDp,
+                    )
+                }
             }
         }
     }

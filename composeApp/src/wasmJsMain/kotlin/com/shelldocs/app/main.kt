@@ -9,6 +9,7 @@ import kotlinx.browser.document
 fun main() {
     ComposeViewport(document.body!!) {
         val config = remember { loadWebAppConfig() }
-        App(config = config)
+        val themePrefs = remember { WebThemePreferences() }
+        App(config = config, themePrefs = themePrefs)
     }
 }

@@ -8,11 +8,12 @@ import androidx.compose.ui.window.application
 
 fun main() = application {
     val config = loadDesktopAppConfig()
+    val themePrefs = DesktopThemePreferences()
     Window(
         onCloseRequest = ::exitApplication,
         title = "ShellAtlas",
         state = WindowState(size = DpSize(1440.dp, 900.dp)),
     ) {
-        App(config = config)
+        App(config = config, themePrefs = themePrefs)
     }
 }
