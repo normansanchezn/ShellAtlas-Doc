@@ -21,6 +21,7 @@ import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
@@ -116,6 +117,36 @@ class SourcesViewModelTest {
         testScheduler.advanceUntilIdle()
         assertEquals(1, repository.syncs)
         assertTrue(viewModel.currentState.syncingSourceIds.isEmpty())
+        viewModel.clear()
+    }
+
+    @Test
+    fun syncOnErrorSourceShowsConflictError() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(SourcesIntent.Initialize)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onIntent(SourcesIntent.Sync("jira"))
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+        assertEquals(0, repository.syncs)
+        viewModel.clear()
+    }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(SourcesIntent.Initialize)
+        viewModel.onIntent(SourcesIntent.Sync("jira"))
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(SourcesIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

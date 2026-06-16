@@ -93,4 +93,42 @@ class DashboardViewModelTest {
         assertNotNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        repository.nextResult = DomainResult.failure(AppError.Network("offline"))
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DashboardIntent.Initialize)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(DashboardIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
+        viewModel.clear()
+    }
+
+    @Test
+    fun refreshKeepsPreviousMetricsUntilComplete() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DashboardIntent.Initialize)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
+
+        repository.nextResult = DomainResult.success(metrics(200))
+        viewModel.onIntent(DashboardIntent.Refresh)
+        testScheduler.runCurrent()
+
+        assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
+        assertTrue(viewModel.currentState.isLoading)
+
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(200, viewModel.currentState.metrics?.totalDocuments)
+        assertFalse(viewModel.currentState.isLoading)
+        viewModel.clear()
+    }
 }

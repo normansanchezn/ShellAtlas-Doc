@@ -153,10 +153,124 @@ class ShellAtlasDemoTest {
 
         composeRule.onNodeWithTag(DemoTestTags.sourceSync("Confluence")).performClick()
         pauseForRecording(2_000L)
-        composeRule.onNodeWithTag(DemoTestTags.sourceReconnect("Jira")).performClick()
+    }
+
+    // ── Complete flows ──────────────────────────────────────────────────────
+
+    @Test
+    fun flow_loginComplete() {
+        waitForTag(DemoTestTags.SignInRoot)
+        composeRule.onNodeWithTag(DemoTestTags.SignInEmail).performTextInput("demo@shell.com")
+        composeRule.onNodeWithTag(DemoTestTags.SignInPassword).performTextInput("demo-pass-123")
+        pauseForRecording(500L)
+        composeRule.onNodeWithTag(DemoTestTags.PasswordToggle).performClick()
+        pauseForRecording(400L)
+        composeRule.onNodeWithTag(DemoTestTags.PasswordToggle).performClick()
+        composeRule.onNodeWithTag(DemoTestTags.SignInSubmit).performClick()
+        waitForTag(DemoTestTags.WorkspaceRoot)
+        waitForTag(DemoTestTags.AssistantScreen)
         pauseForRecording()
-        composeRule.onNodeWithTag(DemoTestTags.sourceSync("Jira")).performClick()
+    }
+
+    @Test
+    fun flow_assistantComplete() {
+        signIn()
+
+        waitForTag(DemoTestTags.AssistantScreen)
+        waitForText("ShellAtlas")
         pauseForRecording()
+
+        askAssistantQuestion("What is the EoSB1 authentication flow?")
+        waitForText("ShellAtlas AI")
+        pauseForRecording(2_000L)
+
+        askAssistantQuestion("How do tokens rotate silently?")
+        waitForText("ShellAtlas AI")
+        pauseForRecording(1_500L)
+
+        askAssistantQuestion("Summarise the release process.")
+        waitForText("ShellAtlas AI")
+        pauseForRecording(2_000L)
+    }
+
+    @Test
+    fun flow_documentsComplete() {
+        signIn()
+
+        navigateTo("Documents")
+        waitForTag(DemoTestTags.DocumentsScreen)
+        pauseForRecording()
+
+        openDocument("Authentication Flow - Android")
+        pauseForRecording()
+
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsHistory).performClick()
+        waitForText("v2")
+        pauseForRecording(750L)
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsHistory).performClick()
+        pauseForRecording(500L)
+
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsBookmark).performClick()
+        pauseForRecording(500L)
+
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsEdit).performClick()
+        waitForTag(DemoTestTags.DocumentsEditorMarkdown)
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsEditorMarkdown)
+            .performTextInput("\n\n## End-to-end note\n\nVerified in flow test.")
+        pauseForRecording()
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsSaveDraft).performClick()
+        waitForText("Draft saved", timeoutMillis = 25_000L)
+        pauseForRecording()
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsPublish).performClick()
+        waitForText("Authentication Flow - Android")
+        pauseForRecording()
+
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsNew).performClick()
+        waitForTag(DemoTestTags.DocumentsNewTitle)
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsNewTitle)
+            .performTextInput("Flow Test Document")
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsNewMarkdown)
+            .performTextInput("# Flow Test\n\nCreated during complete documents flow.")
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsCreate).performClick()
+        waitForText("Flow Test Document")
+        pauseForRecording()
+    }
+
+    @Test
+    fun flow_updatesPendingComplete() {
+        signIn()
+
+        navigateTo("Updates Pending")
+        waitForTag(DemoTestTags.UpdatesScreen)
+        waitForText("Maintenance triage")
+        pauseForRecording()
+
+        composeRule.onNodeWithTag(DemoTestTags.UpdatesScan).performClick()
+        pauseForRecording(2_000L)
+
+        composeRule.onNodeWithTag(DemoTestTags.updatesRisk("Critical")).performClick()
+        pauseForRecording()
+        composeRule.onNodeWithTag(DemoTestTags.updatesRisk("High")).performClick()
+        pauseForRecording()
+        composeRule.onNodeWithTag(DemoTestTags.updatesRisk("Critical")).performClick()
+        pauseForRecording()
+    }
+
+    @Test
+    fun flow_dashboardComplete() {
+        signIn()
+
+        navigateTo("Dashboard")
+        waitForTag(DemoTestTags.DashboardScreen)
+        waitForText("Knowledge operations overview")
+        pauseForRecording()
+
+        waitForText("Documents")
+        waitForText("Queries")
+        pauseForRecording(1_500L)
+
+        composeRule.onNodeWithTag(DemoTestTags.DashboardRefresh).performClick()
+        pauseForRecording(2_000L)
     }
 
     @Test

@@ -1,4 +1,4 @@
-@file:OptIn(kotlin.time.ExperimentalTime::class)
+@file:OptIn(ExperimentalTime::class)
 
 package com.shelldocs.feature.assistant.presentation
 
@@ -27,6 +27,10 @@ import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
 import com.shelldocs.core.domain.repository.ConversationRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
+import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint
+import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
+import com.shelldocs.core.domain.repository.KnowledgeCheckpointRepository
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
 import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
 import com.shelldocs.core.domain.usecase.assistant.CreateDocumentFromAssistantUseCase
@@ -36,6 +40,9 @@ import com.shelldocs.core.domain.usecase.assistant.RetrieveGroundingDocumentsUse
 import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
+import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
+import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -45,7 +52,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
     override val main = dispatcher
@@ -132,6 +141,15 @@ private class SingleDocumentRepository : DocumentRepository {
     override suspend fun delete(id: String) = DomainResult.success(Unit)
 }
 
+private class FakeKnowledgeCheckpointRepository : KnowledgeCheckpointRepository {
+    override suspend fun checkpoints(): DomainResult<List<KnowledgeCheckpoint>> =
+        DomainResult.success(emptyList())
+    override suspend fun progress(): DomainResult<KnowledgeProgress> =
+        DomainResult.success(KnowledgeProgress(completed = 0, total = 0))
+    override suspend fun complete(checkpointId: String): DomainResult<KnowledgeProgress> =
+        DomainResult.success(KnowledgeProgress(completed = 1, total = 1))
+}
+
 class AssistantViewModelTest {
 
     private val engine = FixedEngine()
@@ -139,6 +157,7 @@ class AssistantViewModelTest {
     private fun viewModel(scheduler: TestCoroutineScheduler): AssistantViewModel {
         val documents = SingleDocumentRepository()
         val conversations = TestConversationRepository()
+        val checkpoints = FakeKnowledgeCheckpointRepository()
         var idCounter = 0
         return AssistantViewModel(
             askAssistant = AskAssistantUseCase(
@@ -153,6 +172,9 @@ class AssistantViewModelTest {
             getConversations = GetConversationsUseCase(conversations),
             saveConversation = SaveConversationUseCase(conversations),
             getDocuments = GetDocumentsUseCase(documents),
+            getKnowledgeCheckpoints = GetKnowledgeCheckpointsUseCase(checkpoints),
+            getKnowledgeProgress = GetKnowledgeProgressUseCase(checkpoints),
+            completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(checkpoints),
             timeProvider = TimeProvider { Instant.parse("2026-06-11T10:00:00Z") },
             idGenerator = IdGenerator { "id-${++idCounter}" },
             dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
@@ -244,6 +266,43 @@ class AssistantViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertTrue(viewModel.currentState.messages.isEmpty())
+        viewModel.clear()
+    }
+
+    @Test
+    fun sendWhileAnsweringIsBlocked() = runTest {
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(AssistantIntent.InputChanged("First question"))
+        viewModel.onIntent(AssistantIntent.SendQuestion)
+        testScheduler.runCurrent()
+
+        assertTrue(viewModel.currentState.isAnswering)
+
+        viewModel.onIntent(AssistantIntent.InputChanged("Second question"))
+        viewModel.onIntent(AssistantIntent.SendQuestion)
+        testScheduler.advanceUntilIdle()
+
+        // First answer returned; second SendQuestion was rejected because isAnswering was true
+        assertEquals(2, viewModel.currentState.messages.size)
+        viewModel.clear()
+    }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        engine.failNext = true
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(AssistantIntent.InputChanged("Any question"))
+        viewModel.onIntent(AssistantIntent.SendQuestion)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(AssistantIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

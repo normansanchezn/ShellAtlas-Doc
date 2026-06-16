@@ -3,6 +3,7 @@
 package com.shelldocs.feature.updates.presentation
 
 import com.shelldocs.core.common.coroutines.DispatcherProvider
+import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
@@ -15,7 +16,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
     override val main = dispatcher
@@ -36,7 +40,7 @@ private fun update(id: String, risk: RiskLevel, impact: Int) = PendingUpdate(
     lastReview = Instant.parse("2026-01-12T00:00:00Z"),
 )
 
-private class FakePendingUpdatesRepository : PendingUpdatesRepository {
+private class FakePendingUpdatesRepository(var failScan: Boolean = false) : PendingUpdatesRepository {
     var scans = 0
     private val data = listOf(
         update("a", RiskLevel.LOW, 31),
@@ -46,6 +50,7 @@ private class FakePendingUpdatesRepository : PendingUpdatesRepository {
 
     override suspend fun pendingUpdates() = DomainResult.success(data)
     override suspend fun scanNow(): DomainResult<List<PendingUpdate>> {
+        if (failScan) return DomainResult.failure(AppError.Network("Scanner offline"))
         scans++
         return DomainResult.success(data)
     }
@@ -53,7 +58,7 @@ private class FakePendingUpdatesRepository : PendingUpdatesRepository {
 
 class UpdatesViewModelTest {
 
-    private val repository = FakePendingUpdatesRepository()
+    private val repository = FakePendingUpdatesRepository(failScan = false)
 
     private fun viewModel(scheduler: kotlinx.coroutines.test.TestCoroutineScheduler) = UpdatesViewModel(
         getPendingUpdates = GetPendingUpdatesUseCase(repository),
@@ -96,6 +101,51 @@ class UpdatesViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(1, repository.scans)
+        viewModel.clear()
+    }
+
+    @Test
+    fun scanSetsLoadingFlagThenClears() = runTest {
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(UpdatesIntent.ScanNow)
+        testScheduler.runCurrent()
+
+        assertTrue(viewModel.currentState.isScanning)
+
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.currentState.isScanning)
+        viewModel.clear()
+    }
+
+    @Test
+    fun scanFailureShowsErrorDialog() = runTest {
+        repository.failScan = true
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(UpdatesIntent.ScanNow)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+        assertFalse(viewModel.currentState.isScanning)
+        viewModel.clear()
+    }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        repository.failScan = true
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(UpdatesIntent.ScanNow)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(UpdatesIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

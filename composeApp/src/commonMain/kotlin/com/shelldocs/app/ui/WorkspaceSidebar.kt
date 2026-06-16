@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,9 +34,7 @@ import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.IconAlertTriangle
-import com.shelldocs.core.designsystem.icons.IconBookOpen
 import com.shelldocs.core.designsystem.icons.IconFileText
-import com.shelldocs.core.designsystem.icons.IconGitBranch
 import com.shelldocs.core.designsystem.icons.IconLayers
 import com.shelldocs.core.designsystem.icons.IconLayoutGrid
 import com.shelldocs.core.designsystem.icons.IconMessageSquare
@@ -111,8 +111,6 @@ fun WorkspaceSidebar(
                 modifier = Modifier.padding(start = ShellSpacing.sm, top = ShellSpacing.lg, bottom = ShellSpacing.xs),
             )
             SidebarSourceItem(IconLayers, "Confluence", activeRoute, onNavigate)
-            SidebarSourceItem(IconGitBranch, "Azure DevOps", activeRoute, onNavigate)
-            SidebarSourceItem(IconBookOpen, "Jira", activeRoute, onNavigate)
         }
         Column(modifier = Modifier.padding(ShellSpacing.sm)) {
             SidebarActionRow(
@@ -202,7 +200,10 @@ private fun SidebarItem(
             .clip(RoundedCornerShape(ShellRadius.sm))
             .background(background)
             .testTag(DemoTestTags.navRoute(route.title))
-            .clickable { onNavigate(route) }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { onNavigate(route) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm + 1.dp),
@@ -244,7 +245,10 @@ private fun SidebarSourceItem(
             .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .testTag(DemoTestTags.navRoute(AppRoute.SOURCES.title))
-            .clickable { onNavigate(AppRoute.SOURCES) }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { onNavigate(AppRoute.SOURCES) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm + 1.dp),
@@ -271,7 +275,11 @@ private fun SidebarActionRow(
             .fillMaxWidth()
             .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm + 1.dp),

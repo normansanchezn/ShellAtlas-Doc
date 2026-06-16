@@ -34,6 +34,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
@@ -235,6 +236,38 @@ class DocumentsViewModelTest {
         val created = repository.docs.getValue("doc-created")
         assertEquals("Project playbook", created.title)
         assertTrue(created.rawMarkdown.startsWith("# Project playbook"))
+        viewModel.clear()
+    }
+
+    @Test
+    fun newDocumentWithBlankTitleIsRejected() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DocumentsIntent.Initialize)
+        viewModel.onIntent(DocumentsIntent.StartCreatingDocument)
+        viewModel.onIntent(DocumentsIntent.NewDocumentTitleChanged("   "))
+        viewModel.onIntent(DocumentsIntent.SubmitNewDocument)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+        assertFalse("doc-created" in repository.docs)
+        viewModel.clear()
+    }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        role = UserRole.VIEWER
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DocumentsIntent.Initialize)
+        viewModel.onIntent(DocumentsIntent.SelectDocument("doc-1"))
+        viewModel.onIntent(DocumentsIntent.StartEditing)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(DocumentsIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
 }

@@ -147,4 +147,38 @@ class AuthViewModelTest {
         assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
     }
+
+    @Test
+    fun canSubmitRequiresBothFields() = runTest {
+        val viewModel = viewModel(StubAuthRepository(DomainResult.success(sampleSession())), testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("user@shell.com"))
+        assertFalse(viewModel.currentState.canSubmit)
+
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret"))
+        assertTrue(viewModel.currentState.canSubmit)
+
+        viewModel.onIntent(AuthIntent.PasswordChanged(""))
+        assertFalse(viewModel.currentState.canSubmit)
+        viewModel.clear()
+    }
+
+    @Test
+    fun dismissErrorClearsDialog() = runTest {
+        val repository = StubAuthRepository(DomainResult.failure(AppError.Unauthorized("bad creds")))
+        val viewModel = viewModel(repository, testScheduler)
+
+        viewModel.onIntent(AuthIntent.EmailChanged("user@shell.com"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("wrong"))
+        viewModel.onIntent(AuthIntent.Submit)
+        testScheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.currentState.errorDialog)
+
+        viewModel.onIntent(AuthIntent.DismissError)
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.currentState.errorDialog)
+        viewModel.clear()
+    }
 }

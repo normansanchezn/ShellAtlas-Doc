@@ -57,72 +57,81 @@ fun WorkspaceShell(
 
     when {
         isWide -> {
-            Row(modifier = modifier.fillMaxSize().background(colors.background)) {
-                WorkspaceSidebar(
-                    activeRoute = route,
-                    pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
-                    user = session?.user,
-                    isDarkTheme = isDarkTheme,
-                    searchQuery = searchQuery,
-                    onSearchChange = { searchQuery = it },
-                    onNavigate = container.navigator::navigate,
-                    onToggleTheme = onToggleTheme,
-                )
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(colors.border),
-                )
-                RouteContent(
-                    container = container,
-                    route = route,
-                    isWide = true,
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = onToggleTheme,
-                    onSignedOut = onSignedOut,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+                ShellWorkspaceBackground(Modifier.fillMaxSize())
+                Row(modifier = Modifier.fillMaxSize()) {
+                    WorkspaceSidebar(
+                        activeRoute = route,
+                        pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                        user = session?.user,
+                        isDarkTheme = isDarkTheme,
+                        searchQuery = searchQuery,
+                        onSearchChange = { searchQuery = it },
+                        onNavigate = container.navigator::navigate,
+                        onToggleTheme = onToggleTheme,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .fillMaxHeight()
+                            .background(colors.border),
+                    )
+                    RouteContent(
+                        container = container,
+                        route = route,
+                        isWide = true,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        onSignedOut = onSignedOut,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
         isRail -> {
-            Row(modifier = modifier.fillMaxSize().background(colors.background)) {
-                WorkspaceRail(
-                    activeRoute = route,
-                    pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
-                    isDarkTheme = isDarkTheme,
-                    onNavigate = container.navigator::navigate,
-                    onToggleTheme = onToggleTheme,
-                )
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(colors.border),
-                )
-                RouteContent(
-                    container = container,
-                    route = route,
-                    isWide = isRailContentWide,
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = onToggleTheme,
-                    onSignedOut = onSignedOut,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+                ShellWorkspaceBackground(Modifier.fillMaxSize())
+                Row(modifier = Modifier.fillMaxSize()) {
+                    WorkspaceRail(
+                        activeRoute = route,
+                        pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                        isDarkTheme = isDarkTheme,
+                        onNavigate = container.navigator::navigate,
+                        onToggleTheme = onToggleTheme,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .fillMaxHeight()
+                            .background(colors.border),
+                    )
+                    RouteContent(
+                        container = container,
+                        route = route,
+                        isWide = isRailContentWide,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        onSignedOut = onSignedOut,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
         else -> {
-            Column(modifier = modifier.fillMaxSize().background(colors.background)) {
-                RouteContent(
-                    container = container,
-                    route = route,
-                    isWide = false,
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = onToggleTheme,
-                    onSignedOut = onSignedOut,
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                )
-                WorkspaceBottomBar(activeRoute = route, onNavigate = container.navigator::navigate)
+            Box(modifier = modifier.fillMaxSize().background(colors.background)) {
+                ShellWorkspaceBackground(Modifier.fillMaxSize())
+                Column(modifier = Modifier.fillMaxSize()) {
+                    RouteContent(
+                        container = container,
+                        route = route,
+                        isWide = false,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
+                        onSignedOut = onSignedOut,
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                    )
+                    WorkspaceBottomBar(activeRoute = route, onNavigate = container.navigator::navigate)
+                }
             }
         }
     }

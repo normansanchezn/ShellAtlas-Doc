@@ -4,6 +4,7 @@ import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.time.TimeProvider
 import com.shelldocs.core.domain.entity.source.KnowledgeSource
+import com.shelldocs.core.domain.entity.source.SourceKind
 import com.shelldocs.core.domain.entity.source.SourceStatus
 import com.shelldocs.core.domain.entity.source.SyncLogEntry
 import com.shelldocs.core.domain.entity.source.SyncOutcome
@@ -18,7 +19,11 @@ class DemoSourcesRepository(private val timeProvider: TimeProvider) : SourcesRep
     private var logCounter = 0
 
     override suspend fun sources(): DomainResult<List<KnowledgeSource>> =
-        DomainResult.success(sources.values.sortedBy { it.kind.ordinal })
+        DomainResult.success(
+            sources.values
+                .filter { it.kind != SourceKind.JIRA && it.kind != SourceKind.AZURE_DEVOPS }
+                .sortedBy { it.kind.ordinal },
+        )
 
     @OptIn(ExperimentalTime::class)
     override suspend fun syncLog(): DomainResult<List<SyncLogEntry>> =

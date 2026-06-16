@@ -21,9 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
-import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -112,17 +113,23 @@ fun ShellLoginBackground(modifier: Modifier = Modifier) {
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .onPointerEvent(PointerEventType.Move) { event ->
-                val change = event.changes.firstOrNull()
-                if (change?.type == PointerType.Mouse) {
-                    lastPointerPos = change.position
-                    mouseActive = true
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        val change = event.changes.firstOrNull()
+                        when (event.type) {
+                            PointerEventType.Move -> {
+                                if (change?.type == PointerType.Mouse) {
+                                    lastPointerPos = change.position
+                                    mouseActive = true
+                                }
+                            }
+                            PointerEventType.Exit -> mouseActive = false
+                            else -> {}
+                        }
+                    }
                 }
-            }
-            .onPointerEvent(PointerEventType.Exit) {
-                mouseActive = false
-                // Keep lastPointerPos so the spring-back targets the last known
-                // cursor location and particles visibly drift back from there.
             },
     ) {
         drawRect(
