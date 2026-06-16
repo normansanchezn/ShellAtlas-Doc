@@ -18,4 +18,10 @@ class AppEnvironmentTest {
         assertEquals("http://127.0.0.1:54321", normalizeRuntimeSetting("http://127.0.0.1:54321"))
         assertEquals("sb_publishable_xxx", normalizeRuntimeSetting("sb_publishable_xxx"))
     }
+
+    @Test
+    fun secretSupabaseKeysAreIgnoredForClientAuth() {
+        assertNull(normalizeSupabaseAnonKey("sb_secret_local-dev-key"))
+        assertEquals("sb_publishable_xxx", normalizeSupabaseAnonKey("sb_publishable_xxx"))
+    }
 }

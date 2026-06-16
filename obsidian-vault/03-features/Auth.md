@@ -23,6 +23,7 @@ Authentication and role management entry flow for ShellAtlas.
 - `core/domain/entity/auth`
 - `core/domain/usecase/auth`
 - `core/data/demo/DemoAuthRepository.kt`
+- `composeApp/src/commonMain/kotlin/com/shelldocs/app/di/AppEnvironment.kt`
 - `feature/auth`
 
 ## Development Notes
@@ -33,3 +34,9 @@ Authentication and role management entry flow for ShellAtlas.
 - The sign-in screen now explains demo-mode credentials when live config is absent.
 - Placeholder values in copied env files are ignored so local development can stay in demo mode until real config is ready.
 - The password field now includes a show/hide control, and sign-in errors explain when the local Supabase stack is unavailable.
+- Supabase client auth now ignores `sb_secret_*` keys so a backend service-role secret cannot accidentally disable demo mode in local development.
+- Test auth sessions now use future expiry dates so auth fixtures do not look stale during debugging.
+
+## Mermaid Diagram
+
+- `obsidian-vault/08-diagrams/Auth Runtime Selection Flow.md`

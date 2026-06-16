@@ -55,10 +55,17 @@ internal fun normalizeRuntimeSetting(value: String?): String? =
         ?.takeIf(String::isNotBlank)
         ?.takeUnless(::isPlaceholderSetting)
 
+internal fun normalizeSupabaseAnonKey(value: String?): String? =
+    normalizeRuntimeSetting(value)
+        ?.takeUnless(::isSecretSupabaseKey)
+
 internal fun isPlaceholderSetting(value: String): Boolean {
     val normalized = value.trim().lowercase()
     return placeholderMarkers.any(normalized::contains)
 }
+
+internal fun isSecretSupabaseKey(value: String): Boolean =
+    value.trim().lowercase().startsWith("sb_secret_")
 
 internal fun resolveBooleanSetting(
     readSetting: (String) -> String?,

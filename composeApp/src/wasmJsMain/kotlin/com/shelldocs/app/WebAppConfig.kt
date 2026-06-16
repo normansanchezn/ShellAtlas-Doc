@@ -1,6 +1,7 @@
 package com.shelldocs.app
 
 import com.shelldocs.app.di.AppConfig
+import com.shelldocs.app.di.normalizeSupabaseAnonKey
 import com.shelldocs.app.di.resolveAppEnvironment
 import com.shelldocs.app.di.resolveBooleanSetting
 import com.shelldocs.app.di.resolveProfileSetting
@@ -15,7 +16,9 @@ fun loadWebAppConfig(): AppConfig {
 
     val environment = resolveAppEnvironment(::setting)
     val supabaseUrl = resolveProfileSetting(::setting, environment, "SUPABASE_URL")
-    val supabaseAnonKey = resolveProfileSetting(::setting, environment, "SUPABASE_ANON_KEY")
+    val supabaseAnonKey = normalizeSupabaseAnonKey(
+        resolveProfileSetting(::setting, environment, "SUPABASE_ANON_KEY"),
+    )
     val apiBaseUrl = resolveProfileSetting(::setting, environment, "API_BASE_URL")
     val apiBearerToken = resolveProfileSetting(::setting, environment, "API_BEARER_TOKEN")
     val useOllama = resolveBooleanSetting(::setting, environment, "USE_OLLAMA")

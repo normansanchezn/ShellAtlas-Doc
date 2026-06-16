@@ -43,7 +43,7 @@ private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProv
 private fun sampleSession() = AuthSession(
     accessToken = "at",
     refreshToken = "rt",
-    expiresAt = Instant.parse("2026-06-12T00:00:00Z"),
+    expiresAt = Instant.parse("2030-06-12T00:00:00Z"),
     user = UserProfile("user-1", "elena.vargas@shell.com", "Elena Vargas", "iOS Shell App", UserRole.OWNER),
 )
 

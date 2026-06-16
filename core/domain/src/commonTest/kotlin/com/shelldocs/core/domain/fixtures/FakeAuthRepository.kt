@@ -38,7 +38,7 @@ class FakeAuthRepository : AuthRepository {
         fun sampleSession(role: UserRole = UserRole.OWNER): AuthSession = AuthSession(
             accessToken = "token",
             refreshToken = "refresh",
-            expiresAt = Instant.parse("2026-06-02T00:00:00Z"),
+            expiresAt = Instant.parse("2030-06-02T00:00:00Z"),
             user = UserProfile(
                 id = "user-1",
                 email = "elena.vargas@shell.com",

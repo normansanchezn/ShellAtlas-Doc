@@ -2,6 +2,7 @@ package com.shelldocs.app
 
 import android.util.Log
 import com.shelldocs.app.di.AppConfig
+import com.shelldocs.app.di.normalizeSupabaseAnonKey
 import com.shelldocs.app.di.parseAppEnvironment
 import com.shelldocs.core.data.assistant.OllamaConfig
 import com.shelldocs.core.data.network.ApiConfig
@@ -11,14 +12,15 @@ private const val AuthTag = "ShellDocsAuth"
 
 fun loadAndroidAppConfig(): AppConfig {
     val supabaseUrl = normalizeAndroidLocalhost(BuildConfig.SUPABASE_URL)
+    val supabaseAnonKey = normalizeSupabaseAnonKey(BuildConfig.SUPABASE_ANON_KEY).orEmpty()
     val apiBaseUrl = normalizeAndroidLocalhost(BuildConfig.API_BASE_URL)
     val ollamaBaseUrl = normalizeAndroidLocalhost(BuildConfig.OLLAMA_BASE_URL)
     val environment = parseAppEnvironment(BuildConfig.APP_ENVIRONMENT)
 
     val config = AppConfig(
         environment = environment,
-        supabase = if (supabaseUrl.isNotBlank() && BuildConfig.SUPABASE_ANON_KEY.isNotBlank()) {
-            SupabaseConfig(url = supabaseUrl, anonKey = BuildConfig.SUPABASE_ANON_KEY)
+        supabase = if (supabaseUrl.isNotBlank() && supabaseAnonKey.isNotBlank()) {
+            SupabaseConfig(url = supabaseUrl, anonKey = supabaseAnonKey)
         } else {
             null
         },
