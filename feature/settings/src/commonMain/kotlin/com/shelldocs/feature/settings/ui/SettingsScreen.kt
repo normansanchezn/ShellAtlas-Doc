@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -169,7 +170,12 @@ private fun SectionChipsRow(
     onSelect: (SettingsSection) -> Unit,
 ) {
     val colors = ShellTheme.colors
-    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+    ) {
         SettingsSection.entries.forEach { section ->
             val isActive = section == selected
             val background by animateColorAsState(
@@ -186,6 +192,7 @@ private fun SectionChipsRow(
                 text = section.displayName,
                 style = ShellTheme.typography.caption,
                 color = contentColor,
+                maxLines = 1,
                 modifier = Modifier
                     .testTag(DemoTestTags.settingsSection(section.displayName))
                     .clip(RoundedCornerShape(ShellRadius.full))

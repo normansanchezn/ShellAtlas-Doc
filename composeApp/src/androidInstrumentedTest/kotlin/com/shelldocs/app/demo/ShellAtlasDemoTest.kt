@@ -336,6 +336,57 @@ class ShellAtlasDemoTest {
         pauseForRecording()
     }
 
+    // ── Narrow-width layout regressions ─────────────────────────────────────
+    // These run in portrait (the narrow-width case) where wrapping/overflow
+    // bugs in chip rows and headers actually reproduce; the landscape tests
+    // above don't have enough width to catch them.
+
+    @Test
+    fun settings_portraitSectionChipsAllReachable() {
+        composeRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        signIn()
+
+        navigateTo("Settings")
+        waitForTag(DemoTestTags.SettingsScreen)
+
+        // Regression: the section chip row used to have no horizontal scroll,
+        // so on narrow widths the trailing chip's label wrapped into several
+        // vertical lines instead of staying on one line — every chip must
+        // still be tappable and lead to its section's content.
+        openSettingsSection("AI Assistant")
+        waitForText("AI Assistant")
+        openSettingsSection("Team & Access")
+        waitForText("Team Members")
+        openSettingsSection("Notifications")
+        waitForText("Weekly digest")
+        openSettingsSection("Integrations")
+        waitForText("Connection status, sync runs and reconnection live in the Sources section of the sidebar.")
+        openSettingsSection("General")
+        waitForText("Dark mode")
+    }
+
+    @Test
+    fun documents_portraitEditorHeaderStaysUsableWithLongTitle() {
+        composeRule.activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        signIn()
+
+        navigateTo("Documents")
+        waitForTag(DemoTestTags.DocumentsScreen)
+        openDocument("Authentication Flow - Android")
+
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsEdit).performClick()
+        waitForTag(DemoTestTags.DocumentsEditorMarkdown)
+
+        // Regression: the editor header used to put the back button, the
+        // doc title and the Save draft button all in one Row with no line
+        // cap, so a long title wrapped across the header and pushed Save
+        // draft out of reach. Both controls must stay reachable here.
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsEditorMarkdown)
+            .performTextInput("\n\nPortrait regression check.")
+        composeRule.onNodeWithTag(DemoTestTags.DocumentsSaveDraft).performClick()
+        waitForText("Draft saved", timeoutMillis = 25_000L)
+    }
+
     private fun signIn() {
         waitForTag(DemoTestTags.SignInRoot)
         composeRule.onNodeWithTag(DemoTestTags.SignInEmail).performTextInput("demo@shell.com")

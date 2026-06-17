@@ -2,6 +2,7 @@ package com.shelldocs.feature.documents.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -59,7 +60,11 @@ fun AttributesPanel(
 
         if (document.attributes.tags.isNotEmpty()) {
             AttributeGroupLabel("Tags")
-            Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+            ) {
                 document.attributes.tags.forEach { tag ->
                     ShellBadge(
                         text = "#$tag",

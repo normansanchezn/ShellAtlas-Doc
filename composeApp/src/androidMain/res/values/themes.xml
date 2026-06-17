@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Theme.DeviceDefault.DayNight.NoActionBar doesn't exist as a single
+    framework resource — DayNight and NoActionBar aren't combined upstream.
+    Inherit DayNight (so the native window respects the system light/dark
+    setting before Compose mounts) and drop the action bar ourselves.
+    -->
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>
