@@ -1,21 +1,18 @@
 package com.shelldocs.feature.auth.ui
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -82,16 +79,17 @@ private fun buildParticles(count: Int): List<Particle> {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ShellLoginBackground(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "login-bg")
-    val time by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = TWO_PI,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 22_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "time",
-    )
+    // Monotonically increasing clock — never resets, so sin/cos never jump at cycle boundaries.
+    var time by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        var lastMs = 0L
+        while (true) {
+            withFrameMillis { ms ->
+                if (lastMs != 0L) time += (ms - lastMs) / 22_000f * TWO_PI
+                lastMs = ms
+            }
+        }
+    }
 
     val particles = remember { buildParticles(count = 68) }
 

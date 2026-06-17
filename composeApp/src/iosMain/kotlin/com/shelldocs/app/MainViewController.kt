@@ -8,5 +8,6 @@ import platform.UIKit.UIViewController
 fun MainViewController(): UIViewController = ComposeUIViewController {
     val config = remember { loadIosAppConfig() }
     val themePrefs = remember { IosThemePreferences() }
-    App(config = config, themePrefs = themePrefs)
+    val sessionPrefs = remember { IosSessionPreferences() }
+    App(config = config, themePrefs = themePrefs, sessionPrefs = sessionPrefs)
 }

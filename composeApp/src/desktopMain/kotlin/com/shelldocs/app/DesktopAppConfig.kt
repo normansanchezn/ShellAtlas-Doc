@@ -11,7 +11,15 @@ import com.shelldocs.core.data.supabase.SupabaseConfig
 import java.io.File
 
 fun loadDesktopAppConfig(): AppConfig {
-    val fileEnv = loadDotEnv()
+    val flavor = System.getProperty("shelldocs.flavor")
+        ?: System.getenv("SHELLDOC_FLAVOR")
+        ?: "demo"
+    if (flavor.lowercase() == "demo") {
+        println("[ShellDocsAuth] Desktop config: DEMO mode (in-memory data, local Ollama)")
+        return AppConfig()
+    }
+
+    val fileEnv = loadDotEnv(flavor)
     fun setting(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() } ?: fileEnv[name]
 
     val environment = resolveAppEnvironment(::setting)
@@ -25,7 +33,7 @@ fun loadDesktopAppConfig(): AppConfig {
     val ollamaBaseUrl = resolveProfileSetting(::setting, environment, "OLLAMA_BASE_URL")
         ?: "http://127.0.0.1:11434"
     val ollamaModel = resolveProfileSetting(::setting, environment, "OLLAMA_MODEL")
-        ?: "llama3.1"
+        ?: "llama3.2"
 
     val config = AppConfig(
         environment = environment,
@@ -51,9 +59,10 @@ fun loadDesktopAppConfig(): AppConfig {
     return config
 }
 
-private fun loadDotEnv(): Map<String, String> {
+private fun loadDotEnv(flavor: String = "demo"): Map<String, String> {
     val workingDirectory = File(System.getProperty("user.dir"))
     val envFile = sequenceOf(
+        workingDirectory.resolve(".env.$flavor"),
         workingDirectory.resolve(".env"),
         workingDirectory.parentFile?.resolve(".env"),
     ).filterNotNull().firstOrNull(File::exists) ?: return emptyMap()

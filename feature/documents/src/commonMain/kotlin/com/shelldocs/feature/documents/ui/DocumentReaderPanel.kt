@@ -33,10 +33,12 @@ import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconBookmark
+import com.shelldocs.core.designsystem.icons.IconChevronLeft
+import com.shelldocs.core.designsystem.icons.IconChevronRight
 import com.shelldocs.core.designsystem.icons.IconEdit
 import com.shelldocs.core.designsystem.icons.IconHistory
-import com.shelldocs.core.designsystem.icons.IconShare
 import com.shelldocs.core.designsystem.icons.IconLayers
+import com.shelldocs.core.designsystem.icons.IconShare
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -95,6 +97,13 @@ fun DocumentReaderPanel(
                     modifier = Modifier.testTag(DemoTestTags.DocumentsEdit),
                 )
             }
+            if (isWide) {
+                PanelCollapseButton(
+                    icon = if (state.isAttributesExpanded) IconChevronRight else IconChevronLeft,
+                    contentDescription = if (state.isAttributesExpanded) "Collapse attributes" else "Show attributes",
+                    onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
+                )
+            }
         }
         if (isWide) {
             Row(modifier = Modifier.weight(1f)) {
@@ -114,37 +123,25 @@ fun DocumentReaderPanel(
                         onIntent = onIntent,
                         modifier = Modifier.width(attributesWidth).fillMaxHeight(),
                     )
-                } else {
+                } else if (state.isAttributesExpanded) {
                     val attributesPanelWidth by animateDpAsState(
-                        targetValue = if (state.isAttributesExpanded) attributesWidth else COLLAPSED_RAIL_WIDTH,
+                        targetValue = attributesWidth,
                         animationSpec = tween(ShellMotion.durationMedium, easing = ShellMotion.standard),
                         label = "attributesPanelWidth",
                     )
-                    if (state.isAttributesExpanded) {
-                        ResizeHandle(onDrag = onResizeAttributes)
-                    }
+                    ResizeHandle(onDrag = onResizeAttributes)
                     Box(
                         modifier = Modifier
                             .width(attributesPanelWidth)
                             .fillMaxHeight()
                             .clipToBounds(),
                     ) {
-                        if (state.isAttributesExpanded) {
-                            AttributesPanel(
-                                document = document,
-                                modifier = Modifier.width(attributesWidth).fillMaxHeight(),
-                                canEdit = state.canEdit,
-                                onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
-                                onCollapse = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
-                            )
-                        } else {
-                            CollapsedPanelRail(
-                                icon = IconLayers,
-                                contentDescription = "Show attributes",
-                                onClick = { onIntent(DocumentsIntent.ToggleAttributesPanel) },
-                                modifier = Modifier.fillMaxHeight(),
-                            )
-                        }
+                        AttributesPanel(
+                            document = document,
+                            modifier = Modifier.width(attributesWidth).fillMaxHeight(),
+                            canEdit = state.canEdit,
+                            onEdit = { onIntent(DocumentsIntent.OpenAttributesEditor) },
+                        )
                     }
                 }
             }

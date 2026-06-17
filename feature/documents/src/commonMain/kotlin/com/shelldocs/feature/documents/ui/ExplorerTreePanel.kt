@@ -27,7 +27,6 @@ import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.IconBookmark
 import com.shelldocs.core.designsystem.icons.IconChevronDown
-import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.icons.IconChevronRight
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconPlus
@@ -41,13 +40,12 @@ import com.shelldocs.core.domain.entity.document.DocumentNodeType
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsState
 
-/** EXPLORER rail: search, "+ New" and the collapsible folder tree. */
+/** EXPLORER rail: search, "+ New" and the folder tree. */
 @Composable
 fun ExplorerTreePanel(
     state: DocumentsState,
     onIntent: (DocumentsIntent) -> Unit,
     modifier: Modifier = Modifier,
-    onCollapse: (() -> Unit)? = null,
 ) {
     val colors = ShellTheme.colors
     Column(
@@ -66,13 +64,6 @@ fun ExplorerTreePanel(
                     icon = IconPlus,
                     onClick = { onIntent(DocumentsIntent.StartCreatingDocument) },
                     modifier = Modifier.testTag(DemoTestTags.DocumentsNew),
-                )
-            }
-            if (onCollapse != null) {
-                PanelCollapseButton(
-                    icon = IconChevronLeft,
-                    contentDescription = "Collapse explorer",
-                    onClick = onCollapse,
                 )
             }
         }

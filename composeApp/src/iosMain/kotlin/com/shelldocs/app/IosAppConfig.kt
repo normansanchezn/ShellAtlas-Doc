@@ -13,6 +13,12 @@ import platform.Foundation.NSProcessInfo
 fun loadIosAppConfig(): AppConfig {
     fun setting(name: String): String? = NSProcessInfo.processInfo.environment[name] as? String
 
+    val flavor = setting("SHELLDOC_FLAVOR")?.lowercase() ?: "demo"
+    if (flavor == "demo") {
+        println("[ShellDocsAuth] iOS config: DEMO mode (in-memory data, local Ollama)")
+        return AppConfig()
+    }
+
     val environment = resolveAppEnvironment(::setting)
     val supabaseUrl = resolveProfileSetting(::setting, environment, "SUPABASE_URL")
     val supabaseAnonKey = normalizeSupabaseAnonKey(

@@ -11,7 +11,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val config = loadAndroidAppConfig()
         setContent {
-            App(config = config, themePrefs = AndroidThemePreferences(applicationContext))
+            App(
+                config = config,
+                themePrefs = AndroidThemePreferences(applicationContext),
+                sessionPrefs = AndroidSessionPreferences(applicationContext),
+            )
         }
     }
 }

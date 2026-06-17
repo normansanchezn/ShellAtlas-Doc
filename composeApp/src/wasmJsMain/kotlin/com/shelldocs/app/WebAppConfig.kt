@@ -12,6 +12,14 @@ import kotlinx.browser.window
 
 fun loadWebAppConfig(): AppConfig {
     val params = parseQueryParams(window.location.search)
+
+    // URL param overrides build-time flavor (useful for ad-hoc testing).
+    val flavor = (params["SHELLDOC_FLAVOR"] ?: BUILD_FLAVOR).lowercase()
+    if (flavor == "demo") {
+        println("[ShellDocsAuth] Web config: DEMO mode (in-memory data, local Ollama)")
+        return AppConfig()
+    }
+
     fun setting(name: String): String? = params[name]?.takeIf { it.isNotBlank() }
 
     val environment = resolveAppEnvironment(::setting)

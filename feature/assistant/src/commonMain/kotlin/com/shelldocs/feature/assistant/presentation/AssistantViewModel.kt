@@ -187,10 +187,13 @@ class AssistantViewModel(
             createdAt = timeProvider.now(),
         )
         val language = detectLanguage(question, default = currentState.conversationLanguage)
+        val languageChanged = language != currentState.conversationLanguage
+        val switchMessage = if (languageChanged) languageSwitchMessage(language) else null
         val activeCheckpointId = currentState.activeCheckpointId
         setState {
+            val newMessages = if (switchMessage != null) messages + userMessage + switchMessage else messages + userMessage
             copy(
-                messages = messages + userMessage,
+                messages = newMessages,
                 input = "",
                 isAnswering = true,
                 errorDialog = null,
@@ -249,6 +252,18 @@ class AssistantViewModel(
         }
         setState { copy(activeConversationId = conversation.id, conversations = refreshed) }
     }
+
+    @OptIn(ExperimentalTime::class)
+    private fun languageSwitchMessage(language: AssistantLanguage): AssistantMessage = AssistantMessage(
+        id = idGenerator.newId(),
+        role = MessageRole.SYSTEM,
+        markdown = when (language) {
+            AssistantLanguage.SPANISH -> "Switching to Spanish · Cambiando a Español"
+            AssistantLanguage.FRENCH -> "Switching to French · Passant au Français"
+            AssistantLanguage.ENGLISH -> "Switching to English"
+        },
+        createdAt = timeProvider.now(),
+    )
 
     private companion object {
         const val MAX_TITLE_LENGTH = 38

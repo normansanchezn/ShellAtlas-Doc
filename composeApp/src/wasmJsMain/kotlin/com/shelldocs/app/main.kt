@@ -10,6 +10,7 @@ fun main() {
     ComposeViewport(document.body!!) {
         val config = remember { loadWebAppConfig() }
         val themePrefs = remember { WebThemePreferences() }
-        App(config = config, themePrefs = themePrefs)
+        val sessionPrefs = remember { WebSessionPreferences() }
+        App(config = config, themePrefs = themePrefs, sessionPrefs = sessionPrefs)
     }
 }

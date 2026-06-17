@@ -103,40 +103,16 @@ fun DocumentsScreen(
         } else {
             if (isWide) {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    val explorerPanelWidth by animateDpAsState(
-                        targetValue = if (state.isExplorerExpanded) explorerWidth else COLLAPSED_RAIL_WIDTH,
-                        animationSpec = tween(ShellMotion.durationMedium, easing = ShellMotion.standard),
-                        label = "explorerPanelWidth",
+                    ExplorerTreePanel(
+                        state = state,
+                        onIntent = viewModel::onIntent,
+                        modifier = Modifier.width(explorerWidth).fillMaxHeight(),
                     )
-                    Box(
-                        modifier = Modifier
-                            .width(explorerPanelWidth)
-                            .fillMaxHeight()
-                            .clipToBounds(),
-                    ) {
-                        if (state.isExplorerExpanded) {
-                            ExplorerTreePanel(
-                                state = state,
-                                onIntent = viewModel::onIntent,
-                                onCollapse = { viewModel.onIntent(DocumentsIntent.ToggleExplorerPanel) },
-                                modifier = Modifier.width(explorerWidth).fillMaxHeight(),
-                            )
-                        } else {
-                            CollapsedPanelRail(
-                                icon = IconFolder,
-                                contentDescription = "Show explorer",
-                                onClick = { viewModel.onIntent(DocumentsIntent.ToggleExplorerPanel) },
-                                modifier = Modifier.fillMaxHeight(),
-                            )
-                        }
-                    }
-                    if (state.isExplorerExpanded) {
-                        ResizeHandle(
-                            onDrag = { deltaPx ->
-                                explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
-                            },
-                        )
-                    }
+                    ResizeHandle(
+                        onDrag = { deltaPx ->
+                            explorerWidth = withDelta(explorerWidth, deltaPx, density, EXPLORER_MIN_WIDTH, EXPLORER_MAX_WIDTH)
+                        },
+                    )
                     Box(modifier = Modifier.fillMaxSize()) {
                         val selected = state.selectedDocument
                         if (selected == null) {

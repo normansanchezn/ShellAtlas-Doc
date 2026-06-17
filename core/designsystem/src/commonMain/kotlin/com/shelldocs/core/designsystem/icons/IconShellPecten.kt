@@ -1,5 +1,6 @@
 package com.shelldocs.core.designsystem.icons
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Simplified Shell pecten (scallop) mark used in the app logo chip. */

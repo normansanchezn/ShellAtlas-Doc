@@ -14,23 +14,25 @@ import kotlin.time.ExperimentalTime
 /**
  * Demo identity provider: any syntactically valid credential signs in as the
  * workspace owner (Elena Vargas). Used when no Supabase project is configured.
+ *
+ * Pass [initiallyLoggedIn] = true to skip the login screen on app restart
+ * (session is restored without requiring credentials again).
  */
-class DemoAuthRepository(private val timeProvider: TimeProvider) : AuthRepository {
+@OptIn(ExperimentalTime::class)
+class DemoAuthRepository(
+    private val timeProvider: TimeProvider,
+    initiallyLoggedIn: Boolean = false,
+) : AuthRepository {
 
-    private val mutableSession = MutableStateFlow<AuthSession?>(null)
+    private val mutableSession = MutableStateFlow<AuthSession?>(
+        if (initiallyLoggedIn) buildSession(timeProvider) else null,
+    )
     override val session: StateFlow<AuthSession?> = mutableSession.asStateFlow()
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun signIn(credentials: SignInCredentials): DomainResult<AuthSession> {
-        println("[ShellDocsAuth] Demo sign-in for ${credentials.email}")
-        val authSession = AuthSession(
-            accessToken = "demo-access-token",
-            refreshToken = "demo-refresh-token",
-            expiresAt = timeProvider.now() + 1.hours,
-            user = DemoSeed.elena,
-        )
+        val authSession = buildSession(timeProvider)
         mutableSession.value = authSession
-        println("[ShellDocsAuth] Demo sign-in success as ${authSession.user.email}")
+        println("[ShellDocsAuth] Demo sign-in as ${authSession.user.email}")
         return DomainResult.success(authSession)
     }
 
@@ -41,4 +43,14 @@ class DemoAuthRepository(private val timeProvider: TimeProvider) : AuthRepositor
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
+
+    companion object {
+        @OptIn(ExperimentalTime::class)
+        internal fun buildSession(timeProvider: TimeProvider) = AuthSession(
+            accessToken = "demo-access-token",
+            refreshToken = "demo-refresh-token",
+            expiresAt = timeProvider.now() + 1.hours,
+            user = DemoSeed.elena,
+        )
+    }
 }

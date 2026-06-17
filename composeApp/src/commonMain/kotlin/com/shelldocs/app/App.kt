@@ -45,8 +45,9 @@ import com.shelldocs.feature.auth.ui.SignInScreen
 fun App(
     config: AppConfig = AppConfig(),
     themePrefs: ThemePreferences = NoOpThemePreferences,
+    sessionPrefs: SessionPreferences = NoOpSessionPreferences,
 ) {
-    val container = remember(config) { AppContainer(config) }
+    val container = remember(config) { AppContainer(config, sessionPrefs) }
     val systemDark = isSystemInDarkTheme()
     var isDarkTheme by remember { mutableStateOf(themePrefs.load() ?: systemDark) }
     var textScale by remember { mutableFloatStateOf(1f) }

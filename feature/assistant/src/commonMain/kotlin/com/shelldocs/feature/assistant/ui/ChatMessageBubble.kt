@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
+import com.shelldocs.core.designsystem.icons.IconLanguage
 import com.shelldocs.core.designsystem.icons.IconSparkles
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
@@ -40,7 +41,8 @@ fun ChatMessageBubble(
 ) {
     when (message.role) {
         MessageRole.USER -> UserBubble(message, modifier)
-        else -> AssistantBubble(message, onSourceClick, modifier)
+        MessageRole.SYSTEM -> SystemBubble(message, modifier)
+        MessageRole.ASSISTANT -> AssistantBubble(message, onSourceClick, modifier)
     }
 }
 
@@ -57,6 +59,29 @@ private fun UserBubble(message: AssistantMessage, modifier: Modifier) {
                 .clip(RoundedCornerShape(ShellRadius.md))
                 .background(colors.brand)
                 .padding(horizontal = ShellSpacing.md, vertical = ShellSpacing.sm),
+        )
+    }
+}
+
+@Composable
+private fun SystemBubble(message: AssistantMessage, modifier: Modifier) {
+    val colors = ShellTheme.colors
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = ShellSpacing.xs),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = IconLanguage,
+            contentDescription = null,
+            tint = colors.textMuted,
+            modifier = Modifier.size(12.dp),
+        )
+        Text(
+            text = message.markdown,
+            style = ShellTheme.typography.caption,
+            color = colors.textMuted,
+            modifier = Modifier.padding(start = ShellSpacing.xs),
         )
     }
 }

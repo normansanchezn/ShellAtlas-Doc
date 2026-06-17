@@ -1,5 +1,8 @@
 package com.shelldocs.app.di
 
+import com.shelldocs.app.AppAuthRepository
+import com.shelldocs.app.NoOpSessionPreferences
+import com.shelldocs.app.SessionPreferences
 import com.shelldocs.app.navigation.AppNavigator
 import com.shelldocs.core.common.coroutines.DefaultDispatcherProvider
 import com.shelldocs.core.common.coroutines.DispatcherProvider
@@ -77,7 +80,10 @@ import kotlinx.serialization.json.Json
  * Manual composition root (no DI framework): one place where the whole
  * dependency graph is assembled, mirroring the original AppContainer.
  */
-class AppContainer(private val config: AppConfig = AppConfig()) {
+class AppContainer(
+    private val config: AppConfig = AppConfig(),
+    private val sessionPrefs: SessionPreferences = NoOpSessionPreferences,
+) {
 
     val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
     private val timeProvider = SystemTimeProvider()
@@ -103,8 +109,8 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
 
     val authRepository: AuthRepository by lazy {
         val supabase = config.supabase
-        if (supabase == null) {
-            DemoAuthRepository(timeProvider)
+        val delegate: AuthRepository = if (supabase == null) {
+            DemoAuthRepository(timeProvider, initiallyLoggedIn = sessionPrefs.loadSessionFlag())
         } else {
             SupabaseAuthRepository(
                 authApi = SupabaseAuthApi(httpClient, supabase),
@@ -113,6 +119,7 @@ class AppContainer(private val config: AppConfig = AppConfig()) {
                 timeProvider = timeProvider,
             )
         }
+        AppAuthRepository(delegate, sessionPrefs)
     }
 
     val roleRepository: RoleRepository by lazy {

@@ -21,6 +21,24 @@ fun loadDotEnv(rootDir: File): Map<String, String> {
 
 val dotEnv = loadDotEnv(rootDir)
 
+// Flavor used by desktop and web builds. Default is "demo" (in-memory data, no external services).
+// Override with: ./gradlew :composeApp:run -PshellFlavor=prod
+val shellFlavor: String = providers.gradleProperty("shellFlavor").orElse("demo").get()
+
+// Generate BUILD_FLAVOR constant for the wasmJs (web) target at build time.
+val generateWebBuildFlavor by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/wasmJsMain/kotlin")
+    outputs.dir(outputDir)
+    inputs.property("shellFlavor", shellFlavor)
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/shelldocs/app")
+        dir.mkdirs()
+        dir.resolve("BuildFlavor.kt").writeText(
+            "package com.shelldocs.app\n\ninternal const val BUILD_FLAVOR = \"$shellFlavor\"\n",
+        )
+    }
+}
+
 fun envOrDotEnv(name: String): String =
     providers.environmentVariable(name).orNull
         ?.takeIf { it.isNotBlank() }
@@ -109,8 +127,11 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
+        wasmJsMain {
+            kotlin.srcDir(generateWebBuildFlavor)
+            dependencies {
+                implementation(libs.ktor.client.js)
+            }
         }
     }
 }
@@ -134,19 +155,21 @@ android {
 
     flavorDimensions += "environment"
     productFlavors {
-        create("dev") {
+        create("demo") {
             dimension = "environment"
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
 
+            // Demo mode: no external services. All data is seeded in memory.
+            // Empty SUPABASE_URL + API_BASE_URL guarantees isDemoMode=true in AppConfig.
             buildConfigField("String", "APP_ENVIRONMENT", "\"DEV\"")
-            buildConfigField("String", "SUPABASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_SUPABASE_URL").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_URL") }}\"")
-            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${envOrDotEnv("SHELLDOC_DEV_SUPABASE_ANON_KEY").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_ANON_KEY") }}\"")
-            buildConfigField("String", "API_BASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_API_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_API_BASE_URL") }}\"")
-            buildConfigField("String", "API_BEARER_TOKEN", "\"${envOrDotEnv("SHELLDOC_DEV_API_BEARER_TOKEN").ifBlank { envOrDotEnv("SHELLDOC_API_BEARER_TOKEN") }}\"")
-            buildConfigField("boolean", "USE_OLLAMA", envOrDotEnv("SHELLDOC_DEV_USE_OLLAMA").ifBlank { envOrDotEnv("SHELLDOC_USE_OLLAMA") }.equals("true", ignoreCase = true).toString())
-            buildConfigField("String", "OLLAMA_BASE_URL", "\"${envOrDotEnv("SHELLDOC_DEV_OLLAMA_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_BASE_URL").ifBlank { "http://10.0.2.2:11434" } }}\"")
-            buildConfigField("String", "OLLAMA_MODEL", "\"${envOrDotEnv("SHELLDOC_DEV_OLLAMA_MODEL").ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_MODEL").ifBlank { "llama3.1" } }}\"")
+            buildConfigField("String", "SUPABASE_URL", "\"\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"\"")
+            buildConfigField("String", "API_BASE_URL", "\"\"")
+            buildConfigField("String", "API_BEARER_TOKEN", "\"\"")
+            buildConfigField("boolean", "USE_OLLAMA", "false")
+            buildConfigField("String", "OLLAMA_BASE_URL", "\"http://10.0.2.2:11434\"")
+            buildConfigField("String", "OLLAMA_MODEL", "\"llama3.2\"")
         }
         create("prod") {
             dimension = "environment"
@@ -182,6 +205,11 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.shelldocs.app.MainKt"
+
+        // Pass flavor to the JVM process so DesktopAppConfig can detect it at startup.
+        // ./gradlew :composeApp:run                   → demo mode (default)
+        // ./gradlew :composeApp:run -PshellFlavor=prod → prod mode (reads .env.prod or .env)
+        jvmArgs += "-Dshelldocs.flavor=$shellFlavor"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
