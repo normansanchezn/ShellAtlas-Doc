@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
+import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
 import com.shelldocs.core.designsystem.icons.IconChevronLeft
@@ -43,12 +44,20 @@ fun NewDocumentEditorPanel(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
         ) {
-            ShellGhostButton(
-                text = "Back to workspace",
-                icon = IconChevronLeft,
-                onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
-                enabled = !state.isBusy,
-            )
+            if (isWide) {
+                ShellGhostButton(
+                    text = "Back to workspace",
+                    icon = IconChevronLeft,
+                    onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
+                    enabled = !state.isBusy,
+                )
+            } else {
+                ShellIconButton(
+                    icon = IconChevronLeft,
+                    contentDescription = "Back to workspace",
+                    onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
+                )
+            }
             Text(
                 text = buildString {
                     append("New document")
@@ -117,10 +126,8 @@ private fun WideNewDocumentEditor(
             MarkdownEditorField(
                 markdown = state.newDocumentMarkdown,
                 onMarkdownChange = { onIntent(DocumentsIntent.NewDocumentMarkdownChanged(it)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .testTag(DemoTestTags.DocumentsNewMarkdown),
+                modifier = Modifier.weight(1f).fillMaxSize(),
+                fieldModifier = Modifier.testTag(DemoTestTags.DocumentsNewMarkdown),
             )
             Column(
                 modifier = Modifier
@@ -176,10 +183,9 @@ private fun MobileNewDocumentEditStep(
         MarkdownEditorField(
             markdown = state.newDocumentMarkdown,
             onMarkdownChange = { onIntent(DocumentsIntent.NewDocumentMarkdownChanged(it)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .testTag(DemoTestTags.DocumentsNewMarkdown),
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            fieldModifier = Modifier.testTag(DemoTestTags.DocumentsNewMarkdown),
+            showToolbar = true,
         )
         ShellPrimaryButton(
             text = "Continue to preview",

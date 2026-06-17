@@ -7,8 +7,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Type scale matching the Figma file (Inter at 10/12/13/14/16/22,
- * uppercase 10sp section labels with 0.5 tracking, mono for kbd/code).
+ * Shared type scale.
+ *
+ * `default()` keeps the denser desktop/web rhythm.
+ * `mobile()` raises the baseline to match native mobile readability and
+ * accessibility expectations.
  */
 @Immutable
 data class ShellTypography(
@@ -51,6 +54,22 @@ data class ShellTypography(
             sectionLabel = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 15.sp, letterSpacing = 0.5.sp),
             metricValue = TextStyle(fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 26.sp, letterSpacing = (-0.3).sp),
             code = TextStyle(fontFamily = mono, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp),
+        )
+
+        fun mobile(
+            sans: FontFamily = FontFamily.SansSerif,
+            mono: FontFamily = FontFamily.Monospace,
+        ): ShellTypography = ShellTypography(
+            displayTitle = TextStyle(fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 38.sp, letterSpacing = (-0.5).sp),
+            pageTitle = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 30.sp, letterSpacing = (-0.3).sp),
+            sectionTitle = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, lineHeight = 24.sp),
+            body = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp),
+            bodyStrong = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
+            label = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+            caption = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
+            sectionLabel = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 16.sp, letterSpacing = 0.4.sp),
+            metricValue = TextStyle(fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 32.sp, letterSpacing = (-0.35).sp),
+            code = TextStyle(fontFamily = mono, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
         )
 
         private fun TextStyle.scale(factor: Float): TextStyle = copy(

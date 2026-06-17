@@ -27,6 +27,7 @@ object ShellTheme {
 @Composable
 fun ShellDocsTheme(
     darkTheme: Boolean = false,
+    typography: ShellTypography = ShellTypography.default(),
     textScale: Float = 1f,
     content: @Composable () -> Unit,
 ) {
@@ -58,7 +59,7 @@ fun ShellDocsTheme(
     )
     CompositionLocalProvider(
         LocalShellColors provides colors,
-        LocalShellTypography provides ShellTypography.default().scaled(textScale),
+        LocalShellTypography provides typography.scaled(textScale),
         LocalTextSelectionColors provides selectionColors,
     ) {
         MaterialTheme(colorScheme = materialColors, content = content)

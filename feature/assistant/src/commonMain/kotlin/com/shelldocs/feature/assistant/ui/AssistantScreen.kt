@@ -1,13 +1,16 @@
 package com.shelldocs.feature.assistant.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +24,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.icons.IconSparkles
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
@@ -45,14 +51,19 @@ fun AssistantScreen(
     val state by viewModel.state.collectAsState()
     val colors = ShellTheme.colors
     val listState = rememberLazyListState()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(viewModel) {
         viewModel.onIntent(AssistantIntent.Initialize)
         viewModel.effects.collect { effect ->
             when (effect) {
                 AssistantEffect.ScrollToLatestMessage -> {
-                    val lastIndex = viewModel.currentState.messages.size - 1
-                    if (lastIndex >= 0) listState.animateScrollToItem(lastIndex)
+                    // Target the trailing spacer (not the last message) so the scroll
+                    // clears the whole bubble, including its sources list below it.
+                    val bottomIndex = viewModel.currentState.messages.size +
+                        (if (viewModel.currentState.isAnswering) 1 else 0)
+                    if (bottomIndex >= 0) listState.animateScrollToItem(bottomIndex)
                 }
             }
         }
@@ -76,7 +87,17 @@ fun AssistantScreen(
                 activeCheckpointId = state.activeCheckpointId,
                 onStartKnowledgeTransfer = { viewModel.onIntent(AssistantIntent.StartKnowledgeTransfer) },
             )
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        })
+                    },
+            ) {
                 if (state.messages.isEmpty()) {
                     AssistantEmptyThread(modifier = Modifier.align(Alignment.Center))
                 } else {
@@ -99,6 +120,7 @@ fun AssistantScreen(
                         if (state.isAnswering) {
                             item("typing") { TypingIndicator() }
                         }
+                        item("bottom-anchor") { Spacer(modifier = Modifier.height(1.dp)) }
                     }
                 }
             }
@@ -106,7 +128,11 @@ fun AssistantScreen(
                 value = state.input,
                 canSend = state.canSend,
                 onValueChange = { viewModel.onIntent(AssistantIntent.InputChanged(it)) },
-                onSend = { viewModel.onIntent(AssistantIntent.SendQuestion) },
+                onSend = {
+                    viewModel.onIntent(AssistantIntent.SendQuestion)
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                },
             )
         }
 

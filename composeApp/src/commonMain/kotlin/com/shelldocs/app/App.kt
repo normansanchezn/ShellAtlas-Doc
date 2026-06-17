@@ -33,6 +33,7 @@ import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.ui.WorkspaceShell
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellDocsTheme
+import com.shelldocs.core.designsystem.tokens.ShellTypography
 import com.shelldocs.feature.auth.ui.SignInScreen
 
 /**
@@ -50,64 +51,67 @@ fun App(
     themePrefs: ThemePreferences = NoOpThemePreferences,
     sessionPrefs: SessionPreferences = NoOpSessionPreferences,
 ) {
-    val container = remember(config) { AppContainer(config, sessionPrefs) }
-    val systemDark = isSystemInDarkTheme()
-    val focusManager = LocalFocusManager.current
-    var isDarkTheme by remember { mutableStateOf(themePrefs.load() ?: systemDark) }
-    var textScale by remember { mutableFloatStateOf(1f) }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val container = remember(config) { AppContainer(config, sessionPrefs) }
+        val systemDark = isSystemInDarkTheme()
+        val focusManager = LocalFocusManager.current
+        val widthDp = maxWidth.value.toInt()
+        val isMobile = widthDp < RAIL_LAYOUT_MIN_WIDTH_DP
+        val baseTypography = if (isMobile) ShellTypography.mobile() else ShellTypography.default()
+        var isDarkTheme by remember { mutableStateOf(themePrefs.load() ?: systemDark) }
+        var textScale by remember { mutableFloatStateOf(1f) }
 
-    ShellDocsTheme(darkTheme = isDarkTheme, textScale = textScale) {
-        val session by container.authRepository.session.collectAsState()
-        // BoxWithConstraints intentionally has NO windowInsetsPadding here.
-        // The login screen background bleeds edge-to-edge (behind Dynamic Island
-        // and home indicator).  WorkspaceShell owns its own inset padding.
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag(DemoTestTags.WorkspaceRoot)
-                .pointerInput(focusManager) {
-                    detectTapGestures(onTap = { focusManager.clearFocus() })
-                }
-                .onPreviewKeyEvent { event ->
-                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                    val mod = event.isMetaPressed || event.isCtrlPressed
-                    if (!mod) return@onPreviewKeyEvent false
-                    when (event.key) {
-                        Key.Equals -> { textScale = (textScale + ZOOM_STEP).coerceAtMost(MAX_ZOOM); true }
-                        Key.Minus -> { textScale = (textScale - ZOOM_STEP).coerceAtLeast(MIN_ZOOM); true }
-                        Key.Zero -> { textScale = 1f; true }
-                        else -> false
+        ShellDocsTheme(darkTheme = isDarkTheme, typography = baseTypography, textScale = textScale) {
+            val session by container.authRepository.session.collectAsState()
+            // BoxWithConstraints intentionally has NO windowInsetsPadding here.
+            // The login screen background bleeds edge-to-edge (behind Dynamic Island
+            // and home indicator). WorkspaceShell owns its own inset padding.
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(DemoTestTags.WorkspaceRoot)
+                    .pointerInput(focusManager) {
+                        detectTapGestures(onTap = { focusManager.clearFocus() })
                     }
-                },
-        ) {
-            val widthDp = maxWidth.value.toInt()
-            val isMobile = widthDp < RAIL_LAYOUT_MIN_WIDTH_DP
-            if (session == null) {
-                val authViewModel = remember(container) { container.authViewModel() }
-                DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
-                SignInScreen(
-                    viewModel = authViewModel,
-                    isDemoMode = config.isDemoMode,
-                    isMobile = isMobile,
-                    onSignedIn = { /* session flow drives the switch */ },
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
-                ) {
-                    WorkspaceShell(
-                        container = container,
-                        isDarkTheme = isDarkTheme,
-                        onToggleTheme = {
-                            val next = !isDarkTheme
-                            isDarkTheme = next
-                            themePrefs.save(next)
-                        },
-                        onSignedOut = { /* session flow drives the switch */ },
-                        availableWidthDp = widthDp,
+                    .onPreviewKeyEvent { event ->
+                        if (isMobile || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val mod = event.isMetaPressed || event.isCtrlPressed
+                        if (!mod) return@onPreviewKeyEvent false
+                        when (event.key) {
+                            Key.Equals -> { textScale = (textScale + ZOOM_STEP).coerceAtMost(MAX_ZOOM); true }
+                            Key.Minus -> { textScale = (textScale - ZOOM_STEP).coerceAtLeast(MIN_ZOOM); true }
+                            Key.Zero -> { textScale = 1f; true }
+                            else -> false
+                        }
+                    },
+            ) {
+                if (session == null) {
+                    val authViewModel = remember(container) { container.authViewModel() }
+                    DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
+                    SignInScreen(
+                        viewModel = authViewModel,
+                        isDemoMode = config.isDemoMode,
+                        isMobile = isMobile,
+                        onSignedIn = { /* session flow drives the switch */ },
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(WindowInsets.safeDrawing),
+                    ) {
+                        WorkspaceShell(
+                            container = container,
+                            isDarkTheme = isDarkTheme,
+                            onToggleTheme = {
+                                val next = !isDarkTheme
+                                isDarkTheme = next
+                                themePrefs.save(next)
+                            },
+                            onSignedOut = { /* session flow drives the switch */ },
+                            availableWidthDp = widthDp,
+                        )
+                    }
                 }
             }
         }
