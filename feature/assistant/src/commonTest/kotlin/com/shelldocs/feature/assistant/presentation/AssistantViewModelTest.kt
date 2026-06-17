@@ -27,7 +27,6 @@ import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
 import com.shelldocs.core.domain.repository.ConversationRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
-import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
 import com.shelldocs.core.domain.repository.KnowledgeCheckpointRepository
@@ -44,6 +43,7 @@ import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointU
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
@@ -154,7 +154,10 @@ class AssistantViewModelTest {
 
     private val engine = FixedEngine()
 
-    private fun viewModel(scheduler: TestCoroutineScheduler): AssistantViewModel {
+    private fun viewModel(
+        scheduler: TestCoroutineScheduler,
+        assistantEngine: AssistantEngine = engine,
+    ): AssistantViewModel {
         val documents = SingleDocumentRepository()
         val conversations = TestConversationRepository()
         val checkpoints = FakeKnowledgeCheckpointRepository()
@@ -163,12 +166,12 @@ class AssistantViewModelTest {
             askAssistant = AskAssistantUseCase(
                 detectIntent = DetectAssistantIntentUseCase(),
                 retrieveGroundingDocuments = RetrieveGroundingDocumentsUseCase(documents),
-                engine = engine,
+                engine = assistantEngine,
                 cache = NoopCache(),
                 createDocumentFromAssistant = CreateDocumentFromAssistantUseCase(CreateDocumentUseCase(documents)),
                 roleProvider = { UserRole.DEVELOP },
             ),
-            checkAvailability = CheckAssistantAvailabilityUseCase(engine),
+            checkAvailability = CheckAssistantAvailabilityUseCase(assistantEngine),
             getConversations = GetConversationsUseCase(conversations),
             saveConversation = SaveConversationUseCase(conversations),
             getDocuments = GetDocumentsUseCase(documents),
@@ -226,6 +229,21 @@ class AssistantViewModelTest {
     }
 
     @Test
+    fun spanishQuestionChangesConversationLanguageWithoutAddingSystemMessage() = runTest {
+        val viewModel = viewModel(testScheduler)
+
+        viewModel.onIntent(AssistantIntent.InputChanged("¿Como funciona la autenticacion?"))
+        viewModel.onIntent(AssistantIntent.SendQuestion)
+        testScheduler.advanceUntilIdle()
+
+        val state = viewModel.currentState
+        assertEquals(AssistantLanguage.SPANISH, state.conversationLanguage)
+        assertEquals(2, state.messages.size)
+        assertTrue(state.messages.none { it.role == MessageRole.SYSTEM })
+        viewModel.clear()
+    }
+
+    @Test
     fun engineFailureKeepsUserMessageAndShowsError() = runTest {
         engine.failNext = true
         val viewModel = viewModel(testScheduler)
@@ -270,21 +288,42 @@ class AssistantViewModelTest {
     }
 
     @Test
-    fun sendWhileAnsweringIsBlocked() = runTest {
-        val viewModel = viewModel(testScheduler)
+    fun queuedQuestionsProduceTwoExchanges() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val blockingEngine = object : AssistantEngine {
+            override suspend fun answer(
+                question: String,
+                intent: AssistantIntentType,
+                groundingDocuments: List<ScoredDocument>,
+                language: AssistantLanguage?,
+            ): DomainResult<AssistantAnswer> {
+                gate.await()
+                return DomainResult.success(
+                    AssistantAnswer(
+                        markdown = "Grounded answer about $question",
+                        confidence = AnswerConfidence.HIGH,
+                        sources = emptyList(),
+                        intent = intent,
+                    ),
+                )
+            }
+
+            override suspend fun availability() =
+                AssistantAvailability(isLlmReachable = false, modelName = null, statusMessage = "grounded")
+        }
+        val viewModel = viewModel(testScheduler, assistantEngine = blockingEngine)
 
         viewModel.onIntent(AssistantIntent.InputChanged("First question"))
         viewModel.onIntent(AssistantIntent.SendQuestion)
         testScheduler.runCurrent()
 
-        assertTrue(viewModel.currentState.isAnswering)
-
         viewModel.onIntent(AssistantIntent.InputChanged("Second question"))
         viewModel.onIntent(AssistantIntent.SendQuestion)
+
+        gate.complete(Unit)
         testScheduler.advanceUntilIdle()
 
-        // First answer returned; second SendQuestion was rejected because isAnswering was true
-        assertEquals(2, viewModel.currentState.messages.size)
+        assertEquals(4, viewModel.currentState.messages.size)
         viewModel.clear()
     }
 

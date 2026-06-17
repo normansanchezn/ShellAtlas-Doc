@@ -264,6 +264,36 @@ class DocumentsViewModelTest {
     }
 
     @Test
+    fun newDocumentContinueToPreviewRequiresAttributesThenCreatesWithThem() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DocumentsIntent.Initialize)
+        viewModel.onIntent(DocumentsIntent.StartCreatingDocument)
+        viewModel.onIntent(DocumentsIntent.NewDocumentTitleChanged("Mobile preview flow"))
+        viewModel.onIntent(DocumentsIntent.NewDocumentMarkdownChanged("# Mobile preview flow\n\nBody"))
+        viewModel.onIntent(DocumentsIntent.ContinueNewDocumentToPreview)
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.currentState.isAttributesDialogOpen)
+        assertEquals(AttributesEditorTarget.NewDocument, viewModel.currentState.attributesEditorTarget)
+        assertEquals(DocumentsEditorStep.Edit, viewModel.currentState.newDocumentStep)
+
+        viewModel.onIntent(DocumentsIntent.AttributesOwnerChanged("Docs Team"))
+        viewModel.onIntent(DocumentsIntent.SaveAttributes)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.currentState.isAttributesDialogOpen)
+        assertEquals(DocumentsEditorStep.Preview, viewModel.currentState.newDocumentStep)
+
+        viewModel.onIntent(DocumentsIntent.SubmitNewDocument)
+        testScheduler.advanceUntilIdle()
+
+        val created = repository.docs.getValue("doc-created")
+        assertEquals("Docs Team", created.attributes.owner)
+        assertFalse(viewModel.currentState.isCreatingDocument)
+        viewModel.clear()
+    }
+
+    @Test
     fun newDocumentWithBlankTitleIsRejected() = runTest {
         val viewModel = viewModel(testScheduler)
         viewModel.onIntent(DocumentsIntent.Initialize)

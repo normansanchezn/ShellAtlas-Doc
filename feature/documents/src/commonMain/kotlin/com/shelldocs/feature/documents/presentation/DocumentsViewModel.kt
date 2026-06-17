@@ -85,19 +85,25 @@ class DocumentsViewModel(
                 setState { copy(newDocumentTitle = intent.value) }
             is DocumentsIntent.NewDocumentMarkdownChanged ->
                 setState { copy(newDocumentMarkdown = intent.value) }
+            DocumentsIntent.ContinueNewDocumentToPreview -> openNewDocumentAttributesEditor(forPreview = true)
+            DocumentsIntent.BackToNewDocumentEditor -> setState { copy(newDocumentStep = DocumentsEditorStep.Edit) }
             DocumentsIntent.CancelNewDocument ->
                 setState {
                     copy(
                         isCreatingDocument = false,
                         newDocumentTitle = "",
                         newDocumentMarkdown = "",
+                        newDocumentStep = DocumentsEditorStep.Edit,
                         loadingMessage = null,
+                        isAttributesDialogOpen = false,
+                        shouldShowPreviewAfterAttributes = false,
                     )
                 }
             DocumentsIntent.SubmitNewDocument -> submitNewDocument()
             DocumentsIntent.ToggleExplorerPanel -> setState { copy(isExplorerExpanded = !isExplorerExpanded) }
             DocumentsIntent.ToggleAttributesPanel -> setState { copy(isAttributesExpanded = !isAttributesExpanded) }
             DocumentsIntent.OpenAttributesEditor -> openAttributesEditor()
+            DocumentsIntent.OpenNewDocumentAttributesEditor -> openNewDocumentAttributesEditor()
             DocumentsIntent.CloseAttributesEditor ->
                 setState { copy(isAttributesDialogOpen = false, shouldShowPreviewAfterAttributes = false) }
             is DocumentsIntent.AttributesOwnerChanged ->
@@ -225,6 +231,9 @@ class DocumentsViewModel(
                 selectedDocument = null,
                 newDocumentTitle = "",
                 newDocumentMarkdown = "",
+                newDocumentStep = DocumentsEditorStep.Edit,
+                attributesDraft = AttributesDraft(),
+                attributesEditorTarget = AttributesEditorTarget.NewDocument,
                 errorDialog = null,
             )
         }
@@ -352,11 +361,19 @@ class DocumentsViewModel(
     private suspend fun submitNewDocument() {
         val title = currentState.newDocumentTitle.trim()
         val markdown = currentState.newDocumentMarkdown.trim().ifBlank { buildMarkdownForTitle(title) }
+        val attributesDraft = currentState.attributesDraft
         setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
         withContext(dispatchers.io) {
             createDocument(currentState.role, title, markdown)
         }
             .onSuccess { created ->
+                val updatedDocument = withContext(dispatchers.io) {
+                    updateAttributes(
+                        currentState.role,
+                        created.id,
+                        buildAttributesFromDraft(attributesDraft),
+                    ).getOrDefault(created)
+                }
                 refreshAfterMutation(selectedId = created.id)
                 setState {
                     copy(
@@ -364,12 +381,15 @@ class DocumentsViewModel(
                         isCreatingDocument = false,
                         newDocumentTitle = "",
                         newDocumentMarkdown = "",
+                        newDocumentStep = DocumentsEditorStep.Edit,
+                        attributesDraft = AttributesDraft(),
+                        shouldShowPreviewAfterAttributes = false,
                         isEditing = true,
-                        editorMarkdown = created.rawMarkdown,
+                        editorMarkdown = updatedDocument.rawMarkdown,
                         editorStep = DocumentsEditorStep.Edit,
                     )
                 }
-                sendEffect(DocumentsEffect.ShowNotice("Created \"${created.title}\""))
+                sendEffect(DocumentsEffect.ShowNotice("Created \"${updatedDocument.title}\""))
             }
             .onFailure { error ->
                 setState {
@@ -393,6 +413,7 @@ class DocumentsViewModel(
             copy(
                 isAttributesDialogOpen = true,
                 shouldShowPreviewAfterAttributes = forPreview,
+                attributesEditorTarget = AttributesEditorTarget.ExistingDocument,
                 attributesDraft = AttributesDraft(
                     owner = document.attributes.owner,
                     module = document.attributes.module,
@@ -404,9 +425,34 @@ class DocumentsViewModel(
         }
     }
 
+    private fun openNewDocumentAttributesEditor(forPreview: Boolean = false) {
+        setState {
+            copy(
+                isAttributesDialogOpen = true,
+                shouldShowPreviewAfterAttributes = forPreview,
+                attributesEditorTarget = AttributesEditorTarget.NewDocument,
+            )
+        }
+    }
+
     private suspend fun persistAttributes() {
-        val document = currentState.selectedDocument ?: return
         val draft = currentState.attributesDraft
+        if (currentState.attributesEditorTarget == AttributesEditorTarget.NewDocument) {
+            setState {
+                copy(
+                    isAttributesDialogOpen = false,
+                    shouldShowPreviewAfterAttributes = false,
+                    newDocumentStep = if (shouldShowPreviewAfterAttributes) {
+                        DocumentsEditorStep.Preview
+                    } else {
+                        newDocumentStep
+                    },
+                )
+            }
+            return
+        }
+
+        val document = currentState.selectedDocument ?: return
         val attributes = DocumentAttributes(
             owner = draft.owner,
             module = draft.module,
@@ -445,6 +491,18 @@ class DocumentsViewModel(
                 }
             }
     }
+
+    private fun buildAttributesFromDraft(
+        draft: AttributesDraft,
+        parentFolderId: String? = null,
+    ): DocumentAttributes = DocumentAttributes(
+        owner = draft.owner,
+        module = draft.module,
+        team = draft.team,
+        platform = draft.platform,
+        parentFolderId = parentFolderId,
+        tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+    )
 
     private fun toggleBookmark(documentId: String) {
         setState {

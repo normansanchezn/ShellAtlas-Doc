@@ -2,7 +2,7 @@
 title: "Assistant Welcome Message And Multilingual Replies"
 type: "dev-log"
 created: 2026-06-11
-updated: 2026-06-11
+updated: 2026-06-17
 tags:
   - shelldoc
   - dev-log
@@ -16,6 +16,8 @@ tags:
 - New `AssistantLanguage` entity (`ENGLISH`, `SPANISH`, `FRENCH`) and `DetectAssistantLanguageUseCase`: lightweight EN/ES/FR detector based on diacritics and common function words.
 - New `BuildWelcomeMessageUseCase`: returns a localized (EN/ES/FR, default Spanish) greeting that lists what the assistant can do — show a document, point to documentation on a topic, share documentation analytics, run a guided KT for new collaborators, or create a draft document.
 - `AssistantViewModel` now injects the welcome message as `messages.first()` whenever the conversation is empty — on `Initialize` and on `StartNewConversation`. No `AppContainer` wiring needed: `BuildWelcomeMessageUseCase` and the `buildWelcomeMessage` constructor param both have defaults.
+- Mobile assistant threads now start in English by default, detect the language from each user prompt, and answer only in that language.
+- Removed the bilingual language-switch system message so the conversation no longer shows mixed EN/ES copy in the same turn.
 - `GroundedAssistantEngine` and `CreateDocumentFromAssistantUseCase` now hold full localized `Copy` tables (EN/ES/FR) for every template string (questions, flow walkthroughs, improvement advice, summaries, "not enough information", document-creation confirmations), keyed off `DetectAssistantLanguageUseCase`. English copy was kept verbatim to the pre-refactor strings so existing tests stay green.
 - `OllamaAssistantEngine`'s prompt now explicitly instructs the LLM to reply in the same language (EN/ES/FR) the user wrote in.
 - `KnowledgeQueryExpander` gained onboarding/KT aliases ("onboarding", "knowledge transfer", "kt session", "nuevo colaborador", "nouveau collaborateur", ...) mapping to `["onboarding", "authentication", "release process"]`, and `DetectAssistantIntentUseCase` gained matching FLOW_MARKERS so guided-KT requests route to `EXPLAIN_FLOW` and ground on the Authentication / Release Process docs.
@@ -23,7 +25,7 @@ tags:
 
 ## Why
 
-Per [[Assistant]] and [[AI Rules]]: opening the assistant should never drop the user on an empty chat — it should proactively offer the things it can do (show docs, point to docs, analytics, guided KT, create a doc), and reply in whichever of EN/ES/FR the user actually used.
+Per [[Assistant]] and [[AI Rules]]: opening the assistant should never drop the user on an empty chat — it should proactively offer the things it can do (show docs, point to docs, analytics, guided KT, create a doc), and reply in whichever of EN/ES/FR the user actually used without injecting cross-language system chatter.
 
 ## Follow-ups
 

@@ -79,7 +79,11 @@ fun DashboardScreen(
                         MetricCards(metrics = metrics, modifier = Modifier.weight(1f))
                     }
                 } else {
-                    MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), stacked = true)
+                    MetricCards(
+                        metrics = metrics,
+                        modifier = Modifier.fillMaxWidth(),
+                        columns = 3,
+                    )
                 }
 
                 if (isWide) {
@@ -93,10 +97,20 @@ fun DashboardScreen(
                         RecentActivityCard(metrics = metrics, modifier = Modifier.weight(1f))
                     }
                 } else {
-                    KnowledgeHealthCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-                    ModuleCoverageCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-                    StatusDonutCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-                    UsageChartCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
+                    ) {
+                        KnowledgeHealthCard(metrics = metrics, modifier = Modifier.weight(1f))
+                        StatusDonutCard(metrics = metrics, modifier = Modifier.weight(1f))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
+                    ) {
+                        ModuleCoverageCard(metrics = metrics, modifier = Modifier.weight(1f))
+                        UsageChartCard(metrics = metrics, modifier = Modifier.weight(1f))
+                    }
                     RecentActivityCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
                 }
                 NeedsAttentionRow(metrics = metrics, isWide = isWide)
@@ -120,7 +134,7 @@ fun DashboardScreen(
 private fun MetricCards(
     metrics: com.shelldocs.core.domain.entity.dashboard.DashboardMetrics,
     modifier: Modifier = Modifier,
-    stacked: Boolean = false,
+    columns: Int = 4,
 ) {
     val colors = ShellTheme.colors
     val cards: List<@Composable (Modifier) -> Unit> = listOf(
@@ -160,17 +174,16 @@ private fun MetricCards(
             )
         },
     )
-    if (stacked) {
-        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
-            cards.forEach { card -> card(Modifier.fillMaxWidth()) }
-        }
-    } else {
-        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
-            cards.chunked(4).forEach { row ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
-                    row.forEach { card ->
-                        androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) { card(Modifier.fillMaxWidth()) }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
+        cards.chunked(columns).forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
+                row.forEach { card ->
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
+                        card(Modifier.fillMaxWidth())
                     }
+                }
+                repeat((columns - row.size).coerceAtLeast(0)) {
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f))
                 }
             }
         }

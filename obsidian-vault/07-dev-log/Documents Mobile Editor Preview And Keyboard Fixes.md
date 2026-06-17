@@ -19,6 +19,8 @@ tags:
 - Removed live preview from the phone editor until the user taps `Continue to preview`.
 - Reused the attributes dialog as a required step before preview opens.
 - Moved the mobile continue action directly under the live editor field.
+- Applied the same staged flow to `NewDocumentEditorPanel`, so document creation now goes source -> attributes -> preview -> create.
+- Persisted new-document attributes immediately after creation so the saved record matches the previewed metadata.
 - Added app-level tap-to-dismiss keyboard behavior.
 - Set Android `windowSoftInputMode` to `adjustNothing` so the bottom bar stays under the keyboard while the editor content handles IME spacing.
 
@@ -34,6 +36,7 @@ tags:
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/presentation/DocumentsViewModel.kt`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/DocumentEditorPanel.kt`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/AttributesEditDialog.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/NewDocumentEditorPanel.kt`
 - `feature/documents/src/commonTest/kotlin/com/shelldocs/feature/documents/presentation/DocumentsViewModelTest.kt`
 - `composeApp/src/commonMain/kotlin/com/shelldocs/app/App.kt`
 - `composeApp/src/androidMain/AndroidManifest.xml`
@@ -60,4 +63,4 @@ tags:
 ## Next steps
 
 - Validate the new mobile editor flow manually on Android and iPhone simulators with the on-screen keyboard.
-- If needed, apply the same staged preview pattern to the new-document flow.
+- Manually validate the new-document preview flow on Android and iPhone simulators with long markdown drafts.

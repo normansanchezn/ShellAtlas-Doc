@@ -6,7 +6,7 @@ platform: "Android/iOS/Desktop/Web"
 area: "ShellDoc"
 owner: "Product Engineering"
 created: 2026-06-11
-updated: 2026-06-11
+updated: 2026-06-17
 tags:
   - shelldoc
   - assistant
@@ -17,7 +17,7 @@ tags:
 
 ## Summary
 
-Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It now answers with longer structured sections, can render context-aware Mermaid diagrams inside the conversation, and can still turn a chat request into a new draft document.
+Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It now answers with longer structured sections, can render context-aware Mermaid diagrams inside the conversation, can still turn a chat request into a new draft document, and on mobile now keeps each reply in the detected language of the current user turn instead of mixing bilingual system copy into the thread.
 
 ## Related Files
 
@@ -41,7 +41,7 @@ When the detected intent is a flow/process explanation, `GroundedAssistantEngine
 
 ## Welcome Message
 
-- `BuildWelcomeMessageUseCase` returns a localized (EN/ES/FR, default ES) greeting shown by `AssistantViewModel` whenever `messages` is empty — on `Initialize` and on `StartNewConversation`.
+- `BuildWelcomeMessageUseCase` returns a localized (EN/ES/FR) greeting shown by `AssistantViewModel` whenever `messages` is empty — on `Initialize` and on `StartNewConversation`.
 - The greeting tells the user it can: open/show a document, point to where to find documentation on a topic, share documentation analytics, walk through a guided KT for new collaborators, or create a new draft document.
 - No DI wiring needed: `BuildWelcomeMessageUseCase` has a no-arg constructor and `AssistantViewModel`'s `buildWelcomeMessage` param defaults to `BuildWelcomeMessageUseCase()`.
 
@@ -50,6 +50,7 @@ When the detected intent is a flow/process explanation, `GroundedAssistantEngine
 - `DetectAssistantLanguageUseCase` detects EN/ES/FR from diacritics and common function words (defaults to English; falls back to a caller-supplied default when no hints match).
 - `GroundedAssistantEngine` and `CreateDocumentFromAssistantUseCase` each hold a localized `Copy` table (EN/ES/FR) for every template string — questions, flow walkthroughs, improvement advice, summaries, "not enough information", and document-creation confirmations.
 - `OllamaAssistantEngine`'s prompt instructs the LLM to reply in the same language the user wrote in (EN/ES/FR), defaulting to English if unsure.
+- `AssistantViewModel` now starts a new conversation in English by default, infers the active language from each user message, and replies only in that detected language. The previous bilingual "switching language" system message was removed so the mobile transcript stays clean.
 
 ## Source Card Navigation
 

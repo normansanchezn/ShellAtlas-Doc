@@ -278,7 +278,7 @@ private fun MobilePreviewStep(
 }
 
 @Composable
-private fun MarkdownEditorField(
+internal fun MarkdownEditorField(
     markdown: String,
     onMarkdownChange: (String) -> Unit,
     modifier: Modifier = Modifier,
