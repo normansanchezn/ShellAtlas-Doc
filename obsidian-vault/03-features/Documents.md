@@ -6,8 +6,7 @@ platform: "Android/iOS/Desktop/Web"
 area: "ShellDoc"
 owner: "Product Engineering"
 created: 2026-06-11
-updated: 2026-06-11
-updated: 2026-06-12
+updated: 2026-06-17
 tags:
   - shelldoc
   - documents
@@ -18,7 +17,7 @@ tags:
 
 ## Summary
 
-Explorer, reader and editor flows for the shared documentation corpus, now with a dedicated creation screen, direct Supabase persistence fallback when the REST backend is not configured, and a title-driven new-document flow that no longer injects `Untitled document`.
+Explorer, reader and editor flows for the shared documentation corpus, now with a dedicated creation screen, direct Supabase persistence fallback when the REST backend is not configured, a title-driven new-document flow that no longer injects `Untitled document`, and a stepped mobile editing flow that gates preview behind metadata capture.
 
 ## Related Files
 
@@ -27,13 +26,21 @@ Explorer, reader and editor flows for the shared documentation corpus, now with 
 - `core/data/repository/SupabaseDocumentRepository.kt`
 - `feature/documents`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/presentation/DocumentsViewModel.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/presentation/DocumentsState.kt`
 - `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/NewDocumentEditorPanel.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/DocumentEditorPanel.kt`
+- `feature/documents/src/commonMain/kotlin/com/shelldocs/feature/documents/ui/AttributesEditDialog.kt`
+- `composeApp/src/commonMain/kotlin/com/shelldocs/app/App.kt`
+- `composeApp/src/androidMain/AndroidManifest.xml`
 
 ## Layout
 
 - `DocumentsScreen` now shows only one explorer tree on the left and the reader on the right. The redundant list pane was removed to avoid two competing trees/lists in the same workspace.
 - On narrow screens, `DocumentsScreen` switches to a single-column flow with explicit Explorer/Reader mode buttons so Android, iOS and web do not try to render a desktop split view in too little space.
-- `DocumentEditorPanel` and `NewDocumentEditorPanel` stack the editor and preview vertically on narrow screens instead of forcing a two-column layout.
+- `NewDocumentEditorPanel` still stacks editor and preview vertically on narrow screens, but `DocumentEditorPanel` no longer exposes live preview immediately on phones.
+- On narrow screens, editing an existing document is now a stepped flow: source editor first, then attributes dialog, then preview/publish.
+- The phone editor keeps the workspace bottom bar beneath the keyboard while the editor area uses IME-aware spacing.
+- Tapping outside focused fields now clears focus at the app root, so the keyboard dismisses consistently across screens.
 - Explorer tree and attributes/history rail start **collapsed** (`isExplorerExpanded`/`isAttributesExpanded = false`) whenever a document is selected, via `DocumentsViewModel.select()`. Each shows a slim `CollapsedPanelRail` when collapsed.
 - Both panels are user-resizable by dragging a lighter `ResizeHandle` on their border. On desktop, the handle uses a horizontal resize cursor on hover. Widths clamp: explorer 180-420dp, attributes 200-360dp.
 - Collapse affordances use neutral section icons instead of chevrons so they do not read like back-navigation. The collapsed rail is intentionally compact and low-contrast so it reads as a section toggle, not a primary button.
@@ -55,3 +62,9 @@ Explorer, reader and editor flows for the shared documentation corpus, now with 
 - `SupabaseDocumentRepository` persists `documents`, `document_versions`, `document_drafts` and `document_attributes` through PostgREST using the authenticated user's token and existing RLS policies.
 - The creation editor and submit flow were updated after a regression where `# Untitled document` was leaking into the editor and colliding with the explicit title field.
 - The visual density of panel separators and collapse rails was reduced to make the Documents workspace feel cleaner and less browser-like.
+- Mobile editing now uses `DocumentsEditorStep` in state so preview is an explicit stage instead of a live side effect of typing.
+- Preview handoff is gated through `shouldShowPreviewAfterAttributes`, which reuses the attributes dialog instead of creating a second metadata form.
+
+## Mermaid Diagram
+
+- `obsidian-vault/08-diagrams/Documents Mobile Editing Flow.md`

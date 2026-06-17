@@ -1,6 +1,6 @@
 # ShellAtlas Project Tree
 
-Updated: 2026-06-16
+Updated: 2026-06-17
 
 ## Overview
 
@@ -10,6 +10,13 @@ Primary architecture:
 
 ```text
 UI (Compose/SwiftUI host) -> Presentation (MVI) -> Domain <- Data
+```
+
+Build alignment note:
+
+```text
+Android app + Android library modules now pin the same Kotlin JVM target (11)
+to avoid cross-module inline bytecode mismatches during Android compilation.
 ```
 
 ## Repository Root

@@ -61,10 +61,21 @@ class DocumentsViewModel(
             DocumentsIntent.StartEditing -> startEditing()
             is DocumentsIntent.EditorChanged ->
                 setState { copy(editorMarkdown = intent.markdown, draftMessage = null) }
+            DocumentsIntent.ContinueToPreview -> openAttributesEditor(forPreview = true)
+            DocumentsIntent.BackToEditor -> setState { copy(editorStep = DocumentsEditorStep.Edit) }
             DocumentsIntent.SaveDraft -> persistDraft()
             is DocumentsIntent.Publish -> publish(intent.changeSummary)
             DocumentsIntent.CancelEditing ->
-                setState { copy(isEditing = false, editorMarkdown = "", draftMessage = null) }
+                setState {
+                    copy(
+                        isEditing = false,
+                        editorMarkdown = "",
+                        editorStep = DocumentsEditorStep.Edit,
+                        draftMessage = null,
+                        isAttributesDialogOpen = false,
+                        shouldShowPreviewAfterAttributes = false,
+                    )
+                }
             DocumentsIntent.ShowHistory -> showHistory()
             DocumentsIntent.HideHistory -> setState { copy(isHistoryVisible = false) }
             is DocumentsIntent.RestoreVersion -> restore(intent.versionId)
@@ -87,7 +98,8 @@ class DocumentsViewModel(
             DocumentsIntent.ToggleExplorerPanel -> setState { copy(isExplorerExpanded = !isExplorerExpanded) }
             DocumentsIntent.ToggleAttributesPanel -> setState { copy(isAttributesExpanded = !isAttributesExpanded) }
             DocumentsIntent.OpenAttributesEditor -> openAttributesEditor()
-            DocumentsIntent.CloseAttributesEditor -> setState { copy(isAttributesDialogOpen = false) }
+            DocumentsIntent.CloseAttributesEditor ->
+                setState { copy(isAttributesDialogOpen = false, shouldShowPreviewAfterAttributes = false) }
             is DocumentsIntent.AttributesOwnerChanged ->
                 setState { copy(attributesDraft = attributesDraft.copy(owner = intent.value)) }
             is DocumentsIntent.AttributesModuleChanged ->
@@ -153,6 +165,7 @@ class DocumentsViewModel(
                 selectedDocument = document,
                 isEditing = false,
                 editorMarkdown = "",
+                editorStep = DocumentsEditorStep.Edit,
                 isHistoryVisible = false,
                 versions = emptyList(),
                 errorDialog = null,
@@ -184,7 +197,15 @@ class DocumentsViewModel(
             }
             return
         }
-        setState { copy(isEditing = true, editorMarkdown = document.rawMarkdown, draftMessage = null) }
+        setState {
+            copy(
+                isEditing = true,
+                editorMarkdown = document.rawMarkdown,
+                editorStep = DocumentsEditorStep.Edit,
+                draftMessage = null,
+                shouldShowPreviewAfterAttributes = false,
+            )
+        }
     }
 
     private fun startCreatingDocument() {
@@ -246,7 +267,9 @@ class DocumentsViewModel(
                         loadingMessage = null,
                         isEditing = false,
                         editorMarkdown = "",
+                        editorStep = DocumentsEditorStep.Edit,
                         draftMessage = null,
+                        shouldShowPreviewAfterAttributes = false,
                     )
                 }
                 sendEffect(DocumentsEffect.ShowNotice("Published \"${published.title}\""))
@@ -343,6 +366,7 @@ class DocumentsViewModel(
                         newDocumentMarkdown = "",
                         isEditing = true,
                         editorMarkdown = created.rawMarkdown,
+                        editorStep = DocumentsEditorStep.Edit,
                     )
                 }
                 sendEffect(DocumentsEffect.ShowNotice("Created \"${created.title}\""))
@@ -363,11 +387,12 @@ class DocumentsViewModel(
         append("\n\n")
     }
 
-    private fun openAttributesEditor() {
+    private fun openAttributesEditor(forPreview: Boolean = false) {
         val document = currentState.selectedDocument ?: return
         setState {
             copy(
                 isAttributesDialogOpen = true,
+                shouldShowPreviewAfterAttributes = forPreview,
                 attributesDraft = AttributesDraft(
                     owner = document.attributes.owner,
                     module = document.attributes.module,
@@ -399,6 +424,12 @@ class DocumentsViewModel(
                     copy(
                         loadingMessage = null,
                         isAttributesDialogOpen = false,
+                        shouldShowPreviewAfterAttributes = false,
+                        editorStep = if (shouldShowPreviewAfterAttributes) {
+                            DocumentsEditorStep.Preview
+                        } else {
+                            editorStep
+                        },
                         selectedDocument = updated,
                         documents = documents.map { if (it.id == updated.id) updated else it },
                     )

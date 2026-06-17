@@ -18,6 +18,16 @@ data class AttributesDraft(
     val tagsText: String = "",
 )
 
+enum class DocumentsEditorStep {
+    Edit,
+    Preview,
+}
+
+enum class AttributesEditorTarget {
+    ExistingDocument,
+    NewDocument,
+}
+
 /** Snapshot of the three-pane Documents screen. */
 data class DocumentsState(
     val isLoading: Boolean = false,
@@ -31,8 +41,10 @@ data class DocumentsState(
     val isCreatingDocument: Boolean = false,
     val newDocumentTitle: String = "",
     val newDocumentMarkdown: String = "",
+    val newDocumentStep: DocumentsEditorStep = DocumentsEditorStep.Edit,
     val isEditing: Boolean = false,
     val editorMarkdown: String = "",
+    val editorStep: DocumentsEditorStep = DocumentsEditorStep.Edit,
     val draftMessage: String? = null,
     val versions: List<DocumentVersion> = emptyList(),
     val isHistoryVisible: Boolean = false,
@@ -40,6 +52,8 @@ data class DocumentsState(
     val isExplorerExpanded: Boolean = true,
     val isAttributesExpanded: Boolean = true,
     val isAttributesDialogOpen: Boolean = false,
+    val shouldShowPreviewAfterAttributes: Boolean = false,
+    val attributesEditorTarget: AttributesEditorTarget = AttributesEditorTarget.ExistingDocument,
     val attributesDraft: AttributesDraft = AttributesDraft(),
     val bookmarkedDocumentIds: Set<String> = emptySet(),
 ) : MviState {

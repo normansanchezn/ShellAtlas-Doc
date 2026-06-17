@@ -176,6 +176,30 @@ class DocumentsViewModelTest {
     }
 
     @Test
+    fun continueToPreviewRequiresAttributesAndThenShowsPreview() = runTest {
+        val viewModel = viewModel(testScheduler)
+        viewModel.onIntent(DocumentsIntent.Initialize)
+        viewModel.onIntent(DocumentsIntent.SelectDocument("doc-1"))
+        viewModel.onIntent(DocumentsIntent.StartEditing)
+        viewModel.onIntent(DocumentsIntent.ContinueToPreview)
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.currentState.isAttributesDialogOpen)
+        assertTrue(viewModel.currentState.shouldShowPreviewAfterAttributes)
+        assertEquals(DocumentsEditorStep.Edit, viewModel.currentState.editorStep)
+
+        viewModel.onIntent(DocumentsIntent.AttributesOwnerChanged("Mobile Docs"))
+        viewModel.onIntent(DocumentsIntent.SaveAttributes)
+        testScheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.currentState.isAttributesDialogOpen)
+        assertFalse(viewModel.currentState.shouldShowPreviewAfterAttributes)
+        assertEquals(DocumentsEditorStep.Preview, viewModel.currentState.editorStep)
+        assertEquals("Mobile Docs", viewModel.currentState.selectedDocument?.attributes?.owner)
+        viewModel.clear()
+    }
+
+    @Test
     fun viewerRoleCannotStartEditing() = runTest {
         role = UserRole.VIEWER
         val viewModel = viewModel(testScheduler)

@@ -24,7 +24,10 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.gestures.detectTapGestures
 import com.shelldocs.app.di.AppConfig
 import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.ui.WorkspaceShell
@@ -49,6 +52,7 @@ fun App(
 ) {
     val container = remember(config) { AppContainer(config, sessionPrefs) }
     val systemDark = isSystemInDarkTheme()
+    val focusManager = LocalFocusManager.current
     var isDarkTheme by remember { mutableStateOf(themePrefs.load() ?: systemDark) }
     var textScale by remember { mutableFloatStateOf(1f) }
 
@@ -61,6 +65,9 @@ fun App(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag(DemoTestTags.WorkspaceRoot)
+                .pointerInput(focusManager) {
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                }
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     val mod = event.isMetaPressed || event.isCtrlPressed

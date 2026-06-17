@@ -9,6 +9,8 @@ sealed interface DocumentsIntent : MviIntent {
     data class SelectDocument(val documentId: String) : DocumentsIntent
     data object StartEditing : DocumentsIntent
     data class EditorChanged(val markdown: String) : DocumentsIntent
+    data object ContinueToPreview : DocumentsIntent
+    data object BackToEditor : DocumentsIntent
     data object SaveDraft : DocumentsIntent
     data class Publish(val changeSummary: String) : DocumentsIntent
     data object CancelEditing : DocumentsIntent
@@ -19,8 +21,11 @@ sealed interface DocumentsIntent : MviIntent {
     data class CreateDocument(val title: String) : DocumentsIntent
     data class NewDocumentTitleChanged(val value: String) : DocumentsIntent
     data class NewDocumentMarkdownChanged(val value: String) : DocumentsIntent
+    data object ContinueNewDocumentToPreview : DocumentsIntent
+    data object BackToNewDocumentEditor : DocumentsIntent
     data object CancelNewDocument : DocumentsIntent
     data object SubmitNewDocument : DocumentsIntent
+    data object OpenNewDocumentAttributesEditor : DocumentsIntent
     data object ToggleExplorerPanel : DocumentsIntent
     data object ToggleAttributesPanel : DocumentsIntent
     data object OpenAttributesEditor : DocumentsIntent

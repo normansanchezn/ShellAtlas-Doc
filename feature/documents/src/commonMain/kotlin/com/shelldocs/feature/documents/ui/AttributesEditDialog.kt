@@ -23,7 +23,11 @@ fun AttributesEditDialog(
     val draft = state.attributesDraft
     val colors = ShellTheme.colors
     ShellDialog(
-        title = "Edit attributes",
+        title = if (state.shouldShowPreviewAfterAttributes) {
+            "Add attributes before preview"
+        } else {
+            "Edit attributes"
+        },
         onDismiss = { onIntent(DocumentsIntent.CloseAttributesEditor) },
         actions = {
             ShellGhostButton(
@@ -32,13 +36,24 @@ fun AttributesEditDialog(
                 enabled = !state.isBusy,
             )
             ShellPrimaryButton(
-                text = if (state.loadingMessage == "Saving attributes...") "Saving..." else "Save",
+                text = when {
+                    state.loadingMessage == "Saving attributes..." -> "Saving..."
+                    state.shouldShowPreviewAfterAttributes -> "Continue to preview"
+                    else -> "Save"
+                },
                 onClick = { onIntent(DocumentsIntent.SaveAttributes) },
                 enabled = !state.isBusy,
             )
         },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
+            if (state.shouldShowPreviewAfterAttributes) {
+                Text(
+                    text = "Add the document metadata now. As soon as you save it, the preview screen will open automatically.",
+                    style = ShellTheme.typography.caption,
+                    color = colors.textMuted,
+                )
+            }
             AttributeField(
                 label = "Owner",
                 value = draft.owner,
