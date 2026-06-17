@@ -11,4 +11,6 @@ data class AssistantMessage @OptIn(ExperimentalTime::class) constructor(
     val confidence: AnswerConfidence? = null,
     val sources: List<AnswerSource> = emptyList(),
     val createdAt: kotlin.time.Instant,
+    /** True when this bubble tells the user the AI model is down, not a real answer. */
+    val isUnavailable: Boolean = false,
 )

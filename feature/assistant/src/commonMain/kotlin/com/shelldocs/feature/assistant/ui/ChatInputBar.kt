@@ -18,6 +18,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -30,7 +34,10 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.icons.IconSend
@@ -48,6 +55,17 @@ fun ChatInputBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
+    // Buffer the edit locally; feeding the StateFlow-backed `value` straight into
+    // BasicTextField races the IME on fast typing and can scramble characters
+    // when the round trip lags a frame behind a keystroke (see ShellTextField).
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+    LaunchedEffect(value) {
+        if (value != textFieldValue.text) {
+            textFieldValue = textFieldValue.copy(text = value, selection = TextRange(value.length))
+        }
+    }
     Column(
         modifier = modifier.fillMaxWidth().padding(
             horizontal = ShellSpacing.xxl,
@@ -75,8 +93,11 @@ fun ChatInputBar(
                     )
                 }
                 BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
+                    value = textFieldValue,
+                    onValueChange = { updated ->
+                        textFieldValue = updated
+                        onValueChange(updated.text)
+                    },
                     textStyle = ShellTheme.typography.body.copy(color = colors.textPrimary),
                     cursorBrush = SolidColor(colors.info),
                     maxLines = 4,

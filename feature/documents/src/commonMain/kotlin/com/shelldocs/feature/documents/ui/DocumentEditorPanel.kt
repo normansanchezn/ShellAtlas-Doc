@@ -34,6 +34,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
@@ -289,7 +291,15 @@ private fun MobilePreviewStep(
     }
 }
 
-internal enum class MarkdownAction { Bold, Italic, Heading1, Heading2, Heading3, BulletList, Table }
+internal enum class MarkdownAction(val toolbarLabel: String, val contentDescription: String) {
+    Bold("B", "Bold"),
+    Italic("I", "Italic"),
+    Heading1("H1", "Heading 1"),
+    Heading2("H2", "Heading 2"),
+    Heading3("H3", "Heading 3"),
+    BulletList("•", "Bullet list"),
+    Table("⊞", "Table"),
+}
 
 @Composable
 internal fun MarkdownEditorField(
@@ -378,18 +388,14 @@ private fun MarkdownToolbar(onAction: (MarkdownAction) -> Unit) {
             .padding(horizontal = ShellSpacing.sm, vertical = ShellSpacing.xs),
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
     ) {
-        MarkdownToolbarButton("B", "Bold") { onAction(MarkdownAction.Bold) }
-        MarkdownToolbarButton("I", "Italic") { onAction(MarkdownAction.Italic) }
-        MarkdownToolbarButton("H1", "Heading 1") { onAction(MarkdownAction.Heading1) }
-        MarkdownToolbarButton("H2", "Heading 2") { onAction(MarkdownAction.Heading2) }
-        MarkdownToolbarButton("H3", "Heading 3") { onAction(MarkdownAction.Heading3) }
-        MarkdownToolbarButton("•", "Bullet list") { onAction(MarkdownAction.BulletList) }
-        MarkdownToolbarButton("⊞", "Table") { onAction(MarkdownAction.Table) }
+        MarkdownAction.entries.forEach { action ->
+            MarkdownToolbarButton(action) { onAction(action) }
+        }
     }
 }
 
 @Composable
-private fun MarkdownToolbarButton(label: String, contentDescription: String, onClick: () -> Unit) {
+private fun MarkdownToolbarButton(action: MarkdownAction, onClick: () -> Unit) {
     val colors = ShellTheme.colors
     Box(
         modifier = Modifier
@@ -397,11 +403,12 @@ private fun MarkdownToolbarButton(label: String, contentDescription: String, onC
             .height(32.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .clickable(onClick = onClick)
+            .semantics { contentDescription = action.contentDescription }
             .padding(horizontal = ShellSpacing.xs),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = label,
+            text = action.toolbarLabel,
             style = ShellTheme.typography.label,
             color = colors.textSecondary,
         )

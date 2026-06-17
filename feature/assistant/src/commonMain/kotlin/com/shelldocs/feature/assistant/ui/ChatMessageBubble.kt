@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
+import com.shelldocs.core.designsystem.icons.IconAlertTriangle
 import com.shelldocs.core.designsystem.icons.IconLanguage
 import com.shelldocs.core.designsystem.icons.IconSparkles
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -88,6 +89,10 @@ private fun SystemBubble(message: AssistantMessage, modifier: Modifier) {
 
 @Composable
 private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSource) -> Unit, modifier: Modifier) {
+    if (message.isUnavailable) {
+        UnavailableBubble(message, modifier)
+        return
+    }
     val colors = ShellTheme.colors
     Column(modifier = modifier.fillMaxWidth().widthIn(max = 640.dp)) {
         Row(
@@ -130,6 +135,30 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
                 modifier = Modifier.padding(top = ShellSpacing.sm),
             )
         }
+    }
+}
+
+/** Plain "AI is down right now" notice — no AI branding, confidence, or sources, so it never reads as a real answer. */
+@Composable
+private fun UnavailableBubble(message: AssistantMessage, modifier: Modifier) {
+    val colors = ShellTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .widthIn(max = 640.dp)
+            .clip(RoundedCornerShape(ShellRadius.md))
+            .background(colors.warningSoft)
+            .border(1.dp, colors.warning, RoundedCornerShape(ShellRadius.md))
+            .padding(ShellSpacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+    ) {
+        Icon(
+            imageVector = IconAlertTriangle,
+            contentDescription = null,
+            tint = colors.warning,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(text = message.markdown, style = ShellTheme.typography.body, color = colors.textPrimary)
     }
 }
 

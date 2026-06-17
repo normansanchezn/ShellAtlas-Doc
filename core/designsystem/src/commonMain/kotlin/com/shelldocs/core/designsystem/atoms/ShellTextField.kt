@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +35,9 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
@@ -77,9 +80,25 @@ fun ShellTextField(
         passwordVisible -> VisualTransformation.None
         else -> PasswordVisualTransformation()
     }
+    // Buffer the edit locally and only resync from `value` when it changes for a
+    // reason other than our own onValueChange (e.g. switching records). Feeding a
+    // ViewModel-StateFlow-backed String straight into `value` races the IME on fast
+    // typing/composing input and can scramble characters when the round trip lags
+    // a frame behind a keystroke.
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+    LaunchedEffect(value) {
+        if (value != textFieldValue.text) {
+            textFieldValue = textFieldValue.copy(text = value, selection = TextRange(value.length))
+        }
+    }
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = textFieldValue,
+        onValueChange = { updated ->
+            textFieldValue = updated
+            onValueChange(updated.text)
+        },
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 32.dp)

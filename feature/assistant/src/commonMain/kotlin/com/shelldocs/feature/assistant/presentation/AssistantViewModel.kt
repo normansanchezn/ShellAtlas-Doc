@@ -221,6 +221,7 @@ class AssistantViewModel(
                     confidence = answer.confidence,
                     sources = answer.sources,
                     createdAt = timeProvider.now(),
+                    isUnavailable = answer.isUnavailable,
                 )
                 setState { copy(messages = messages + assistantMessage, isAnswering = false) }
                 sendEffect(AssistantEffect.ScrollToLatestMessage)

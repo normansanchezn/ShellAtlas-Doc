@@ -14,10 +14,17 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.icons.IconSearch
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -33,6 +40,14 @@ fun ShellSearchField(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = ShellTheme.colors
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+    LaunchedEffect(value) {
+        if (value != textFieldValue.text) {
+            textFieldValue = textFieldValue.copy(text = value, selection = TextRange(value.length))
+        }
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -55,8 +70,11 @@ fun ShellSearchField(
                 Text(text = placeholder, style = ShellTheme.typography.label, color = colors.textMuted)
             }
             BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
+                value = textFieldValue,
+                onValueChange = { updated ->
+                    textFieldValue = updated
+                    onValueChange(updated.text)
+                },
                 singleLine = true,
                 textStyle = ShellTheme.typography.label.copy(color = colors.textPrimary),
                 cursorBrush = SolidColor(colors.brand),
