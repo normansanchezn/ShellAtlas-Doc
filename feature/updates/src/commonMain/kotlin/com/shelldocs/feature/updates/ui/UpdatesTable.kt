@@ -1,12 +1,7 @@
 package com.shelldocs.feature.updates.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,9 +24,11 @@ fun UpdatesTable(
     state: UpdatesState,
     isWide: Boolean,
     onSetRisk: (documentId: String, risk: RiskLevel?) -> Unit,
+    onOpenUpdate: (documentId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
+    val showActions = state.isAdmin || state.canUpdateDocuments
     ShellCard(modifier = modifier.fillMaxWidth()) {
         Column {
             Row(
@@ -47,10 +44,17 @@ fun UpdatesTable(
                 if (isWide) HeaderCell("DOC VERSION", Modifier.width(96.dp))
                 HeaderCell("OWNER", Modifier.width(60.dp))
                 if (isWide) HeaderCell("LAST REVIEW", Modifier.width(96.dp))
-                if (state.isAdmin) HeaderCell("ACTIONS", Modifier.width(130.dp))
+                if (showActions) HeaderCell("ACTIONS", Modifier.width(210.dp))
             }
             state.filteredUpdates.forEach { update ->
-                UpdateRow(update = update, isWide = isWide, isAdmin = state.isAdmin, onSetRisk = onSetRisk)
+                UpdateRow(
+                    update = update,
+                    isWide = isWide,
+                    isAdmin = state.isAdmin,
+                    canUpdateDocuments = state.canUpdateDocuments,
+                    onSetRisk = onSetRisk,
+                    onOpenUpdate = onOpenUpdate,
+                )
             }
         }
     }
@@ -72,7 +76,9 @@ private fun UpdateRow(
     update: PendingUpdate,
     isWide: Boolean,
     isAdmin: Boolean,
+    canUpdateDocuments: Boolean,
     onSetRisk: (documentId: String, risk: RiskLevel?) -> Unit,
+    onOpenUpdate: (documentId: String) -> Unit,
 ) {
     val colors = ShellTheme.colors
     val versionMismatch = update.documentVersion.isNotBlank() && update.documentVersion != update.applicationVersion
@@ -127,15 +133,23 @@ private fun UpdateRow(
                 modifier = Modifier.width(96.dp),
             )
         }
-        if (isAdmin) {
-            Box(modifier = Modifier.width(130.dp)) {
-                ShellGhostButton(
-                    text = if (update.manualRiskOverride == RiskLevel.MEDIUM) "Clear override" else "Mark Medium",
-                    onClick = {
-                        val next = if (update.manualRiskOverride == RiskLevel.MEDIUM) null else RiskLevel.MEDIUM
-                        onSetRisk(update.documentId, next)
-                    },
-                )
+        if (isAdmin || canUpdateDocuments) {
+            Row(
+                modifier = Modifier.width(210.dp),
+                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+            ) {
+                if (canUpdateDocuments) {
+                    ShellGhostButton(text = "Update", onClick = { onOpenUpdate(update.documentId) })
+                }
+                if (isAdmin) {
+                    ShellGhostButton(
+                        text = if (update.manualRiskOverride == RiskLevel.MEDIUM) "Clear override" else "Mark Medium",
+                        onClick = {
+                            val next = if (update.manualRiskOverride == RiskLevel.MEDIUM) null else RiskLevel.MEDIUM
+                            onSetRisk(update.documentId, next)
+                        },
+                    )
+                }
             }
         }
     }

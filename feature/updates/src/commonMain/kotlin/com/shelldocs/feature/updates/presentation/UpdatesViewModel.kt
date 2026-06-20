@@ -1,7 +1,7 @@
 package com.shelldocs.feature.updates.presentation
 
-import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
@@ -28,8 +28,12 @@ class UpdatesViewModel(
     private val setManualRiskLevel: SetManualRiskLevelUseCase,
     private val currentUserRole: UserRole,
     private val visibleDevelopmentArea: DevelopmentArea?,
+    private val canUpdateDocuments: Boolean,
     dispatchers: DispatcherProvider,
-) : MviViewModel<UpdatesIntent, UpdatesState, UpdatesEffect>(UpdatesState(isAdmin = currentUserRole == UserRole.OWNER), dispatchers) {
+) : MviViewModel<UpdatesIntent, UpdatesState, UpdatesEffect>(
+    UpdatesState(isAdmin = currentUserRole == UserRole.OWNER, canUpdateDocuments = canUpdateDocuments),
+    dispatchers,
+) {
 
     private val isAdmin get() = currentUserRole == UserRole.OWNER
 
@@ -44,6 +48,7 @@ class UpdatesViewModel(
             is UpdatesIntent.AcceptMetadataSuggestion -> accept(intent.documentId, intent.attribute)
             is UpdatesIntent.AssignMetadata -> assign(intent.documentId, intent.attribute, intent.value)
             is UpdatesIntent.SetManualRisk -> setManualRisk(intent.documentId, intent.risk)
+            is UpdatesIntent.OpenUpdate -> sendEffect(UpdatesEffect.OpenAiUpdate(intent.documentId))
         }
     }
 

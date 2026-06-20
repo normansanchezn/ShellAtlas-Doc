@@ -1,23 +1,11 @@
 package com.shelldocs.feature.updates.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -30,6 +18,7 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.MetadataAttribute
 import com.shelldocs.feature.updates.presentation.DocumentationHealthTab
+import com.shelldocs.feature.updates.presentation.UpdatesEffect
 import com.shelldocs.feature.updates.presentation.UpdatesIntent
 import com.shelldocs.feature.updates.presentation.UpdatesViewModel
 
@@ -38,6 +27,7 @@ import com.shelldocs.feature.updates.presentation.UpdatesViewModel
 fun UpdatesScreen(
     viewModel: UpdatesViewModel,
     isWide: Boolean,
+    onOpenAiUpdate: (documentId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
@@ -45,6 +35,14 @@ fun UpdatesScreen(
     var editTarget by remember { mutableStateOf<Pair<String, MetadataAttribute>?>(null) }
 
     LaunchedEffect(viewModel) { viewModel.onIntent(UpdatesIntent.Initialize) }
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is UpdatesEffect.OpenAiUpdate -> onOpenAiUpdate(effect.documentId)
+                else -> Unit
+            }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
         Column(
@@ -88,6 +86,7 @@ fun UpdatesScreen(
                         state = state,
                         isWide = isWide,
                         onSetRisk = { documentId, risk -> viewModel.onIntent(UpdatesIntent.SetManualRisk(documentId, risk)) },
+                        onOpenUpdate = { documentId -> viewModel.onIntent(UpdatesIntent.OpenUpdate(documentId)) },
                     )
                 }
                 DocumentationHealthTab.METADATA_ISSUES -> {

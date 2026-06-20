@@ -23,12 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
     override val main = dispatcher
@@ -96,6 +91,7 @@ class UpdatesViewModelTest {
         setManualRiskLevel = SetManualRiskLevelUseCase(repository),
         currentUserRole = UserRole.VIEWER,
         visibleDevelopmentArea = null,
+        canUpdateDocuments = false,
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )
 

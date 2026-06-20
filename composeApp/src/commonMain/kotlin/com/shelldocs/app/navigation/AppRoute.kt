@@ -8,4 +8,5 @@ enum class AppRoute(val title: String) {
     DASHBOARD("Dashboard"),
     SOURCES("Sources"),
     SETTINGS("Settings"),
+    AI_UPDATE("AI Suggested Update"),
 }

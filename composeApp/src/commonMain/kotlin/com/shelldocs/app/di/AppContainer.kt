@@ -12,39 +12,19 @@ import com.shelldocs.core.data.assistant.CompositeAssistantEngine
 import com.shelldocs.core.data.assistant.GroundedAssistantEngine
 import com.shelldocs.core.data.assistant.OllamaAssistantEngine
 import com.shelldocs.core.data.assistant.OllamaClient
-import com.shelldocs.core.data.demo.DemoAuthRepository
-import com.shelldocs.core.data.demo.DemoDocumentRepository
-import com.shelldocs.core.data.demo.DemoKnowledgeCheckpointRepository
-import com.shelldocs.core.data.demo.DemoRoleRepository
-import com.shelldocs.core.data.demo.DemoSourcesRepository
+import com.shelldocs.core.data.demo.*
 import com.shelldocs.core.data.network.ShellDocsApi
-import com.shelldocs.core.data.repository.ApiDocumentRepository
-import com.shelldocs.core.data.repository.CachingDocumentRepository
-import com.shelldocs.core.data.repository.DerivedDashboardRepository
-import com.shelldocs.core.data.repository.DerivedDocumentTreeRepository
-import com.shelldocs.core.data.repository.DerivedDocumentClassificationRepository
-import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository
-import com.shelldocs.core.data.repository.InMemoryAssistantCacheRepository
-import com.shelldocs.core.data.repository.InMemoryConversationRepository
-import com.shelldocs.core.data.repository.SupabaseDocumentRepository
-import com.shelldocs.core.data.repository.SupabaseAuthRepository
-import com.shelldocs.core.data.repository.SupabaseRoleRepository
+import com.shelldocs.core.data.repository.*
 import com.shelldocs.core.data.supabase.SupabaseAuthApi
 import com.shelldocs.core.data.supabase.SupabasePostgrestApi
 import com.shelldocs.core.data.supabase.SupabaseProfileDataSource
+import com.shelldocs.core.domain.entity.auth.Permission
+import com.shelldocs.core.domain.entity.auth.RolePermissions
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.DevelopmentArea
 import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.repository.RoleRepository
-import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
-import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
-import com.shelldocs.core.domain.usecase.assistant.CreateDocumentFromAssistantUseCase
-import com.shelldocs.core.domain.usecase.assistant.DetectAssistantIntentUseCase
-import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
-import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
-import com.shelldocs.core.domain.usecase.assistant.RetrieveGroundingDocumentsUseCase
-import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
-import com.shelldocs.core.domain.usecase.assistant.ShouldImproveDocumentUseCase
+import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.auth.AssignRoleUseCase
 import com.shelldocs.core.domain.usecase.auth.GetTeamMembersUseCase
 import com.shelldocs.core.domain.usecase.auth.SignInUseCase
@@ -53,14 +33,7 @@ import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestion
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.dashboard.GetDashboardMetricsUseCase
-import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentVersionsUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
-import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
-import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
+import com.shelldocs.core.domain.usecase.document.*
 import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
@@ -76,10 +49,11 @@ import com.shelldocs.feature.dashboard.presentation.DashboardViewModel
 import com.shelldocs.feature.documents.presentation.DocumentsViewModel
 import com.shelldocs.feature.settings.presentation.SettingsViewModel
 import com.shelldocs.feature.sources.presentation.SourcesViewModel
+import com.shelldocs.feature.updates.presentation.AiUpdateViewModel
 import com.shelldocs.feature.updates.presentation.UpdatesViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
 /**
@@ -255,7 +229,17 @@ class AppContainer(
         setManualRiskLevel = SetManualRiskLevelUseCase(pendingUpdatesRepository),
         currentUserRole = currentRole(),
         visibleDevelopmentArea = currentDevelopmentArea(),
+        canUpdateDocuments = RolePermissions.isGranted(currentRole(), Permission.PUBLISH_DOCUMENTS),
         dispatchers = dispatchers,
+    )
+
+    fun aiUpdateViewModel() = AiUpdateViewModel(
+        generateSuggestedUpdate = GenerateSuggestedUpdateUseCase(documentRepository, evaluateHealth, timeProvider),
+        publishDocument = PublishDocumentUseCase(documentRepository),
+        roleProvider = ::currentRole,
+        dispatchers = dispatchers,
+        documentIdRequests = navigator.aiUpdateRequests,
+        consumeDocumentIdRequest = navigator::consumeAiUpdateRequest,
     )
 
     fun dashboardViewModel() = DashboardViewModel(

@@ -1,20 +1,8 @@
 package com.shelldocs.app.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -27,6 +15,7 @@ import com.shelldocs.feature.dashboard.ui.DashboardScreen
 import com.shelldocs.feature.documents.ui.DocumentsScreen
 import com.shelldocs.feature.settings.ui.SettingsScreen
 import com.shelldocs.feature.sources.ui.SourcesScreen
+import com.shelldocs.feature.updates.ui.AiUpdateScreen
 import com.shelldocs.feature.updates.ui.UpdatesScreen
 
 /**
@@ -173,7 +162,19 @@ private fun RouteContent(
             UpdatesScreen(
                 viewModel = viewModel,
                 isWide = isWide,
+                onOpenAiUpdate = container.navigator::openAiUpdate,
                 modifier = modifier.testTag(DemoTestTags.UpdatesScreen),
+            )
+        }
+
+        AppRoute.AI_UPDATE -> {
+            val viewModel = remember(container) { container.aiUpdateViewModel() }
+            DisposableEffect(viewModel) { onDispose(viewModel::clear) }
+            AiUpdateScreen(
+                viewModel = viewModel,
+                onApplied = { container.navigator.navigateBack() },
+                onContactOwner = {},
+                modifier = modifier,
             )
         }
         AppRoute.DASHBOARD -> {

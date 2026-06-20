@@ -18,6 +18,7 @@ data class UpdatesState(
     val isLoadingMetadataIssues: Boolean = false,
     val metadataIssues: List<DocumentClassificationResult> = emptyList(),
     val isAdmin: Boolean = false,
+    val canUpdateDocuments: Boolean = false,
 ) : MviState {
 
     val filteredUpdates: List<PendingUpdate> =

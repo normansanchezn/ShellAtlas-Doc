@@ -21,6 +21,11 @@ class AppNavigator(initial: AppRoute = AppRoute.ASSISTANT) {
     /** Document id requested for opening in the Documents screen, if any. */
     val openDocumentRequests: StateFlow<String?> = mutableOpenDocumentRequests.asStateFlow()
 
+    private val mutableAiUpdateRequests = MutableStateFlow<String?>(null)
+
+    /** Document id requested for the AI Suggested Update screen, if any. */
+    val aiUpdateRequests: StateFlow<String?> = mutableAiUpdateRequests.asStateFlow()
+
     fun navigate(destination: AppRoute) {
         if (destination == mutableRoute.value) return
         previous = mutableRoute.value
@@ -44,5 +49,16 @@ class AppNavigator(initial: AppRoute = AppRoute.ASSISTANT) {
     /** Marks the current open-document request as handled. */
     fun consumeOpenDocumentRequest() {
         mutableOpenDocumentRequests.value = null
+    }
+
+    /** Navigates to the AI Suggested Update screen for [documentId]. */
+    fun openAiUpdate(documentId: String) {
+        mutableAiUpdateRequests.value = documentId
+        navigate(AppRoute.AI_UPDATE)
+    }
+
+    /** Marks the current AI update request as handled. */
+    fun consumeAiUpdateRequest() {
+        mutableAiUpdateRequests.value = null
     }
 }
