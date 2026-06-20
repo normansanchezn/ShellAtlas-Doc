@@ -27,6 +27,7 @@ val shellFlavor: String = providers.gradleProperty("shellFlavor").orElse("demo")
 
 // Generate BUILD_FLAVOR constant for the wasmJs (web) target at build time.
 val generateWebBuildFlavor by tasks.registering {
+    notCompatibleWithConfigurationCache("captures build script reference in doLast")
     val outputDir = layout.buildDirectory.dir("generated/wasmJsMain/kotlin")
     outputs.dir(outputDir)
     inputs.property("shellFlavor", shellFlavor)
