@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,29 +13,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
-import com.shelldocs.core.designsystem.atoms.ShellTextField
-import com.shelldocs.core.designsystem.icons.IconX
-import com.shelldocs.core.designsystem.molecules.ShellDialog
-import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
-import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
+import com.shelldocs.core.designsystem.molecules.*
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
-import com.shelldocs.core.domain.entity.document.LineOrigin
-import com.shelldocs.core.domain.entity.document.SuggestionLine
+import com.shelldocs.core.domain.entity.document.ContentBlock
 import com.shelldocs.feature.updates.presentation.AiUpdateEffect
 import com.shelldocs.feature.updates.presentation.AiUpdateIntent
 import com.shelldocs.feature.updates.presentation.AiUpdateViewModel
 
-private val AiHighlightDark = Color(0xFFEAB308) // Yellow 500
-private val AiHighlightLight = Color(0xFFD97706) // Amber 600
-
-/** AI Assisted Update: read-only current document next to an editable AI suggestion. */
+/**
+ * Documentation review workflow: pre-analysis, then a read-only document
+ * preview next to one continuous editable markdown suggestion — never an
+ * editor split into per-field rows.
+ */
 @Composable
 fun AiUpdateScreen(
     viewModel: AiUpdateViewModel,
@@ -47,7 +39,6 @@ fun AiUpdateScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = ShellTheme.colors
-    val highlight = if (colors.isDark) AiHighlightDark else AiHighlightLight
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -58,43 +49,59 @@ fun AiUpdateScreen(
     }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(ShellSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)
-        ) {
-            Column {
-                Text(text = "AI Suggested Update", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                Text(text = state.documentTitle, style = ShellTheme.typography.caption, color = colors.textMuted)
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
+        val analysisStage = state.analysisStage
+        if (analysisStage != null) {
+            AnalysisProgress(message = analysisStage.message, modifier = Modifier.fillMaxSize())
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(ShellSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
             ) {
-                CurrentDocumentPanel(markdown = state.currentMarkdown, modifier = Modifier.weight(1f).fillMaxHeight())
-                SuggestedUpdatePanel(
-                    lines = state.suggestedLines,
-                    highlight = highlight,
-                    onEditLine = { index, text -> viewModel.onIntent(AiUpdateIntent.EditLine(index, text)) },
-                    onRemoveLine = { index -> viewModel.onIntent(AiUpdateIntent.RemoveLine(index)) },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
+                Column {
+                    Text(
+                        text = "AI Suggested Update",
+                        style = ShellTheme.typography.pageTitle,
+                        color = colors.textPrimary
+                    )
+                    Text(text = state.documentTitle, style = ShellTheme.typography.caption, color = colors.textMuted)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
+                ) {
+                    CurrentDocumentPanel(
+                        blocks = state.currentContentBlocks,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+                    SuggestedUpdatePanel(
+                        markdown = state.suggestedMarkdown,
+                        onMarkdownChange = { viewModel.onIntent(AiUpdateIntent.EditMarkdown(it)) },
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    ShellPrimaryButton(
+                        text = "Save Changes",
+                        onClick = { viewModel.onIntent(AiUpdateIntent.SaveChanges) },
+                        enabled = state.canSave,
+                    )
+                }
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                ShellPrimaryButton(
-                    text = state.applyStage?.message ?: "Apply Update",
-                    onClick = { viewModel.onIntent(AiUpdateIntent.RequestApply) },
-                    enabled = state.canApply,
-                )
+            if (state.isApplying) {
+                ShellLoadingOverlay(message = state.applyStage?.message ?: "Applying...")
             }
         }
+    }
 
-        val applyStage = state.applyStage
-        when {
-            state.isLoading -> ShellLoadingOverlay(message = "Generating AI Suggestion...")
-            applyStage != null -> ShellLoadingOverlay(message = applyStage.message)
-        }
+    if (state.showMetadataDialog) {
+        MetadataReviewDialog(
+            attributes = state.attributes,
+            onCancel = { viewModel.onIntent(AiUpdateIntent.CancelMetadata) },
+            onApply = { attributes -> viewModel.onIntent(AiUpdateIntent.ConfirmMetadata(attributes)) },
+        )
     }
 
     if (state.showConfirmDialog) {
@@ -113,7 +120,25 @@ fun AiUpdateScreen(
 }
 
 @Composable
-private fun CurrentDocumentPanel(markdown: String, modifier: Modifier = Modifier) {
+private fun AnalysisProgress(message: String, modifier: Modifier = Modifier) {
+    val colors = ShellTheme.colors
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)
+        ) {
+            Text(
+                text = "Preparing AI Suggested Update",
+                style = ShellTheme.typography.sectionTitle,
+                color = colors.textPrimary
+            )
+            Text(text = message, style = ShellTheme.typography.body, color = colors.textMuted)
+        }
+    }
+}
+
+@Composable
+private fun CurrentDocumentPanel(blocks: List<ContentBlock>, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
     Column(
         modifier = modifier
@@ -123,70 +148,25 @@ private fun CurrentDocumentPanel(markdown: String, modifier: Modifier = Modifier
             .verticalScroll(rememberScrollState()),
     ) {
         Text(text = "CURRENT DOCUMENT", style = ShellTheme.typography.sectionLabel, color = colors.textMuted)
-        Text(
-            text = markdown,
-            style = ShellTheme.typography.body,
-            color = colors.textSecondary,
-            modifier = Modifier.padding(top = ShellSpacing.sm),
-        )
+        MarkdownBlocksView(blocks = blocks, modifier = Modifier.padding(top = ShellSpacing.sm))
     }
 }
 
 @Composable
 private fun SuggestedUpdatePanel(
-    lines: List<SuggestionLine>,
-    highlight: Color,
-    onEditLine: (index: Int, text: String) -> Unit,
-    onRemoveLine: (index: Int) -> Unit,
+    markdown: String,
+    onMarkdownChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(ShellRadius.md))
-            .background(colors.surface)
-            .padding(ShellSpacing.lg)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
-    ) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
         Text(text = "AI SUGGESTED UPDATE", style = ShellTheme.typography.sectionLabel, color = colors.textMuted)
-        lines.forEachIndexed { index, line ->
-            SuggestionLineRow(
-                text = line.text,
-                isHighlighted = line.origin == LineOrigin.AI_SUGGESTED,
-                highlight = highlight,
-                onTextChange = { onEditLine(index, it) },
-                onRemove = { onRemoveLine(index) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SuggestionLineRow(
-    text: String,
-    isHighlighted: Boolean,
-    highlight: Color,
-    onTextChange: (String) -> Unit,
-    onRemove: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(if (isHighlighted) highlight.copy(alpha = 0.18f) else Color.Transparent),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ShellTextField(
-            value = text,
-            onValueChange = onTextChange,
-            modifier = Modifier.weight(1f),
+        MarkdownEditorField(
+            markdown = markdown,
+            onMarkdownChange = onMarkdownChange,
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            showToolbar = true,
         )
-        if (isHighlighted) {
-            IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
-                Icon(imageVector = IconX, contentDescription = "Remove suggestion", tint = ShellTheme.colors.textMuted)
-            }
-        }
     }
 }
 
@@ -204,13 +184,14 @@ private fun ApplyUpdateConfirmDialog(
         onDismiss = onCancel,
         actions = {
             ShellGhostButton(text = "Cancel", onClick = onCancel)
-            ShellPrimaryButton(text = "Apply Update", onClick = onConfirm)
+            ShellPrimaryButton(text = "Confirm", onClick = onConfirm)
         },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
             Text(
-                text = "The selected changes will be applied to the document and synchronized with all configured " +
-                        "sources of truth. A new version entry will be created and can be reviewed or reverted later.",
+                text = "You are about to publish this document update.\n\n" +
+                        "The changes will be synchronized with all configured sources of truth and recorded in version history.\n\n" +
+                        "This action can be reverted later through document version history.",
                 style = ShellTheme.typography.body,
                 color = colors.textSecondary,
             )

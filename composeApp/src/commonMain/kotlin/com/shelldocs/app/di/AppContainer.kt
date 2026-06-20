@@ -238,6 +238,7 @@ class AppContainer(
 
     fun aiUpdateViewModel() = AiUpdateViewModel(
         generateSuggestedUpdate = GenerateSuggestedUpdateUseCase(documentRepository, evaluateHealth, timeProvider),
+        saveDraft = SaveDraftUseCase(documentRepository),
         publishDocument = PublishDocumentUseCase(documentRepository),
         updateAttributes = UpdateDocumentAttributesUseCase(documentRepository),
         syncToSourcesOfTruth = SyncDocumentToSourcesOfTruthUseCase(documentSyncRepository),

@@ -3,13 +3,8 @@ package com.shelldocs.feature.documents.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.shelldocs.core.domain.entity.document.ContentBlock
-import com.shelldocs.core.domain.entity.document.HeadingBlock
-import com.shelldocs.core.domain.entity.document.ListBlock
-import com.shelldocs.core.domain.entity.document.ListStyle
-import com.shelldocs.core.domain.entity.document.ParagraphBlock
-import com.shelldocs.core.domain.entity.document.QuoteBlock
-import com.shelldocs.core.domain.entity.document.CodeBlock
+import com.shelldocs.core.designsystem.molecules.MarkdownBlocksView
+import com.shelldocs.core.domain.entity.document.*
 
 /**
  * Lightweight live preview of the editor content. It re-parses the raw

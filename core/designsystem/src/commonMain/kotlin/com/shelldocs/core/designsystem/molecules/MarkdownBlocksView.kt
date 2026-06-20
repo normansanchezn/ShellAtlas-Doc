@@ -1,29 +1,18 @@
-package com.shelldocs.feature.documents.ui
+package com.shelldocs.core.designsystem.molecules
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.shelldocs.core.designsystem.molecules.ShellMarkdownText
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
-import com.shelldocs.core.domain.entity.document.CodeBlock
-import com.shelldocs.core.domain.entity.document.ContentBlock
-import com.shelldocs.core.domain.entity.document.HeadingBlock
-import com.shelldocs.core.domain.entity.document.ListBlock
-import com.shelldocs.core.domain.entity.document.ListStyle
-import com.shelldocs.core.domain.entity.document.ParagraphBlock
-import com.shelldocs.core.domain.entity.document.QuoteBlock
+import com.shelldocs.core.domain.entity.document.*
 
-/** Renders parsed document blocks with the reader typography. */
+/** Renders parsed document blocks with the reader typography — the canonical document preview, shared by every feature. */
 @Composable
 fun MarkdownBlocksView(
     blocks: List<ContentBlock>,
@@ -75,7 +64,7 @@ fun MarkdownBlocksView(
                         .padding(ShellSpacing.md),
                 )
                 is QuoteBlock -> Row {
-                    androidx.compose.foundation.layout.Box(
+                    Box(
                         modifier = Modifier
                             .padding(end = ShellSpacing.sm)
                             .background(colors.brand)

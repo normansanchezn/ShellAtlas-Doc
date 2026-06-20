@@ -1,10 +1,10 @@
 package com.shelldocs.feature.updates.presentation
 
-/** Independent loading states for the Apply Update pipeline (per spec's States section). */
+/** Sync pipeline run after Confirm on the final confirmation dialog. */
 enum class ApplyStage(val message: String) {
-    SAVING_DOCUMENT("Saving Document..."),
-    UPDATING_METADATA("Updating Metadata..."),
-    SYNCING_CONFLUENCE("Syncing Confluence..."),
+    UPDATING_DATABASE("Updating Internal Database..."),
+    SYNCING_CONFLUENCE("Updating Confluence..."),
     UPDATING_AZURE_DEVOPS("Updating Azure DevOps..."),
-    REINDEXING_SEARCH("Reindexing Search..."),
+    UPDATING_SEARCH_INDEX("Updating Search Index..."),
+    CREATING_VERSION_ENTRY("Creating Version Entry..."),
 }

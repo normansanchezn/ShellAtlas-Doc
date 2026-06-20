@@ -2,19 +2,11 @@ package com.shelldocs.feature.documents.ui
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,22 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.dp
+import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellStatusBadge
-import com.shelldocs.core.common.testing.DemoTestTags
-import com.shelldocs.core.designsystem.icons.IconBookmark
-import com.shelldocs.core.designsystem.icons.IconChevronLeft
-import com.shelldocs.core.designsystem.icons.IconChevronRight
-import com.shelldocs.core.designsystem.icons.IconEdit
-import com.shelldocs.core.designsystem.icons.IconHistory
-import com.shelldocs.core.designsystem.icons.IconLayers
-import com.shelldocs.core.designsystem.icons.IconShare
+import com.shelldocs.core.designsystem.icons.*
+import com.shelldocs.core.designsystem.molecules.MarkdownBlocksView
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -211,14 +195,14 @@ private fun documentBody(
         ShellGhostButton(
             text = "Share",
             icon = IconShare,
-            onClick = { onIntent(com.shelldocs.feature.documents.presentation.DocumentsIntent.ExportPdf) },
+            onClick = { onIntent(DocumentsIntent.ExportPdf) },
             enabled = !state.isBusy,
         )
         val isBookmarked = document.id in state.bookmarkedDocumentIds
         ShellGhostButton(
             text = if (isBookmarked) "Bookmarked" else "Bookmark",
             icon = IconBookmark,
-            onClick = { onIntent(com.shelldocs.feature.documents.presentation.DocumentsIntent.ToggleBookmark(document.id)) },
+            onClick = { onIntent(DocumentsIntent.ToggleBookmark(document.id)) },
             enabled = !state.isBusy,
             modifier = Modifier.testTag(DemoTestTags.DocumentsBookmark),
         )

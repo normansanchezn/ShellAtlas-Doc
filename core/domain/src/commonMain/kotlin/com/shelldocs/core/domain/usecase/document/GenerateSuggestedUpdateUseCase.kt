@@ -8,8 +8,6 @@ import com.shelldocs.core.common.time.TimeProvider
 import com.shelldocs.core.domain.entity.assistant.DocumentHealth
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentUpdateSuggestion
-import com.shelldocs.core.domain.entity.document.LineOrigin
-import com.shelldocs.core.domain.entity.document.SuggestionLine
 import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 
@@ -17,8 +15,8 @@ import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
  * Local-AI stand-in for the Documentation Health "Update" action: runs the
  * deterministic health audit and proposes a reviewable addendum instead of
  * silently rewriting the document — precision over creativity, per spec.
- * Preserves the original markdown verbatim; only the appended lines are
- * flagged [LineOrigin.AI_SUGGESTED].
+ * Preserves the original markdown verbatim; only appends a flagged section,
+ * loaded as one continuous string into the suggested-update editor.
  */
 class GenerateSuggestedUpdateUseCase(
     private val documentRepository: DocumentRepository,
@@ -31,28 +29,20 @@ class GenerateSuggestedUpdateUseCase(
 
     private fun toSuggestion(document: Document): DocumentUpdateSuggestion {
         val health = evaluateHealth(document)
-        val originalLines = document.rawMarkdown.lines().map { SuggestionLine(it, LineOrigin.ORIGINAL) }
-        val suggestedLines = originalLines + addendumLines(health)
+        val addendum = addendumText(health)
         return DocumentUpdateSuggestion(
             documentId = document.id,
             documentTitle = document.title,
-            ownerName = document.attributes.owner,
+            attributes = document.attributes,
+            currentContentBlocks = document.content.blocks,
             currentMarkdown = document.rawMarkdown,
-            lines = suggestedLines,
+            suggestedMarkdown = if (addendum.isBlank()) document.rawMarkdown else "${document.rawMarkdown}\n\n$addendum",
             generatedAt = timeProvider.now(),
         )
     }
 
-    private fun addendumLines(health: DocumentHealth): List<SuggestionLine> {
-        if (health.issues.isEmpty()) {
-            return listOf(
-                SuggestionLine("", LineOrigin.ORIGINAL),
-                SuggestionLine("_Automatic review found no outdated sections._", LineOrigin.AI_SUGGESTED),
-            )
-        }
-        return listOf(
-            SuggestionLine("", LineOrigin.ORIGINAL),
-            SuggestionLine("## AI Suggested Update", LineOrigin.AI_SUGGESTED),
-        ) + health.issues.map { issue -> SuggestionLine("- $issue — needs review.", LineOrigin.AI_SUGGESTED) }
+    private fun addendumText(health: DocumentHealth): String {
+        if (health.issues.isEmpty()) return ""
+        return "## AI Suggested Update\n" + health.issues.joinToString("\n") { issue -> "- $issue — needs review." }
     }
 }

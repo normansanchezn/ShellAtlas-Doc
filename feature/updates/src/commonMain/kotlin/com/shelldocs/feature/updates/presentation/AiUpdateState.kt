@@ -1,27 +1,32 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.feature.updates.presentation
 
 import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
-import com.shelldocs.core.domain.entity.document.SuggestionLine
+import com.shelldocs.core.domain.entity.document.ContentBlock
+import com.shelldocs.core.domain.entity.document.DocumentAttributes
 
-/** Snapshot of the AI Suggested Update split-screen editor. */
+/** Snapshot of the AI Suggested Update review workflow: preview, single editor, draft, metadata, confirm, sync. */
 data class AiUpdateState(
-    val isLoading: Boolean = true,
+    val analysisStage: AnalysisStage? = AnalysisStage.ANALYZING_DOCUMENT,
     val applyStage: ApplyStage? = null,
     val documentId: String = "",
     val documentTitle: String = "",
-    val ownerName: String = "",
-    val currentMarkdown: String = "",
-    val suggestedLines: List<SuggestionLine> = emptyList(),
+    val attributes: DocumentAttributes = DocumentAttributes(),
+    val currentContentBlocks: List<ContentBlock> = emptyList(),
+    val suggestedMarkdown: String = "",
+    val showMetadataDialog: Boolean = false,
+    val metadataDraft: DocumentAttributes = DocumentAttributes(),
     val showConfirmDialog: Boolean = false,
     val errorDialog: ErrorDialogState? = null,
     val isAdmin: Boolean = false,
 ) : MviState {
 
-    val editedMarkdown: String get() = suggestedLines.joinToString("\n") { it.text }
-
+    val isAnalyzing: Boolean get() = analysisStage != null
     val isApplying: Boolean get() = applyStage != null
+    val ownerName: String get() = attributes.owner
 
-    /** Apply Update is enabled only while the AI editor still has content. */
-    val canApply: Boolean get() = editedMarkdown.isNotBlank() && !isApplying
+    /** Save Changes is enabled only while the editor still has content. */
+    val canSave: Boolean get() = suggestedMarkdown.isNotBlank() && !isApplying
 }
