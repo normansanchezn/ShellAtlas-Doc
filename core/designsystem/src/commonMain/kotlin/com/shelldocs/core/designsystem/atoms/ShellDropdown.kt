@@ -1,11 +1,7 @@
 package com.shelldocs.core.designsystem.atoms
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -70,8 +66,12 @@ fun <T> ShellDropdown(
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             val itemHeight = 36.dp
-            LazyColumn(modifier = Modifier.heightIn(max = itemHeight * maxVisibleItems)) {
-                items(options) { option ->
+            Column(
+                modifier = Modifier
+                    .heightIn(max = itemHeight * maxVisibleItems)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                options.forEach { option ->
                     DropdownMenuItem(
                         text = { Text(label(option), style = ShellTheme.typography.body) },
                         onClick = {
