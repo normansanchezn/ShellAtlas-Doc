@@ -7,7 +7,7 @@ import com.shelldocs.core.domain.entity.document.SuggestionLine
 /** Snapshot of the AI Suggested Update split-screen editor. */
 data class AiUpdateState(
     val isLoading: Boolean = true,
-    val isApplying: Boolean = false,
+    val applyStage: ApplyStage? = null,
     val documentId: String = "",
     val documentTitle: String = "",
     val ownerName: String = "",
@@ -19,6 +19,8 @@ data class AiUpdateState(
 ) : MviState {
 
     val editedMarkdown: String get() = suggestedLines.joinToString("\n") { it.text }
+
+    val isApplying: Boolean get() = applyStage != null
 
     /** Apply Update is enabled only while the AI editor still has content. */
     val canApply: Boolean get() = editedMarkdown.isNotBlank() && !isApplying

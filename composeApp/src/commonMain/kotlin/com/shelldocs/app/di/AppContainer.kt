@@ -176,6 +176,7 @@ class AppContainer(
         DerivedDashboardRepository(documentRepository, evaluateHealth, knowledgeCheckpointRepository)
     }
     private val sourcesRepository by lazy { DemoSourcesRepository(timeProvider) }
+    private val documentSyncRepository by lazy { DemoDocumentSyncRepository() }
 
     // --- ViewModel factories (one fresh instance per screen entry) --------
 
@@ -236,7 +237,10 @@ class AppContainer(
     fun aiUpdateViewModel() = AiUpdateViewModel(
         generateSuggestedUpdate = GenerateSuggestedUpdateUseCase(documentRepository, evaluateHealth, timeProvider),
         publishDocument = PublishDocumentUseCase(documentRepository),
+        updateAttributes = UpdateDocumentAttributesUseCase(documentRepository),
+        syncToSourcesOfTruth = SyncDocumentToSourcesOfTruthUseCase(documentSyncRepository),
         roleProvider = ::currentRole,
+        currentUserProvider = { authRepository.session.value?.user },
         dispatchers = dispatchers,
         documentIdRequests = navigator.aiUpdateRequests,
         consumeDocumentIdRequest = navigator::consumeAiUpdateRequest,

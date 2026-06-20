@@ -82,14 +82,18 @@ fun AiUpdateScreen(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 ShellPrimaryButton(
-                    text = if (state.isApplying) "Saving Document..." else "Apply Update",
+                    text = state.applyStage?.message ?: "Apply Update",
                     onClick = { viewModel.onIntent(AiUpdateIntent.RequestApply) },
                     enabled = state.canApply,
                 )
             }
         }
 
-        if (state.isLoading) ShellLoadingOverlay(message = "Generating AI Suggestion...")
+        val applyStage = state.applyStage
+        when {
+            state.isLoading -> ShellLoadingOverlay(message = "Generating AI Suggestion...")
+            applyStage != null -> ShellLoadingOverlay(message = applyStage.message)
+        }
     }
 
     if (state.showConfirmDialog) {
