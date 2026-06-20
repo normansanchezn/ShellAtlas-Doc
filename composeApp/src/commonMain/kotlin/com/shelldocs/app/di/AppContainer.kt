@@ -21,7 +21,7 @@ import com.shelldocs.core.data.supabase.SupabaseProfileDataSource
 import com.shelldocs.core.domain.entity.auth.Permission
 import com.shelldocs.core.domain.entity.auth.RolePermissions
 import com.shelldocs.core.domain.entity.auth.UserRole
-import com.shelldocs.core.domain.entity.document.DevelopmentArea
+import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.repository.RoleRepository
 import com.shelldocs.core.domain.usecase.assistant.*
@@ -40,6 +40,7 @@ import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
 import com.shelldocs.core.domain.usecase.source.GetSourcesUseCase
 import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
 import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
+import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
@@ -121,8 +122,8 @@ class AppContainer(
     private fun currentRole(): UserRole =
         authRepository.session.value?.user?.role ?: UserRole.VIEWER
 
-    private fun currentDevelopmentArea() =
-        DevelopmentArea.fromKey(authRepository.session.value?.user?.team)
+    private fun currentArea() =
+        Area.fromKey(authRepository.session.value?.user?.team)
 
     // --- Documents --------------------------------------------------------
 
@@ -225,11 +226,12 @@ class AppContainer(
         getPendingUpdates = GetPendingUpdatesUseCase(pendingUpdatesRepository),
         scanForUpdates = ScanForUpdatesUseCase(pendingUpdatesRepository),
         getMetadataIssues = GetMetadataIssuesUseCase(documentClassificationRepository),
+        getHealthyDocuments = GetHealthyDocumentsUseCase(pendingUpdatesRepository),
         acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(documentClassificationRepository),
         assignMetadata = AssignMetadataUseCase(documentClassificationRepository),
         setManualRiskLevel = SetManualRiskLevelUseCase(pendingUpdatesRepository),
         currentUserRole = currentRole(),
-        visibleDevelopmentArea = currentDevelopmentArea(),
+        visibleArea = currentArea(),
         canUpdateDocuments = RolePermissions.isGranted(currentRole(), Permission.PUBLISH_DOCUMENTS),
         dispatchers = dispatchers,
     )

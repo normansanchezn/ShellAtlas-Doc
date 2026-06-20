@@ -1,21 +1,16 @@
 package com.shelldocs.feature.updates.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.common.testing.DemoTestTags
+import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.RiskLevel
-import com.shelldocs.feature.updates.presentation.DOCUMENTATION_HEALTH_RISK_LEVELS
 import com.shelldocs.feature.updates.presentation.UpdatesIntent
 import com.shelldocs.feature.updates.presentation.UpdatesState
 
@@ -38,7 +33,7 @@ fun RiskSummaryRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
     ) {
-        DOCUMENTATION_HEALTH_RISK_LEVELS.forEach { risk ->
+        RiskLevel.DOCUMENTATION_HEALTH_LEVELS.forEach { risk ->
             ShellCard(
                 modifier = Modifier
                     .weight(1f)

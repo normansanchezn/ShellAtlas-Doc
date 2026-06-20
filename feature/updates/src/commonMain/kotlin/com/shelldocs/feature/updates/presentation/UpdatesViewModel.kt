@@ -6,7 +6,7 @@ import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.UserRole
-import com.shelldocs.core.domain.entity.document.DevelopmentArea
+import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
 import com.shelldocs.core.domain.entity.document.MetadataAttribute
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
@@ -14,6 +14,7 @@ import com.shelldocs.core.domain.entity.updates.RiskLevel
 import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
+import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
@@ -23,11 +24,12 @@ class UpdatesViewModel(
     private val getPendingUpdates: GetPendingUpdatesUseCase,
     private val scanForUpdates: ScanForUpdatesUseCase,
     private val getMetadataIssues: GetMetadataIssuesUseCase,
+    private val getHealthyDocuments: GetHealthyDocumentsUseCase,
     private val acceptMetadataSuggestion: AcceptMetadataSuggestionUseCase,
     private val assignMetadata: AssignMetadataUseCase,
     private val setManualRiskLevel: SetManualRiskLevelUseCase,
     private val currentUserRole: UserRole,
-    private val visibleDevelopmentArea: DevelopmentArea?,
+    private val visibleArea: Area?,
     private val canUpdateDocuments: Boolean,
     dispatchers: DispatcherProvider,
 ) : MviViewModel<UpdatesIntent, UpdatesState, UpdatesEffect>(
@@ -49,15 +51,16 @@ class UpdatesViewModel(
             is UpdatesIntent.AssignMetadata -> assign(intent.documentId, intent.attribute, intent.value)
             is UpdatesIntent.SetManualRisk -> setManualRisk(intent.documentId, intent.risk)
             is UpdatesIntent.OpenUpdate -> sendEffect(UpdatesEffect.OpenAiUpdate(intent.documentId))
+            is UpdatesIntent.OpenDocument -> sendEffect(UpdatesEffect.OpenDocument(intent.documentId))
         }
     }
 
-    private fun visibleTo(developmentArea: DevelopmentArea?): Boolean =
-        isAdmin || developmentArea == visibleDevelopmentArea
+    private fun visibleTo(area: Area?): Boolean =
+        isAdmin || area == visibleArea
 
-    private fun List<PendingUpdate>.visiblePendingUpdates() = filter { visibleTo(it.developmentArea) }
+    private fun List<PendingUpdate>.visiblePendingUpdates() = filter { visibleTo(it.area) }
 
-    private fun List<DocumentClassificationResult>.visibleMetadataIssues() = filter { visibleTo(it.developmentArea) }
+    private fun List<DocumentClassificationResult>.visibleMetadataIssues() = filter { visibleTo(it.area) }
 
     private suspend fun load() {
         setState { copy(isLoading = true, errorDialog = null) }
@@ -69,6 +72,7 @@ class UpdatesViewModel(
                 setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("load pending updates")) }
             }
         loadMetadataIssues()
+        loadHealthyDocuments()
     }
 
     private suspend fun scan() {
@@ -81,12 +85,14 @@ class UpdatesViewModel(
                 setState { copy(isScanning = false, errorDialog = error.toErrorDialogState("scan for updates")) }
             }
         loadMetadataIssues()
+        loadHealthyDocuments()
     }
 
     private suspend fun selectTab(tab: DocumentationHealthTab) {
         setState { copy(selectedTab = tab) }
-        if (tab == DocumentationHealthTab.METADATA_ISSUES && currentState.metadataIssues.isEmpty()) {
-            loadMetadataIssues()
+        when {
+            tab == DocumentationHealthTab.METADATA_ISSUES && currentState.metadataIssues.isEmpty() -> loadMetadataIssues()
+            tab == DocumentationHealthTab.HEALTHY && currentState.healthyDocuments.isEmpty() -> loadHealthyDocuments()
         }
     }
 
@@ -98,6 +104,29 @@ class UpdatesViewModel(
             .onSuccess { issues -> setState { copy(isLoadingMetadataIssues = false, metadataIssues = issues.visibleMetadataIssues()) } }
             .onFailure { error ->
                 setState { copy(isLoadingMetadataIssues = false, errorDialog = error.toErrorDialogState("load metadata issues")) }
+            }
+    }
+
+    private suspend fun loadHealthyDocuments() {
+        setState { copy(isLoadingHealthyDocuments = true) }
+        withContext(dispatchers.default) {
+            getHealthyDocuments()
+        }
+            .onSuccess { docs ->
+                setState {
+                    copy(
+                        isLoadingHealthyDocuments = false,
+                        healthyDocuments = docs.visiblePendingUpdates()
+                    )
+                }
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        isLoadingHealthyDocuments = false,
+                        errorDialog = error.toErrorDialogState("load healthy documents")
+                    )
+                }
             }
     }
 

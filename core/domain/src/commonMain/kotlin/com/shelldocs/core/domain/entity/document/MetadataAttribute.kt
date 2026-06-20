@@ -3,7 +3,7 @@ package com.shelldocs.core.domain.entity.document
 /** A classifiable document metadata field. */
 enum class MetadataAttribute(val displayName: String, val required: Boolean) {
     OWNER("Owner", required = true),
-    DEVELOPMENT_AREA("Development Area", required = true),
+    AREA("Area", required = true),
     APPLICATION_VERSION("Application Version", required = true),
     MODULE("Module", required = false),
     PLATFORM("Platform", required = false),

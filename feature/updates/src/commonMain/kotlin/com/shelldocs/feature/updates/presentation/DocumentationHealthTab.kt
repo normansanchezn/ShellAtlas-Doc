@@ -4,4 +4,5 @@ package com.shelldocs.feature.updates.presentation
 enum class DocumentationHealthTab(val label: String) {
     HEALTH("Documentation Health"),
     METADATA_ISSUES("Metadata Issues"),
+    HEALTHY("Documentation Healthy"),
 }

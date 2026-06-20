@@ -28,6 +28,7 @@ fun UpdatesScreen(
     viewModel: UpdatesViewModel,
     isWide: Boolean,
     onOpenAiUpdate: (documentId: String) -> Unit,
+    onOpenDocument: (documentId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
@@ -39,6 +40,7 @@ fun UpdatesScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is UpdatesEffect.OpenAiUpdate -> onOpenAiUpdate(effect.documentId)
+                is UpdatesEffect.OpenDocument -> onOpenDocument(effect.documentId)
                 else -> Unit
             }
         }
@@ -100,6 +102,13 @@ fun UpdatesScreen(
                         onEditMetadata = { documentId, attribute -> editTarget = documentId to attribute },
                     )
                 }
+                DocumentationHealthTab.HEALTHY -> {
+                    HealthyDocumentsTable(
+                        documents = state.healthyDocuments,
+                        isWide = isWide,
+                        onOpenDocument = { documentId -> viewModel.onIntent(UpdatesIntent.OpenDocument(documentId)) },
+                    )
+                }
             }
         }
 
@@ -108,6 +117,8 @@ fun UpdatesScreen(
             state.isScanning -> ShellLoadingOverlay(message = "Scanning documentation health...")
             state.isLoadingMetadataIssues && state.selectedTab == DocumentationHealthTab.METADATA_ISSUES ->
                 ShellLoadingOverlay(message = "Classifying documents...")
+            state.isLoadingHealthyDocuments && state.selectedTab == DocumentationHealthTab.HEALTHY ->
+                ShellLoadingOverlay(message = "Loading healthy documents...")
         }
     }
 

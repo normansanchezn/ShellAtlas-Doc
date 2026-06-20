@@ -19,17 +19,16 @@ data class UpdatesState(
     val metadataIssues: List<DocumentClassificationResult> = emptyList(),
     val isAdmin: Boolean = false,
     val canUpdateDocuments: Boolean = false,
+    val isLoadingHealthyDocuments: Boolean = false,
+    val healthyDocuments: List<PendingUpdate> = emptyList(),
 ) : MviState {
 
     val filteredUpdates: List<PendingUpdate> =
         riskFilter?.let { filter -> updates.filter { it.risk == filter } } ?: updates
 
     val countsByRisk: Map<RiskLevel, Int> =
-        DOCUMENTATION_HEALTH_RISK_LEVELS.associateWith { risk -> updates.count { it.risk == risk } }
+        RiskLevel.DOCUMENTATION_HEALTH_LEVELS.associateWith { risk -> updates.count { it.risk == risk } }
 
     val metadataIssuesRequiringAttention: Int =
         metadataIssues.count { it.status == MetadataClassificationStatus.REQUIRES_ATTENTION }
 }
-
-/** Documentation Health only ever auto/manually assigns these three risk levels. */
-val DOCUMENTATION_HEALTH_RISK_LEVELS = listOf(RiskLevel.CRITICAL, RiskLevel.MEDIUM, RiskLevel.LOW)

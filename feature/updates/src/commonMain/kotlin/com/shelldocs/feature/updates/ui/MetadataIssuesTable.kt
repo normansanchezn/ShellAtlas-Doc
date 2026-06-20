@@ -1,12 +1,7 @@
 package com.shelldocs.feature.updates.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
-import com.shelldocs.core.designsystem.atoms.ShellMetadataStatusBadge
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellColorScheme
@@ -42,6 +36,7 @@ fun MetadataIssuesTable(
                     .fillMaxWidth()
                     .background(colors.surfaceSubtle)
                     .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 HeaderCell("DOCUMENT", Modifier.weight(2.2f))
                 HeaderCell("MISSING", Modifier.weight(1.6f))
@@ -83,7 +78,6 @@ private fun MetadataIssueRow(
     ) {
         Column(modifier = Modifier.weight(2.2f)) {
             Text(issue.documentTitle, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
-            ShellMetadataStatusBadge(status = issue.status)
         }
         Column(modifier = Modifier.weight(1.6f), verticalArrangement = Arrangement.spacedBy(ShellSpacing.xxs)) {
             issue.missingAttributes.forEach { attribute ->

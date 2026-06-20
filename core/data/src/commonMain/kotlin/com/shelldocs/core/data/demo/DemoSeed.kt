@@ -5,16 +5,8 @@ import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository
 import com.shelldocs.core.domain.entity.auth.TeamMember
 import com.shelldocs.core.domain.entity.auth.UserProfile
 import com.shelldocs.core.domain.entity.auth.UserRole
-import com.shelldocs.core.domain.entity.document.DevelopmentArea
-import com.shelldocs.core.domain.entity.document.Document
-import com.shelldocs.core.domain.entity.document.DocumentAttributes
-import com.shelldocs.core.domain.entity.document.DocumentClassification
-import com.shelldocs.core.domain.entity.document.DocumentStatus
-import com.shelldocs.core.domain.entity.source.KnowledgeSource
-import com.shelldocs.core.domain.entity.source.SourceKind
-import com.shelldocs.core.domain.entity.source.SourceStatus
-import com.shelldocs.core.domain.entity.source.SyncLogEntry
-import com.shelldocs.core.domain.entity.source.SyncOutcome
+import com.shelldocs.core.domain.entity.document.*
+import com.shelldocs.core.domain.entity.source.*
 import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 
@@ -93,7 +85,7 @@ object DemoSeed {
             team = "Loyalty Squad",
             tags = listOf("loyalty", "points", "rewards"),
             updatedAt = Instant.parse("2026-01-12T00:00:00Z"),
-            developmentArea = DevelopmentArea.DEVELOPMENT,
+            area = Area.DEVELOPMENT,
             applicationVersion = "8.9.0",
             markdown = """
                 # Loyalty Rewards Flow
@@ -215,7 +207,7 @@ object DemoSeed {
             team = "Android Shell App",
             tags = listOf("eosb1", "release", "build", "pilot", "qa", DerivedPendingUpdatesRepository.UPSTREAM_SIGNAL_TAGS.first()),
             updatedAt = Instant.parse("2026-02-18T00:00:00Z"),
-            developmentArea = DevelopmentArea.DEVELOPMENT,
+            area = Area.DEVELOPMENT,
             applicationVersion = "9.6.0",
             markdown = """
                 # EoSB1 Process for America's App - Android
@@ -486,7 +478,7 @@ object DemoSeed {
         tags: List<String>,
         updatedAt: kotlin.time.Instant,
         team: String = owner.team,
-        developmentArea: DevelopmentArea? = null,
+        area: Area? = null,
         applicationVersion: String = "",
     ): Document {
         val parsed = parser.parse(markdown)
@@ -505,7 +497,7 @@ object DemoSeed {
                 team = team,
                 platform = platform,
                 tags = tags,
-                developmentArea = developmentArea,
+                area = area,
                 applicationVersion = applicationVersion,
             ),
             createdAt = Instant.parse("2025-11-03T00:00:00Z"),

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
@@ -199,30 +200,37 @@ private fun ApplyUpdateConfirmDialog(
 ) {
     val colors = ShellTheme.colors
     ShellDialog(
-        title = "Apply Documentation Update?",
+        title = "Apply Documentation Update",
         onDismiss = onCancel,
         actions = {
             ShellGhostButton(text = "Cancel", onClick = onCancel)
-            ShellPrimaryButton(text = "Confirm", onClick = onConfirm)
+            ShellPrimaryButton(text = "Apply Update", onClick = onConfirm)
         },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
             Text(
-                text = "After applying this update, all modifications will be recorded in the document version history. " +
-                        "You can review or revert these changes at any time.",
+                text = "The selected changes will be applied to the document and synchronized with all configured " +
+                        "sources of truth. A new version entry will be created and can be reviewed or reverted later.",
                 style = ShellTheme.typography.body,
                 color = colors.textSecondary,
             )
             if (isAdmin) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Document Owner", style = ShellTheme.typography.caption, color = colors.textMuted)
-                        Text(text = ownerName, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
+                ShellCard {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(ShellSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Document Owner",
+                                style = ShellTheme.typography.caption,
+                                color = colors.textMuted
+                            )
+                            Text(text = ownerName, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
+                        }
+                        ShellGhostButton(text = "Contact Owner", onClick = onContactOwner)
                     }
-                    ShellGhostButton(text = "Contact Owner", onClick = onContactOwner)
                 }
             }
         }

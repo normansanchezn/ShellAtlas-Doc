@@ -16,6 +16,7 @@ import com.shelldocs.core.domain.repository.PendingUpdatesRepository
 import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
+import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
@@ -61,6 +62,8 @@ private class FakePendingUpdatesRepository(var failScan: Boolean = false) : Pend
 
     override suspend fun setManualRisk(documentId: String, risk: RiskLevel?): DomainResult<PendingUpdate> =
         DomainResult.failure(AppError.NotFound("Not used in these tests"))
+
+    override suspend fun healthyDocuments(): DomainResult<List<PendingUpdate>> = DomainResult.success(emptyList())
 }
 
 private class FakeDocumentClassificationRepository : DocumentClassificationRepository {
@@ -86,11 +89,12 @@ class UpdatesViewModelTest {
         getPendingUpdates = GetPendingUpdatesUseCase(repository),
         scanForUpdates = ScanForUpdatesUseCase(repository),
         getMetadataIssues = GetMetadataIssuesUseCase(classificationRepository),
+        getHealthyDocuments = GetHealthyDocumentsUseCase(repository),
         acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(classificationRepository),
         assignMetadata = AssignMetadataUseCase(classificationRepository),
         setManualRiskLevel = SetManualRiskLevelUseCase(repository),
         currentUserRole = UserRole.VIEWER,
-        visibleDevelopmentArea = null,
+        visibleArea = null,
         canUpdateDocuments = false,
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )

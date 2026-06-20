@@ -9,6 +9,9 @@ interface PendingUpdatesRepository {
 
     suspend fun pendingUpdates(): DomainResult<List<PendingUpdate>>
 
+    /** Fully classified, low-risk, up-to-date documents needing no action — the "Documentation Healthy" list. */
+    suspend fun healthyDocuments(): DomainResult<List<PendingUpdate>>
+
     suspend fun scanNow(): DomainResult<List<PendingUpdate>>
 
     /** Admin-only manual override; pass `null` to clear back to the auto-computed risk. */

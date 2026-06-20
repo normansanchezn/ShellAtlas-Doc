@@ -14,4 +14,5 @@ sealed interface UpdatesIntent : MviIntent {
     data class AssignMetadata(val documentId: String, val attribute: MetadataAttribute, val value: String) : UpdatesIntent
     data class SetManualRisk(val documentId: String, val risk: RiskLevel?) : UpdatesIntent
     data class OpenUpdate(val documentId: String) : UpdatesIntent
+    data class OpenDocument(val documentId: String) : UpdatesIntent
 }

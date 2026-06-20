@@ -11,5 +11,5 @@ data class DocumentClassificationResult @OptIn(ExperimentalTime::class) construc
     val suggestions: List<MetadataSuggestion>,
     val sourceType: SourceType,
     val classifiedAt: kotlin.time.Instant,
-    val developmentArea: DevelopmentArea? = null,
+    val area: Area? = null,
 )

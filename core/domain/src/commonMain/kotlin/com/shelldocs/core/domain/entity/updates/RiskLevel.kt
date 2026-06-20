@@ -25,5 +25,8 @@ enum class RiskLevel(val displayName: String) {
          */
         fun fromSignals(reviewAgeDays: Int, versionMismatch: Boolean, hasUnreflectedUpstreamChanges: Boolean): RiskLevel =
             if (reviewAgeDays > 365 || versionMismatch || hasUnreflectedUpstreamChanges) CRITICAL else LOW
+
+        /** Documentation Health only ever auto/manually assigns these three — [HIGH] is legacy/unused there. */
+        val DOCUMENTATION_HEALTH_LEVELS = listOf(CRITICAL, MEDIUM, LOW)
     }
 }

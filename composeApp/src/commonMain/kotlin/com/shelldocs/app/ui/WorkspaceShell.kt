@@ -163,6 +163,7 @@ private fun RouteContent(
                 viewModel = viewModel,
                 isWide = isWide,
                 onOpenAiUpdate = container.navigator::openAiUpdate,
+                onOpenDocument = container.navigator::openDocument,
                 modifier = modifier.testTag(DemoTestTags.UpdatesScreen),
             )
         }

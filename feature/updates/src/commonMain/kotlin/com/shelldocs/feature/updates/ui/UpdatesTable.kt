@@ -7,10 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.shelldocs.core.designsystem.atoms.ShellAvatar
-import com.shelldocs.core.designsystem.atoms.ShellCard
-import com.shelldocs.core.designsystem.atoms.ShellGhostButton
-import com.shelldocs.core.designsystem.atoms.ShellRiskBadge
+import com.shelldocs.core.designsystem.atoms.*
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
@@ -18,7 +15,7 @@ import com.shelldocs.core.domain.entity.updates.RiskLevel
 import com.shelldocs.feature.updates.presentation.UpdatesState
 import kotlin.time.ExperimentalTime
 
-/** Triage table: document, development area, risk, version drift, owner, last review, actions. */
+/** Triage table: document, area, risk, version drift, owner, last review, actions. */
 @Composable
 fun UpdatesTable(
     state: UpdatesState,
@@ -36,6 +33,7 @@ fun UpdatesTable(
                     .fillMaxWidth()
                     .background(colors.surfaceSubtle)
                     .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 HeaderCell("DOCUMENT", Modifier.weight(2.2f))
                 if (isWide) HeaderCell("AREA", Modifier.weight(1.1f))
@@ -44,7 +42,7 @@ fun UpdatesTable(
                 if (isWide) HeaderCell("DOC VERSION", Modifier.width(96.dp))
                 HeaderCell("OWNER", Modifier.width(60.dp))
                 if (isWide) HeaderCell("LAST REVIEW", Modifier.width(96.dp))
-                if (showActions) HeaderCell("ACTIONS", Modifier.width(210.dp))
+                if (showActions) HeaderCell("ACTIONS", Modifier.width(260.dp))
             }
             state.filteredUpdates.forEach { update ->
                 UpdateRow(
@@ -94,7 +92,7 @@ private fun UpdateRow(
         }
         if (isWide) {
             Text(
-                text = update.developmentArea?.displayName ?: "—",
+                text = update.area?.displayName ?: "—",
                 style = ShellTheme.typography.label,
                 color = colors.textSecondary,
                 modifier = Modifier.weight(1.1f),
@@ -135,20 +133,21 @@ private fun UpdateRow(
         }
         if (isAdmin || canUpdateDocuments) {
             Row(
-                modifier = Modifier.width(210.dp),
+                modifier = Modifier.width(260.dp),
                 horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (isAdmin) {
+                    ShellDropdown(
+                        selected = update.risk,
+                        options = RiskLevel.DOCUMENTATION_HEALTH_LEVELS,
+                        label = { it.displayName },
+                        onSelect = { risk -> onSetRisk(update.documentId, risk) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
                 if (canUpdateDocuments) {
                     ShellGhostButton(text = "Update", onClick = { onOpenUpdate(update.documentId) })
-                }
-                if (isAdmin) {
-                    ShellGhostButton(
-                        text = if (update.manualRiskOverride == RiskLevel.MEDIUM) "Clear override" else "Mark Medium",
-                        onClick = {
-                            val next = if (update.manualRiskOverride == RiskLevel.MEDIUM) null else RiskLevel.MEDIUM
-                            onSetRisk(update.documentId, next)
-                        },
-                    )
                 }
             }
         }

@@ -10,7 +10,7 @@ data class DocumentAttributes @OptIn(ExperimentalTime::class) constructor(
     val platform: String = "",
     val parentFolderId: String? = null,
     val tags: List<String> = emptyList(),
-    val developmentArea: DevelopmentArea? = null,
+    val area: Area? = null,
     val applicationVersion: String = "",
     val lastReviewedDate: kotlin.time.Instant? = null,
     val sourceType: SourceType = SourceType.OTHER,

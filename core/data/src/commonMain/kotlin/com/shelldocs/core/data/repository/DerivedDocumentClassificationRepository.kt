@@ -6,13 +6,7 @@ import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.map
 import com.shelldocs.core.common.time.TimeProvider
-import com.shelldocs.core.domain.entity.document.DevelopmentArea
-import com.shelldocs.core.domain.entity.document.Document
-import com.shelldocs.core.domain.entity.document.DocumentAttributes
-import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
-import com.shelldocs.core.domain.entity.document.MetadataAttribute
-import com.shelldocs.core.domain.entity.document.MetadataClassificationStatus
-import com.shelldocs.core.domain.entity.document.MetadataSuggestion
+import com.shelldocs.core.domain.entity.document.*
 import com.shelldocs.core.domain.repository.DocumentClassificationRepository
 import com.shelldocs.core.domain.repository.DocumentRepository
 
@@ -60,10 +54,10 @@ class DerivedDocumentClassificationRepository(
             missing += MetadataAttribute.OWNER
             inferOwner(document)?.let { suggestions += MetadataSuggestion(MetadataAttribute.OWNER, it, confidencePercent = 55) }
         }
-        if (attributes.developmentArea == null) {
-            missing += MetadataAttribute.DEVELOPMENT_AREA
-            inferDevelopmentArea(document)?.let {
-                suggestions += MetadataSuggestion(MetadataAttribute.DEVELOPMENT_AREA, it.displayName, confidencePercent = 78)
+        if (attributes.area == null) {
+            missing += MetadataAttribute.AREA
+            inferArea(document)?.let {
+                suggestions += MetadataSuggestion(MetadataAttribute.AREA, it.displayName, confidencePercent = 78)
             }
         }
         if (attributes.applicationVersion.isBlank()) {
@@ -91,29 +85,29 @@ class DerivedDocumentClassificationRepository(
             suggestions = suggestions,
             sourceType = attributes.sourceType,
             classifiedAt = timeProvider.now(),
-            developmentArea = attributes.developmentArea,
+            area = attributes.area,
         )
     }
 
     private fun inferOwner(document: Document): String? = document.attributes.team.takeIf { it.isNotBlank() }
 
-    private fun inferDevelopmentArea(document: Document) =
-        DevelopmentArea.fromKey(document.attributes.team)
+    private fun inferArea(document: Document) =
+        Area.fromKey(document.attributes.team)
             ?: keywordMatch(
                 document,
                 mapOf(
-                    "android" to DevelopmentArea.DEVELOPMENT,
-                    "ios" to DevelopmentArea.DEVELOPMENT,
-                    "api" to DevelopmentArea.BACKEND,
-                    "server" to DevelopmentArea.BACKEND,
-                    "test" to DevelopmentArea.QA,
-                    "qa" to DevelopmentArea.QA,
-                    "pipeline" to DevelopmentArea.DEVOPS,
-                    "deploy" to DevelopmentArea.DEVOPS,
-                    "security" to DevelopmentArea.SECURITY,
-                    "auth" to DevelopmentArea.SECURITY,
-                    "architecture" to DevelopmentArea.ARCHITECTURE,
-                    "analytics" to DevelopmentArea.ANALYTICS,
+                    "android" to Area.DEVELOPMENT,
+                    "ios" to Area.DEVELOPMENT,
+                    "api" to Area.DEVELOPMENT,
+                    "server" to Area.DEVELOPMENT,
+                    "design" to Area.DESIGN,
+                    "ux" to Area.DESIGN,
+                    "pipeline" to Area.MANAGEMENT,
+                    "release" to Area.MANAGEMENT,
+                    "architecture" to Area.ARCHITECTURE,
+                    "shell" to Area.SHELL,
+                    "business" to Area.BUSINESS,
+                    "pi" to Area.PI,
                 ),
             )
 
@@ -151,7 +145,7 @@ class DerivedDocumentClassificationRepository(
 
     private fun DocumentAttributes.withValue(attribute: MetadataAttribute, value: String): DocumentAttributes = when (attribute) {
         MetadataAttribute.OWNER -> copy(owner = value)
-        MetadataAttribute.DEVELOPMENT_AREA -> copy(developmentArea = DevelopmentArea.fromKey(value))
+        MetadataAttribute.AREA -> copy(area = Area.fromKey(value))
         MetadataAttribute.APPLICATION_VERSION -> copy(applicationVersion = value)
         MetadataAttribute.MODULE -> copy(module = value)
         MetadataAttribute.PLATFORM -> copy(platform = value)

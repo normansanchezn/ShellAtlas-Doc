@@ -3,6 +3,7 @@ package com.shelldocs.core.data.repository
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.map
 import com.shelldocs.core.common.time.TimeProvider
+import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository.Companion.UPSTREAM_SIGNAL_TAGS
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
@@ -34,6 +35,11 @@ class DerivedPendingUpdatesRepository(
     override suspend fun pendingUpdates(): DomainResult<List<PendingUpdate>> =
         documentRepository.documents().map { documents ->
             documents.mapNotNull(::toPendingUpdate)
+        }
+
+    override suspend fun healthyDocuments(): DomainResult<List<PendingUpdate>> =
+        documentRepository.documents().map { documents ->
+            documents.mapNotNull(::toHealthyRowOrNull)
         }
 
     override suspend fun scanNow(): DomainResult<List<PendingUpdate>> = pendingUpdates()
@@ -75,11 +81,25 @@ class DerivedPendingUpdatesRepository(
             ownerName = attributes.owner,
             ownerInitials = initials(attributes.owner),
             lastReview = attributes.lastReviewedDate ?: document.updatedAt,
-            developmentArea = attributes.developmentArea,
+            area = attributes.area,
             applicationVersion = latestApplicationVersion,
             documentVersion = attributes.applicationVersion,
             manualRiskOverride = manualOverrides[document.id],
         )
+    }
+
+    /** Healthy = passes the health audit, no manual override, auto risk is Low, and metadata + version are complete. */
+    @OptIn(ExperimentalTime::class)
+    private fun toHealthyRowOrNull(document: Document): PendingUpdate? {
+        val health = evaluateHealth(document)
+        if (!health.isHealthy) return null
+        if (manualOverrides.containsKey(document.id)) return null
+        val attributes = document.attributes
+        val metadataComplete =
+            attributes.area != null && attributes.owner.isNotBlank() && attributes.applicationVersion.isNotBlank()
+        if (!metadataComplete) return null
+        val row = toRow(document, health.score)
+        return row.takeIf { it.risk == RiskLevel.LOW }
     }
 
     private fun initials(name: String): String =

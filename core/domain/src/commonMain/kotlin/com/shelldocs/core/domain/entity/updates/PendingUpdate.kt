@@ -1,7 +1,6 @@
 package com.shelldocs.core.domain.entity.updates
 
-import com.shelldocs.core.domain.entity.document.DevelopmentArea
-import kotlinx.datetime.Instant
+import com.shelldocs.core.domain.entity.document.Area
 import kotlin.time.ExperimentalTime
 
 /** Row of the Documentation Health triage table. */
@@ -16,7 +15,7 @@ data class PendingUpdate @OptIn(ExperimentalTime::class) constructor(
     val ownerName: String,
     val ownerInitials: String,
     val lastReview: kotlin.time.Instant,
-    val developmentArea: DevelopmentArea? = null,
+    val area: Area? = null,
     val applicationVersion: String = "",
     val documentVersion: String = "",
     val manualRiskOverride: RiskLevel? = null,
