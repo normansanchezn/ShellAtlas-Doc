@@ -1,9 +1,11 @@
 package com.shelldocs.core.data.demo
 
 import com.shelldocs.core.data.markdown.MarkdownParser
+import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository
 import com.shelldocs.core.domain.entity.auth.TeamMember
 import com.shelldocs.core.domain.entity.auth.UserProfile
 import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.document.DevelopmentArea
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentClassification
@@ -91,6 +93,8 @@ object DemoSeed {
             team = "Loyalty Squad",
             tags = listOf("loyalty", "points", "rewards"),
             updatedAt = Instant.parse("2026-01-12T00:00:00Z"),
+            developmentArea = DevelopmentArea.DEVELOPMENT,
+            applicationVersion = "8.9.0",
             markdown = """
                 # Loyalty Rewards Flow
 
@@ -209,8 +213,10 @@ object DemoSeed {
             module = "Release Process",
             platform = "Android",
             team = "Android Shell App",
-            tags = listOf("eosb1", "release", "build", "pilot", "qa"),
+            tags = listOf("eosb1", "release", "build", "pilot", "qa", DerivedPendingUpdatesRepository.UPSTREAM_SIGNAL_TAGS.first()),
             updatedAt = Instant.parse("2026-02-18T00:00:00Z"),
+            developmentArea = DevelopmentArea.DEVELOPMENT,
+            applicationVersion = "9.6.0",
             markdown = """
                 # EoSB1 Process for America's App - Android
 
@@ -480,6 +486,8 @@ object DemoSeed {
         tags: List<String>,
         updatedAt: kotlin.time.Instant,
         team: String = owner.team,
+        developmentArea: DevelopmentArea? = null,
+        applicationVersion: String = "",
     ): Document {
         val parsed = parser.parse(markdown)
         return Document(
@@ -497,6 +505,8 @@ object DemoSeed {
                 team = team,
                 platform = platform,
                 tags = tags,
+                developmentArea = developmentArea,
+                applicationVersion = applicationVersion,
             ),
             createdAt = Instant.parse("2025-11-03T00:00:00Z"),
             updatedAt = updatedAt,

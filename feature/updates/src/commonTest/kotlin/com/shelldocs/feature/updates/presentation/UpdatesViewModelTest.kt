@@ -5,6 +5,7 @@ package com.shelldocs.feature.updates.presentation
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
 import com.shelldocs.core.domain.entity.document.MetadataAttribute
@@ -17,6 +18,7 @@ import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
+import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -61,6 +63,9 @@ private class FakePendingUpdatesRepository(var failScan: Boolean = false) : Pend
         scans++
         return DomainResult.success(data)
     }
+
+    override suspend fun setManualRisk(documentId: String, risk: RiskLevel?): DomainResult<PendingUpdate> =
+        DomainResult.failure(AppError.NotFound("Not used in these tests"))
 }
 
 private class FakeDocumentClassificationRepository : DocumentClassificationRepository {
@@ -88,7 +93,9 @@ class UpdatesViewModelTest {
         getMetadataIssues = GetMetadataIssuesUseCase(classificationRepository),
         acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(classificationRepository),
         assignMetadata = AssignMetadataUseCase(classificationRepository),
-        isAdmin = false,
+        setManualRiskLevel = SetManualRiskLevelUseCase(repository),
+        currentUserRole = UserRole.VIEWER,
+        visibleDevelopmentArea = null,
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )
 

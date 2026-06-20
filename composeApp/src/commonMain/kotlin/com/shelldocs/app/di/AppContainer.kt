@@ -33,6 +33,7 @@ import com.shelldocs.core.data.supabase.SupabaseAuthApi
 import com.shelldocs.core.data.supabase.SupabasePostgrestApi
 import com.shelldocs.core.data.supabase.SupabaseProfileDataSource
 import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.document.DevelopmentArea
 import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.repository.RoleRepository
 import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
@@ -68,6 +69,7 @@ import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
 import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
+import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
 import com.shelldocs.feature.assistant.presentation.AssistantViewModel
 import com.shelldocs.feature.auth.presentation.AuthViewModel
 import com.shelldocs.feature.dashboard.presentation.DashboardViewModel
@@ -144,6 +146,9 @@ class AppContainer(
 
     private fun currentRole(): UserRole =
         authRepository.session.value?.user?.role ?: UserRole.VIEWER
+
+    private fun currentDevelopmentArea() =
+        DevelopmentArea.fromKey(authRepository.session.value?.user?.team)
 
     // --- Documents --------------------------------------------------------
 
@@ -247,7 +252,9 @@ class AppContainer(
         getMetadataIssues = GetMetadataIssuesUseCase(documentClassificationRepository),
         acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(documentClassificationRepository),
         assignMetadata = AssignMetadataUseCase(documentClassificationRepository),
-        isAdmin = currentRole() == UserRole.OWNER,
+        setManualRiskLevel = SetManualRiskLevelUseCase(pendingUpdatesRepository),
+        currentUserRole = currentRole(),
+        visibleDevelopmentArea = currentDevelopmentArea(),
         dispatchers = dispatchers,
     )
 

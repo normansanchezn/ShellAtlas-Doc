@@ -84,7 +84,11 @@ fun UpdatesScreen(
             when (state.selectedTab) {
                 DocumentationHealthTab.HEALTH -> {
                     RiskSummaryRow(state = state, onIntent = viewModel::onIntent, isWide = isWide)
-                    UpdatesTable(state = state, isWide = isWide)
+                    UpdatesTable(
+                        state = state,
+                        isWide = isWide,
+                        onSetRisk = { documentId, risk -> viewModel.onIntent(UpdatesIntent.SetManualRisk(documentId, risk)) },
+                    )
                 }
                 DocumentationHealthTab.METADATA_ISSUES -> {
                     MetadataIssuesTable(

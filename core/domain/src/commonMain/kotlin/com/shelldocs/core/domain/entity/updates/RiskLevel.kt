@@ -15,5 +15,15 @@ enum class RiskLevel(val displayName: String) {
             score >= 40 -> MEDIUM
             else -> LOW
         }
+
+        /**
+         * Documentation Health auto-classification: Critical when stale beyond a
+         * year, the document's recorded version trails the latest app version, or
+         * any upstream system (ADO, Program Board, Confluence, Release Notes) has
+         * unreflected changes. Otherwise Low. Medium is never auto-assigned — it
+         * is admin-only (see [com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase]).
+         */
+        fun fromSignals(reviewAgeDays: Int, versionMismatch: Boolean, hasUnreflectedUpstreamChanges: Boolean): RiskLevel =
+            if (reviewAgeDays > 365 || versionMismatch || hasUnreflectedUpstreamChanges) CRITICAL else LOW
     }
 }

@@ -10,6 +10,7 @@ import com.shelldocs.core.domain.entity.updates.RiskLevel
 import com.shelldocs.core.domain.usecase.assistant.EvaluateDocumentHealthUseCase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DerivedPendingUpdatesRepositoryTest {
@@ -32,13 +33,26 @@ class DerivedPendingUpdatesRepositoryTest {
     }
 
     @Test
-    fun impactIsInverseOfHealthAndRiskMatchesImpact() = runTest {
+    fun impactIsInverseOfHealthAndRiskIsOnlyCriticalOrLowByDefault() = runTest {
         val updates = repository.pendingUpdates().getOrDefault(emptyList())
 
         updates.forEach { update ->
             assertTrue(update.impactScore in 31..100)
-            kotlin.test.assertEquals(RiskLevel.fromImpactScore(update.impactScore), update.risk)
+            assertTrue(update.risk == RiskLevel.CRITICAL || update.risk == RiskLevel.LOW)
         }
+    }
+
+    @Test
+    fun manualOverrideTakesPrecedenceOverAutoRisk() = runTest {
+        val before = repository.pendingUpdates().getOrDefault(emptyList()).first()
+
+        val updated = repository.setManualRisk(before.documentId, RiskLevel.MEDIUM).getOrDefault(before)
+        assertEquals(RiskLevel.MEDIUM, updated.risk)
+        assertEquals(RiskLevel.MEDIUM, updated.manualRiskOverride)
+
+        val cleared = repository.setManualRisk(before.documentId, null).getOrDefault(updated)
+        assertEquals(before.risk, cleared.risk)
+        assertEquals(null, cleared.manualRiskOverride)
     }
 
     @Test

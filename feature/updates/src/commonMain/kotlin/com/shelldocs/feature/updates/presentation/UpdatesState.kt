@@ -24,8 +24,11 @@ data class UpdatesState(
         riskFilter?.let { filter -> updates.filter { it.risk == filter } } ?: updates
 
     val countsByRisk: Map<RiskLevel, Int> =
-        RiskLevel.entries.associateWith { risk -> updates.count { it.risk == risk } }
+        DOCUMENTATION_HEALTH_RISK_LEVELS.associateWith { risk -> updates.count { it.risk == risk } }
 
     val metadataIssuesRequiringAttention: Int =
         metadataIssues.count { it.status == MetadataClassificationStatus.REQUIRES_ATTENTION }
 }
+
+/** Documentation Health only ever auto/manually assigns these three risk levels. */
+val DOCUMENTATION_HEALTH_RISK_LEVELS = listOf(RiskLevel.CRITICAL, RiskLevel.MEDIUM, RiskLevel.LOW)

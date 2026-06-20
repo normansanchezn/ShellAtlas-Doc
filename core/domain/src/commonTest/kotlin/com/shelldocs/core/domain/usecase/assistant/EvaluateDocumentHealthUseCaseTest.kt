@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.core.domain.usecase.assistant
 
 import com.shelldocs.core.domain.entity.document.DocumentStatus

@@ -91,6 +91,7 @@ class DerivedDocumentClassificationRepository(
             suggestions = suggestions,
             sourceType = attributes.sourceType,
             classifiedAt = timeProvider.now(),
+            developmentArea = attributes.developmentArea,
         )
     }
 

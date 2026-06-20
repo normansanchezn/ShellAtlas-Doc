@@ -16,4 +16,25 @@ class RiskLevelTest {
         assertEquals(RiskLevel.LOW, RiskLevel.fromImpactScore(39))
         assertEquals(RiskLevel.LOW, RiskLevel.fromImpactScore(0))
     }
+
+    @Test
+    fun fromSignalsIsCriticalWhenStaleBeyondAYear() {
+        assertEquals(RiskLevel.CRITICAL, RiskLevel.fromSignals(reviewAgeDays = 366, versionMismatch = false, hasUnreflectedUpstreamChanges = false))
+        assertEquals(RiskLevel.LOW, RiskLevel.fromSignals(reviewAgeDays = 365, versionMismatch = false, hasUnreflectedUpstreamChanges = false))
+    }
+
+    @Test
+    fun fromSignalsIsCriticalOnVersionMismatch() {
+        assertEquals(RiskLevel.CRITICAL, RiskLevel.fromSignals(reviewAgeDays = 1, versionMismatch = true, hasUnreflectedUpstreamChanges = false))
+    }
+
+    @Test
+    fun fromSignalsIsCriticalOnUnreflectedUpstreamChanges() {
+        assertEquals(RiskLevel.CRITICAL, RiskLevel.fromSignals(reviewAgeDays = 1, versionMismatch = false, hasUnreflectedUpstreamChanges = true))
+    }
+
+    @Test
+    fun fromSignalsIsLowWhenNoSignalsFire() {
+        assertEquals(RiskLevel.LOW, RiskLevel.fromSignals(reviewAgeDays = 1, versionMismatch = false, hasUnreflectedUpstreamChanges = false))
+    }
 }

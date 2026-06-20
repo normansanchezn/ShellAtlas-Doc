@@ -15,10 +15,11 @@ import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.RiskLevel
+import com.shelldocs.feature.updates.presentation.DOCUMENTATION_HEALTH_RISK_LEVELS
 import com.shelldocs.feature.updates.presentation.UpdatesIntent
 import com.shelldocs.feature.updates.presentation.UpdatesState
 
-/** Four tappable cards: Critical / High / Medium / Low counters (filters). */
+/** Three tappable cards: Critical / Medium / Low counters (filters). */
 @Composable
 fun RiskSummaryRow(
     state: UpdatesState,
@@ -37,7 +38,7 @@ fun RiskSummaryRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md),
     ) {
-        RiskLevel.entries.forEach { risk ->
+        DOCUMENTATION_HEALTH_RISK_LEVELS.forEach { risk ->
             ShellCard(
                 modifier = Modifier
                     .weight(1f)
