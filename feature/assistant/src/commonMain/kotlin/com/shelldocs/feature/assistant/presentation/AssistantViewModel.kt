@@ -162,6 +162,7 @@ class AssistantViewModel(
         role = MessageRole.ASSISTANT,
         markdown = buildWelcomeMessage(language),
         createdAt = timeProvider.now(),
+        isWelcome = true,
     )
 
     private suspend fun select(conversationId: String) {

@@ -93,6 +93,10 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
         UnavailableBubble(message, modifier)
         return
     }
+    if (message.isWelcome) {
+        WelcomeBubble(message, modifier)
+        return
+    }
     val colors = ShellTheme.colors
     Column(modifier = modifier.fillMaxWidth().widthIn(max = 640.dp)) {
         Row(
@@ -134,6 +138,19 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
                 onSourceClick = onSourceClick,
                 modifier = Modifier.padding(top = ShellSpacing.sm),
             )
+        }
+    }
+}
+
+/** Opening greeting: logo + centered text, capability bullets collapsed into one rotating chip. No header, confidence, or sources. */
+@Composable
+private fun WelcomeBubble(message: AssistantMessage, modifier: Modifier) {
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.widthIn(max = 480.dp).padding(vertical = ShellSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            AssistantWelcomeContent(markdown = message.markdown)
         }
     }
 }

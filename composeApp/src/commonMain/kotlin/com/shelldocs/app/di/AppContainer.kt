@@ -22,6 +22,7 @@ import com.shelldocs.core.data.repository.ApiDocumentRepository
 import com.shelldocs.core.data.repository.CachingDocumentRepository
 import com.shelldocs.core.data.repository.DerivedDashboardRepository
 import com.shelldocs.core.data.repository.DerivedDocumentTreeRepository
+import com.shelldocs.core.data.repository.DerivedDocumentClassificationRepository
 import com.shelldocs.core.data.repository.DerivedPendingUpdatesRepository
 import com.shelldocs.core.data.repository.InMemoryAssistantCacheRepository
 import com.shelldocs.core.data.repository.InMemoryConversationRepository
@@ -47,6 +48,9 @@ import com.shelldocs.core.domain.usecase.auth.AssignRoleUseCase
 import com.shelldocs.core.domain.usecase.auth.GetTeamMembersUseCase
 import com.shelldocs.core.domain.usecase.auth.SignInUseCase
 import com.shelldocs.core.domain.usecase.auth.SignOutUseCase
+import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
+import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
+import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.dashboard.GetDashboardMetricsUseCase
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
@@ -184,6 +188,10 @@ class AppContainer(
     private val pendingUpdatesRepository by lazy {
         DerivedPendingUpdatesRepository(documentRepository, evaluateHealth, timeProvider)
     }
+
+    private val documentClassificationRepository by lazy {
+        DerivedDocumentClassificationRepository(documentRepository, timeProvider)
+    }
     private val knowledgeCheckpointRepository by lazy { DemoKnowledgeCheckpointRepository() }
     private val dashboardRepository by lazy {
         DerivedDashboardRepository(documentRepository, evaluateHealth, knowledgeCheckpointRepository)
@@ -236,6 +244,10 @@ class AppContainer(
     fun updatesViewModel() = UpdatesViewModel(
         getPendingUpdates = GetPendingUpdatesUseCase(pendingUpdatesRepository),
         scanForUpdates = ScanForUpdatesUseCase(pendingUpdatesRepository),
+        getMetadataIssues = GetMetadataIssuesUseCase(documentClassificationRepository),
+        acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(documentClassificationRepository),
+        assignMetadata = AssignMetadataUseCase(documentClassificationRepository),
+        isAdmin = currentRole() == UserRole.OWNER,
         dispatchers = dispatchers,
     )
 

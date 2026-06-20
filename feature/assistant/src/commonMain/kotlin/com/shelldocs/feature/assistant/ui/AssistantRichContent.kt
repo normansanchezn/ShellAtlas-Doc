@@ -1,5 +1,7 @@
 package com.shelldocs.feature.assistant.ui
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -10,23 +12,33 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.shelldocs.core.designsystem.icons.IconShellPecten
 import com.shelldocs.core.designsystem.molecules.ShellMarkdownText
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import kotlin.math.max
+import kotlinx.coroutines.delay
 
 @Composable
 fun AssistantRichContent(
@@ -68,6 +80,109 @@ fun AssistantRichContent(
 
                 is AssistantBlock.Code -> CodeBlock(block.text)
             }
+        }
+    }
+}
+
+/**
+ * Opening greeting layout: logo above centered text, with the capability
+ * bullets collapsed into a single chip that cycles through them instead of
+ * a static list, so the welcome state stays short while still listing what
+ * the assistant can do.
+ */
+@Composable
+fun AssistantWelcomeContent(
+    markdown: String,
+    modifier: Modifier = Modifier,
+) {
+    val blocks = parseBlocks(markdown)
+    val bullets = blocks.filterIsInstance<AssistantBlock.Bullet>().map { it.text }
+    var chipPlaced = false
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
+    ) {
+        WelcomeLogo()
+        blocks.forEach { block ->
+            when (block) {
+                is AssistantBlock.Heading -> Text(
+                    text = block.text,
+                    style = ShellTheme.typography.sectionTitle.copy(textAlign = TextAlign.Center),
+                    color = ShellTheme.colors.textPrimary,
+                )
+
+                is AssistantBlock.Paragraph -> ShellMarkdownText(
+                    text = block.text,
+                    style = ShellTheme.typography.body.copy(textAlign = TextAlign.Center),
+                    color = ShellTheme.colors.textSecondary,
+                )
+
+                is AssistantBlock.Bullet -> if (!chipPlaced) {
+                    chipPlaced = true
+                    RotatingCapabilityChip(options = bullets)
+                }
+
+                is AssistantBlock.Mermaid -> MermaidDiagramCard(diagram = MermaidParser.parse(block.raw))
+
+                is AssistantBlock.Code -> CodeBlock(block.text)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeLogo() {
+    val colors = ShellTheme.colors
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(ShellRadius.md))
+            .background(colors.brand),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = IconShellPecten,
+            contentDescription = "ShellAtlas",
+            tint = colors.onBrand,
+            modifier = Modifier.size(30.dp),
+        )
+    }
+}
+
+/** Cycles through [options] one at a time, crossfading on each change, forever. */
+@Composable
+private fun RotatingCapabilityChip(options: List<String>, modifier: Modifier = Modifier) {
+    if (options.isEmpty()) return
+    val colors = ShellTheme.colors
+    var index by remember { mutableStateOf(0) }
+
+    LaunchedEffect(options) {
+        while (true) {
+            delay(2600)
+            index = (index + 1) % options.size
+        }
+    }
+
+    Crossfade(
+        targetState = index,
+        animationSpec = tween(ShellMotion.durationSlow, easing = ShellMotion.standard),
+        modifier = modifier,
+    ) { current ->
+        Box(
+            modifier = Modifier
+                .widthIn(max = 420.dp)
+                .clip(RoundedCornerShape(ShellRadius.full))
+                .background(colors.brand.copy(alpha = 0.12f))
+                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = options[current],
+                style = ShellTheme.typography.bodyStrong.copy(textAlign = TextAlign.Center),
+                color = colors.brand,
+            )
         }
     }
 }

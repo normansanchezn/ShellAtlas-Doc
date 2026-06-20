@@ -13,4 +13,6 @@ data class AssistantMessage @OptIn(ExperimentalTime::class) constructor(
     val createdAt: kotlin.time.Instant,
     /** True when this bubble tells the user the AI model is down, not a real answer. */
     val isUnavailable: Boolean = false,
+    /** True when this is the opening greeting shown on an empty conversation. */
+    val isWelcome: Boolean = false,
 )

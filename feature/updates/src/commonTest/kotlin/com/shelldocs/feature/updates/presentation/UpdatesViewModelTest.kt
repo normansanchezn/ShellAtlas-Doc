@@ -5,9 +5,16 @@ package com.shelldocs.feature.updates.presentation
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.domain.entity.document.Document
+import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
+import com.shelldocs.core.domain.entity.document.MetadataAttribute
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
+import com.shelldocs.core.domain.repository.DocumentClassificationRepository
 import com.shelldocs.core.domain.repository.PendingUpdatesRepository
+import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
+import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
+import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -56,13 +63,32 @@ private class FakePendingUpdatesRepository(var failScan: Boolean = false) : Pend
     }
 }
 
+private class FakeDocumentClassificationRepository : DocumentClassificationRepository {
+    override suspend fun classify(documentId: String): DomainResult<DocumentClassificationResult> =
+        DomainResult.failure(AppError.NotFound("Not used in these tests"))
+
+    override suspend fun metadataIssues(): DomainResult<List<DocumentClassificationResult>> =
+        DomainResult.success(emptyList())
+
+    override suspend fun acceptSuggestion(documentId: String, attribute: MetadataAttribute): DomainResult<Document> =
+        DomainResult.failure(AppError.NotFound("Not used in these tests"))
+
+    override suspend fun assignMetadata(documentId: String, attribute: MetadataAttribute, value: String): DomainResult<Document> =
+        DomainResult.failure(AppError.NotFound("Not used in these tests"))
+}
+
 class UpdatesViewModelTest {
 
     private val repository = FakePendingUpdatesRepository(failScan = false)
+    private val classificationRepository = FakeDocumentClassificationRepository()
 
     private fun viewModel(scheduler: kotlinx.coroutines.test.TestCoroutineScheduler) = UpdatesViewModel(
         getPendingUpdates = GetPendingUpdatesUseCase(repository),
         scanForUpdates = ScanForUpdatesUseCase(repository),
+        getMetadataIssues = GetMetadataIssuesUseCase(classificationRepository),
+        acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(classificationRepository),
+        assignMetadata = AssignMetadataUseCase(classificationRepository),
+        isAdmin = false,
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )
 
