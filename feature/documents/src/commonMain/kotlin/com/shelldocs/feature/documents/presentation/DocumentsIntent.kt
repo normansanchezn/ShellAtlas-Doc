@@ -1,6 +1,7 @@
 package com.shelldocs.feature.documents.presentation
 
 import com.shelldocs.core.common.mvi.MviIntent
+import com.shelldocs.core.domain.entity.document.Area
 
 sealed interface DocumentsIntent : MviIntent {
     data object Initialize : DocumentsIntent
@@ -35,6 +36,8 @@ sealed interface DocumentsIntent : MviIntent {
     data class AttributesTeamChanged(val value: String) : DocumentsIntent
     data class AttributesPlatformChanged(val value: String) : DocumentsIntent
     data class AttributesTagsChanged(val value: String) : DocumentsIntent
+    data class AttributesAreaChanged(val value: Area?) : DocumentsIntent
+    data class AttributesVersionChanged(val value: String) : DocumentsIntent
     data object SaveAttributes : DocumentsIntent
     data object DismissError : DocumentsIntent
     data class ToggleBookmark(val documentId: String) : DocumentsIntent

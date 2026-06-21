@@ -6,36 +6,16 @@ import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.auth.UserRole
-import com.shelldocs.core.domain.entity.document.Document
-import com.shelldocs.core.domain.entity.document.DocumentAttributes
-import com.shelldocs.core.domain.entity.document.DocumentClassification
-import com.shelldocs.core.domain.entity.document.DocumentContent
-import com.shelldocs.core.domain.entity.document.DocumentNode
-import com.shelldocs.core.domain.entity.document.DocumentNodeType
-import com.shelldocs.core.domain.entity.document.DocumentStatus
-import com.shelldocs.core.domain.entity.document.DocumentVersion
-import com.shelldocs.core.domain.entity.document.DraftReceipt
+import com.shelldocs.core.domain.entity.document.*
 import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.repository.DocumentTreeRepository
-import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentVersionsUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
-import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
-import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
+import com.shelldocs.core.domain.usecase.document.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
     override val main = dispatcher
@@ -189,6 +169,9 @@ class DocumentsViewModelTest {
         assertEquals(DocumentsEditorStep.Edit, viewModel.currentState.editorStep)
 
         viewModel.onIntent(DocumentsIntent.AttributesOwnerChanged("Mobile Docs"))
+        viewModel.onIntent(DocumentsIntent.AttributesPlatformChanged("iOS"))
+        viewModel.onIntent(DocumentsIntent.AttributesVersionChanged("9.6.0"))
+        viewModel.onIntent(DocumentsIntent.AttributesAreaChanged(Area.DEVELOPMENT))
         viewModel.onIntent(DocumentsIntent.SaveAttributes)
         testScheduler.advanceUntilIdle()
 
@@ -254,6 +237,9 @@ class DocumentsViewModelTest {
         testScheduler.advanceUntilIdle()
         viewModel.onIntent(DocumentsIntent.NewDocumentTitleChanged("Project playbook"))
         testScheduler.advanceUntilIdle()
+        viewModel.onIntent(DocumentsIntent.AttributesPlatformChanged("iOS"))
+        viewModel.onIntent(DocumentsIntent.AttributesVersionChanged("9.6.0"))
+        viewModel.onIntent(DocumentsIntent.AttributesAreaChanged(Area.DEVELOPMENT))
         viewModel.onIntent(DocumentsIntent.SubmitNewDocument)
         testScheduler.advanceUntilIdle()
 
@@ -278,6 +264,9 @@ class DocumentsViewModelTest {
         assertEquals(DocumentsEditorStep.Edit, viewModel.currentState.newDocumentStep)
 
         viewModel.onIntent(DocumentsIntent.AttributesOwnerChanged("Docs Team"))
+        viewModel.onIntent(DocumentsIntent.AttributesPlatformChanged("iOS"))
+        viewModel.onIntent(DocumentsIntent.AttributesVersionChanged("9.6.0"))
+        viewModel.onIntent(DocumentsIntent.AttributesAreaChanged(Area.DEVELOPMENT))
         viewModel.onIntent(DocumentsIntent.SaveAttributes)
         testScheduler.advanceUntilIdle()
 

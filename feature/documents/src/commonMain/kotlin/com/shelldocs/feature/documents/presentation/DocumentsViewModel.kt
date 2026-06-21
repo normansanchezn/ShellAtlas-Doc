@@ -2,8 +2,8 @@
 
 package com.shelldocs.feature.documents.presentation
 
-import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.mvi.MviViewModel
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.getOrDefault
@@ -12,20 +12,13 @@ import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.DocumentAttributes
 import com.shelldocs.core.domain.entity.document.DocumentNode
-import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentTreeUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentVersionsUseCase
-import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.domain.usecase.document.PublishDocumentUseCase
-import com.shelldocs.core.domain.usecase.document.RestoreDocumentVersionUseCase
-import com.shelldocs.core.domain.usecase.document.SaveDraftUseCase
-import com.shelldocs.core.domain.usecase.document.UpdateDocumentAttributesUseCase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.shelldocs.core.domain.usecase.document.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DocumentsViewModel(
     private val getDocuments: GetDocumentsUseCase,
@@ -118,6 +111,11 @@ class DocumentsViewModel(
                 setState { copy(attributesDraft = attributesDraft.copy(platform = intent.value)) }
             is DocumentsIntent.AttributesTagsChanged ->
                 setState { copy(attributesDraft = attributesDraft.copy(tagsText = intent.value)) }
+            is DocumentsIntent.AttributesAreaChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(area = intent.value)) }
+
+            is DocumentsIntent.AttributesVersionChanged ->
+                setState { copy(attributesDraft = attributesDraft.copy(applicationVersion = intent.value)) }
             DocumentsIntent.SaveAttributes -> persistAttributes()
             DocumentsIntent.DismissError -> setState { copy(errorDialog = null) }
             is DocumentsIntent.ToggleBookmark -> toggleBookmark(intent.documentId)
@@ -364,6 +362,18 @@ class DocumentsViewModel(
         val title = currentState.newDocumentTitle.trim()
         val markdown = currentState.newDocumentMarkdown.trim().ifBlank { buildMarkdownForTitle(title) }
         val attributesDraft = currentState.attributesDraft
+        if (!attributesDraft.isComplete) {
+            setState {
+                copy(
+                    isAttributesDialogOpen = true,
+                    attributesEditorTarget = AttributesEditorTarget.NewDocument,
+                    errorDialog = com.shelldocs.core.common.error.AppError.Validation(
+                        "Pick an Area, Platform and Version before creating the document — that's how it gets filed correctly in Confluence.",
+                    ).toErrorDialogState("create this document"),
+                )
+            }
+            return
+        }
         setState { copy(loadingMessage = "Creating document...", errorDialog = null) }
         withContext(dispatchers.io) {
             createDocument(currentState.role, title, markdown)
@@ -422,6 +432,8 @@ class DocumentsViewModel(
                     team = document.attributes.team,
                     platform = document.attributes.platform,
                     tagsText = document.attributes.tags.joinToString(", "),
+                    area = document.attributes.area,
+                    applicationVersion = document.attributes.applicationVersion,
                 ),
             )
         }
@@ -455,14 +467,17 @@ class DocumentsViewModel(
         }
 
         val document = currentState.selectedDocument ?: return
-        val attributes = DocumentAttributes(
-            owner = draft.owner,
-            module = draft.module,
-            team = draft.team,
-            platform = draft.platform,
-            parentFolderId = document.attributes.parentFolderId,
-            tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
-        )
+        if (!draft.isComplete) {
+            setState {
+                copy(
+                    errorDialog = com.shelldocs.core.common.error.AppError.Validation(
+                        "Area, Platform and Version are required so this document files correctly in Confluence.",
+                    ).toErrorDialogState("save the document details"),
+                )
+            }
+            return
+        }
+        val attributes = buildAttributesFromDraft(draft, document.attributes.parentFolderId)
         setState { copy(loadingMessage = "Saving attributes...", errorDialog = null) }
         withContext(dispatchers.io) {
             updateAttributes(currentState.role, document.id, attributes)
@@ -504,6 +519,8 @@ class DocumentsViewModel(
         platform = draft.platform,
         parentFolderId = parentFolderId,
         tags = draft.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+        area = draft.area,
+        applicationVersion = draft.applicationVersion,
     )
 
     private fun toggleBookmark(documentId: String) {

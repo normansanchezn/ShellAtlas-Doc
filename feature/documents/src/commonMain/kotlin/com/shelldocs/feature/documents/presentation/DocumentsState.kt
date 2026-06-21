@@ -19,7 +19,10 @@ data class AttributesDraft(
     val tagsText: String = "",
     val area: Area? = null,
     val applicationVersion: String = "",
-)
+) {
+    /** Area, Platform and Version drive the Confluence folder hierarchy — without them documents land under "Unsorted". */
+    val isComplete: Boolean = area != null && platform.isNotBlank() && applicationVersion.isNotBlank()
+}
 
 enum class DocumentsEditorStep {
     Edit,
