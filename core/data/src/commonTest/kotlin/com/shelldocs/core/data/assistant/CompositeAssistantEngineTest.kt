@@ -3,17 +3,13 @@ package com.shelldocs.core.data.assistant
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.getOrNull
-import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
-import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
-import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
-import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
-import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
-import com.shelldocs.core.domain.entity.assistant.ScoredDocument
+import com.shelldocs.core.domain.entity.assistant.*
 import com.shelldocs.core.domain.repository.AssistantEngine
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 private class StubEngine(
     private val result: DomainResult<AssistantAnswer>,
@@ -53,7 +49,7 @@ class CompositeAssistantEngineTest {
     }
 
     @Test
-    fun fallsBackWhenPrimaryFails() = runTest {
+    fun showsUnavailableNoticeWhenPrimaryFails() = runTest {
         val composite = CompositeAssistantEngine(
             primary = StubEngine(DomainResult.failure(AppError.Network()), reachable = false, label = "llm"),
             fallback = StubEngine(DomainResult.success(fallbackAnswer), reachable = false, label = "grounded"),
@@ -61,7 +57,7 @@ class CompositeAssistantEngineTest {
 
         val answer = composite.answer("q", AssistantIntentType.QUESTION, emptyList()).getOrNull()
         assertNotNull(answer)
-        assertEquals("fallback", answer.markdown)
+        assertTrue(answer.isUnavailable)
     }
 
     @Test

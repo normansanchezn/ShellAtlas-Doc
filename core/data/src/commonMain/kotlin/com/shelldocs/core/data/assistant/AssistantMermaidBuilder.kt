@@ -24,7 +24,43 @@ internal object AssistantMermaidBuilder {
         }
     }
 
-    private fun detectType(question: String, document: Document): DiagramType {
+    /** Syntax rules for the detected diagram type, written for an LLM prompt — matches exactly what [MermaidParser]-equivalent UI rendering can parse. */
+    fun promptHint(question: String, document: Document): String {
+        val syntax = when (detectType(question, document)) {
+            DiagramType.FLOWCHART -> """
+                ```mermaid
+                flowchart TD
+                    S1[First step]
+                    S2[Second step]
+                    S1 --> S2
+                ```
+            """.trimIndent()
+
+            DiagramType.SEQUENCE -> """
+                ```mermaid
+                sequenceDiagram
+                    participant User as User
+                    participant ShellAtlas as ShellAtlas
+                    User->>ShellAtlas: Action
+                    ShellAtlas-->>User: Result
+                ```
+            """.trimIndent()
+
+            DiagramType.GANTT -> """
+                ```mermaid
+                gantt
+                    title Title
+                    dateFormat  YYYY-MM-DD
+                    section Flow
+                    First step :task0, 2026-06-10, 2d
+                ```
+            """.trimIndent()
+        }
+        return "Include exactly one diagram using this Mermaid syntax (keep the node IDs like S1/S2, " +
+                "replace bracketed labels with real steps from the documentation, add as many steps as needed):\n$syntax"
+    }
+
+    internal fun detectType(question: String, document: Document): DiagramType {
         val normalizedQuestion = question.lowercase()
         val normalizedDocument = "${document.title} ${document.summary}".lowercase()
         return when {

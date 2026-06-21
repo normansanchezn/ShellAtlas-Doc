@@ -1,13 +1,10 @@
 package com.shelldocs.core.data.network
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -32,7 +29,11 @@ class ShellDocsApiTest {
         }
     """.trimIndent()
 
-    private fun api(handler: MockEngine.() -> Unit = {}, status: HttpStatusCode = HttpStatusCode.OK, body: String = "[$documentJson]"): ShellDocsApi {
+    private fun api(
+        handler: MockEngine.() -> Unit = {},
+        status: HttpStatusCode = HttpStatusCode.OK,
+        body: String = "{\"documents\": [$documentJson]}"
+    ): ShellDocsApi {
         val engine = MockEngine { request ->
             assertEquals("Bearer token-1", request.headers[HttpHeaders.Authorization])
             respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))

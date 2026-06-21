@@ -2,13 +2,7 @@ package com.shelldocs.core.data.assistant
 
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
-import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
-import com.shelldocs.core.domain.entity.assistant.AnswerSource
-import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
-import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
-import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
-import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
-import com.shelldocs.core.domain.entity.assistant.ScoredDocument
+import com.shelldocs.core.domain.entity.assistant.*
 import com.shelldocs.core.domain.repository.AssistantEngine
 
 /**
@@ -84,8 +78,12 @@ class OllamaAssistantEngine(private val client: OllamaClient) : AssistantEngine 
         }
         appendLine()
         when (intent) {
-            AssistantIntentType.EXPLAIN_FLOW ->
+            AssistantIntentType.EXPLAIN_FLOW -> {
                 appendLine("The user wants a step-by-step explanation of a flow or process; structure the answer as ordered steps, pulling from multiple documents if they cover different phases.")
+                grounding.firstOrNull()?.document?.let { topDocument ->
+                    appendLine(AssistantMermaidBuilder.promptHint(question, topDocument))
+                }
+            }
             AssistantIntentType.IMPROVE_DOCUMENT ->
                 appendLine("The user asks whether a document should be improved; judge it honestly and say no when it is healthy.")
             AssistantIntentType.SUMMARIZE ->
