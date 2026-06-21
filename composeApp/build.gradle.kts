@@ -45,32 +45,38 @@ fun envOrDotEnv(name: String): String =
         ?: dotEnv[name].orEmpty()
 
 /**
- * Bakes prod config into the desktop binary at build time, the same way the
- * Android `prod` flavor does via `buildConfigField`. Without this, a packaged
- * .dmg shared to another machine has no `.env.prod` next to it at runtime (it
- * never travels inside the package) and silently falls back to demo mode.
- * `DesktopAppConfig` still prefers a real env var / `.env` file first, so the
- * usual local dev flow (`./gradlew :composeApp:run -PshellFlavor=prod`) is
- * unaffected — these baked values are only the last-resort fallback used by
- * an installed, double-clicked app with no environment of its own.
+ * Bakes config into the desktop binary at build time, the same way the
+ * Android product flavors do via `buildConfigField`. Without this, a packaged
+ * .dmg shared to another machine has no `.env`/`.env.<flavor>` next to it at
+ * runtime (it never travels inside the package) and silently falls back to
+ * demo mode. `DesktopAppConfig` still prefers a real env var / `.env` file
+ * first, so the usual local dev flow (`./gradlew :composeApp:run -PshellFlavor=dev`)
+ * is unaffected — these baked values are only the last-resort fallback used
+ * by an installed, double-clicked app with no environment of its own.
+ *
+ * Prefix mirrors [resolveProfileSetting]'s DEV_/PROD_ lookup: reads
+ * `SHELLDOC_APP_ENVIRONMENT` from the same `.env` to decide which profile
+ * prefix to bake (defaults to DEV, matching the runtime default).
  */
 val generateDesktopBuildConfig by tasks.registering {
     notCompatibleWithConfigurationCache("captures build script reference in doLast")
     val outputDir = layout.buildDirectory.dir("generated/desktopMain/kotlin")
-    val supabaseUrl = envOrDotEnv("SHELLDOC_PROD_SUPABASE_URL").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_URL") }
-    val supabaseAnonKey =
-        envOrDotEnv("SHELLDOC_PROD_SUPABASE_ANON_KEY").ifBlank { envOrDotEnv("SHELLDOC_SUPABASE_ANON_KEY") }
-    val apiBaseUrl = envOrDotEnv("SHELLDOC_PROD_API_BASE_URL").ifBlank { envOrDotEnv("SHELLDOC_API_BASE_URL") }
-    val apiBearerToken =
-        envOrDotEnv("SHELLDOC_PROD_API_BEARER_TOKEN").ifBlank { envOrDotEnv("SHELLDOC_API_BEARER_TOKEN") }
-    val useOllama = envOrDotEnv("SHELLDOC_PROD_USE_OLLAMA").ifBlank { envOrDotEnv("SHELLDOC_USE_OLLAMA") }
-        .equals("true", ignoreCase = true)
-    val ollamaBaseUrl = envOrDotEnv("SHELLDOC_PROD_OLLAMA_BASE_URL")
-        .ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_BASE_URL").ifBlank { "http://127.0.0.1:11434" } }
-    val ollamaModel = envOrDotEnv("SHELLDOC_PROD_OLLAMA_MODEL")
-        .ifBlank { envOrDotEnv("SHELLDOC_OLLAMA_MODEL").ifBlank { "llama3.2" } }
+    val isProd = envOrDotEnv("SHELLDOC_APP_ENVIRONMENT").uppercase().let { it == "PROD" || it == "PRODUCTION" }
+    val profilePrefix = if (isProd) "SHELLDOC_PROD_" else "SHELLDOC_DEV_"
+    fun bakedSetting(key: String): String =
+        envOrDotEnv("$profilePrefix$key").ifBlank { envOrDotEnv("SHELLDOC_$key").ifBlank { envOrDotEnv(key) } }
+
+    val appEnvironment = if (isProd) "PROD" else "DEV"
+    val supabaseUrl = bakedSetting("SUPABASE_URL")
+    val supabaseAnonKey = bakedSetting("SUPABASE_ANON_KEY")
+    val apiBaseUrl = bakedSetting("API_BASE_URL")
+    val apiBearerToken = bakedSetting("API_BEARER_TOKEN")
+    val useOllama = bakedSetting("USE_OLLAMA").equals("true", ignoreCase = true)
+    val ollamaBaseUrl = bakedSetting("OLLAMA_BASE_URL").ifBlank { "http://127.0.0.1:11434" }
+    val ollamaModel = bakedSetting("OLLAMA_MODEL").ifBlank { "llama3.2" }
 
     outputs.dir(outputDir)
+    inputs.property("appEnvironment", appEnvironment)
     inputs.property("supabaseUrl", supabaseUrl)
     inputs.property("supabaseAnonKey", supabaseAnonKey)
     inputs.property("apiBaseUrl", apiBaseUrl)
@@ -85,8 +91,9 @@ val generateDesktopBuildConfig by tasks.registering {
             buildString {
                 appendLine("package com.shelldocs.app")
                 appendLine()
-                appendLine("// Baked at build time from SHELLDOC_PROD_* / SHELLDOC_* env vars — see generateDesktopBuildConfig in build.gradle.kts.")
+                appendLine("// Baked at build time from .env ($profilePrefix / SHELLDOC_ / bare keys) — see generateDesktopBuildConfig in build.gradle.kts.")
                 appendLine("internal object DesktopBuildConfig {")
+                appendLine("    const val APP_ENVIRONMENT: String = \"$appEnvironment\"")
                 appendLine("    const val SUPABASE_URL: String = \"$supabaseUrl\"")
                 appendLine("    const val SUPABASE_ANON_KEY: String = \"$supabaseAnonKey\"")
                 appendLine("    const val API_BASE_URL: String = \"$apiBaseUrl\"")
