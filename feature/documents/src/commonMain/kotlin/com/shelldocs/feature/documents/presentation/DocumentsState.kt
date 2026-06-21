@@ -62,6 +62,9 @@ data class DocumentsState(
     val attributesEditorTarget: AttributesEditorTarget = AttributesEditorTarget.ExistingDocument,
     val attributesDraft: AttributesDraft = AttributesDraft(),
     val bookmarkedDocumentIds: Set<String> = emptySet(),
+    val pendingDeleteDocumentId: String? = null,
+    val pendingDeleteDocumentTitle: String = "",
+    val isDeletingDocument: Boolean = false,
 ) : MviState {
 
     val filteredDocuments: List<Document> =
@@ -74,9 +77,19 @@ data class DocumentsState(
             }
         }
 
+    /** [tree] pruned to documents matching [filterQuery]; empty folders are dropped. */
+    val filteredTree: DocumentNode? =
+        if (filterQuery.isBlank()) {
+            tree
+        } else {
+            tree?.pruneToDocuments(filteredDocuments.map { it.id }.toSet())
+        }
+
     val canEdit: Boolean = RolePermissions.isGranted(role, Permission.EDIT_DOCUMENTS)
 
     val canPublish: Boolean = RolePermissions.isGranted(role, Permission.PUBLISH_DOCUMENTS)
+
+    val canDelete: Boolean = RolePermissions.isGranted(role, Permission.DELETE_DOCUMENTS)
 
     val isBusy: Boolean = isLoading || loadingMessage != null
 }

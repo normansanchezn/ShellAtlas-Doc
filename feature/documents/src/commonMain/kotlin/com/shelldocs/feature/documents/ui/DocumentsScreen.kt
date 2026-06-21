@@ -204,6 +204,10 @@ fun DocumentsScreen(
             onDismiss = { viewModel.onIntent(DocumentsIntent.DismissError) },
         )
     }
+
+    if (state.pendingDeleteDocumentId != null) {
+        DeleteDocumentDialog(state = state, onIntent = viewModel::onIntent)
+    }
 }
 
 private fun withDelta(current: Dp, deltaPx: Float, density: Density, min: Dp, max: Dp): Dp {

@@ -10,4 +10,13 @@ data class DocumentNode(
 ) {
     fun flattenDocumentIds(): List<String> =
         listOfNotNull(documentId) + children.flatMap { it.flattenDocumentIds() }
+
+    /** Prunes the tree down to document nodes whose id is in [matchingDocumentIds]; drops folders left empty. */
+    fun pruneToDocuments(matchingDocumentIds: Set<String>): DocumentNode? = when (type) {
+        DocumentNodeType.DOCUMENT -> takeIf { documentId in matchingDocumentIds }
+        DocumentNodeType.FOLDER -> {
+            val prunedChildren = children.mapNotNull { it.pruneToDocuments(matchingDocumentIds) }
+            if (prunedChildren.isEmpty()) null else copy(children = prunedChildren)
+        }
+    }
 }

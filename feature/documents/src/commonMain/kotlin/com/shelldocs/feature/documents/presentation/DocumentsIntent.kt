@@ -43,4 +43,7 @@ sealed interface DocumentsIntent : MviIntent {
     data class ToggleBookmark(val documentId: String) : DocumentsIntent
     data object ExportPdf : DocumentsIntent
     data class BreadcrumbNavigate(val folderId: String?) : DocumentsIntent
+    data class RequestDeleteDocument(val documentId: String, val documentTitle: String) : DocumentsIntent
+    data object ConfirmDeleteDocument : DocumentsIntent
+    data object CancelDeleteDocument : DocumentsIntent
 }

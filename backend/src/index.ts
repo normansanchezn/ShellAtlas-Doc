@@ -6,6 +6,7 @@ import {parseMarkdown} from "./markdown-parser.ts";
 import {
     type ConfluenceConfig,
     confluenceConfigFromEnv,
+    deletePageFromConfluence,
     fetchPageTree,
     pushDocumentToConfluence,
     syncConfluence,
@@ -781,13 +782,36 @@ app.delete("/v1/documents/:id", async (c) => {
 
     const {data: doc, error: fetchErr} = await db
         .from("documents")
-        .select("id")
+        .select("id, source_type, source_external_id")
         .eq("id", id)
         .is("deleted_at", null)
-        .single<{ id: string }>();
+        .single<{ id: string; source_type: string | null; source_external_id: string | null }>();
 
     if (fetchErr || !doc) {
         return c.json({error: "Document not found"}, 404);
+    }
+
+    const {data: pageIdAttr} = await db
+        .from("document_attributes")
+        .select("value")
+        .eq("document_id", id)
+        .eq("key", "confluence_page_id")
+        .maybeSingle<{ value: unknown }>();
+
+    const confluencePageId =
+        (pageIdAttr?.value as string | null) ??
+        (doc.source_type === "confluence" ? doc.source_external_id : null);
+
+    if (confluencePageId) {
+        const confluenceConfig = await resolveConfluenceConfig();
+        if (confluenceConfig) {
+            try {
+                await deletePageFromConfluence(confluenceConfig, confluencePageId);
+            } catch (err) {
+                console.error(`[ShellDoc] Confluence delete failed for document ${id}:`, err);
+                return c.json({error: `Failed to delete from Confluence: ${(err as Error).message}`}, 502);
+            }
+        }
     }
 
     const {error} = await db

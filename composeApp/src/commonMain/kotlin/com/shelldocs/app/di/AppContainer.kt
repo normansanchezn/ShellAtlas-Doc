@@ -236,9 +236,19 @@ class AppContainer(
         client.isReachable()
     }
 
-    /** Count for the sidebar/rail badge: documents flagged by the health audit as needing review. */
-    suspend fun pendingUpdatesCount(): Int =
-        GetPendingUpdatesUseCase(pendingUpdatesRepository)().getOrDefault(emptyList()).size
+    /**
+     * Count for the sidebar/rail badge: union of documents needing attention, by id.
+     * A document flagged unhealthy *and* with metadata issues counts once, not twice.
+     */
+    suspend fun pendingUpdatesCount(): Int {
+        val unhealthyIds = GetPendingUpdatesUseCase(pendingUpdatesRepository)()
+            .getOrDefault(emptyList())
+            .map { it.documentId }
+        val metadataIssueIds = GetMetadataIssuesUseCase(documentClassificationRepository)()
+            .getOrDefault(emptyList())
+            .map { it.documentId }
+        return (unhealthyIds + metadataIssueIds).toSet().size
+    }
 
     private suspend fun checkIntegrations() {
         val integrationLogger = AppLogger.tag(LogTags.INTEGRATION)
@@ -284,6 +294,7 @@ class AppContainer(
         restoreVersion = RestoreDocumentVersionUseCase(documentRepository),
         createDocument = CreateDocumentUseCase(documentRepository),
         updateAttributes = UpdateDocumentAttributesUseCase(documentRepository),
+        deleteDocument = DeleteDocumentUseCase(documentRepository),
         roleProvider = ::currentRole,
         dispatchers = dispatchers,
         openDocumentRequests = navigator.openDocumentRequests,

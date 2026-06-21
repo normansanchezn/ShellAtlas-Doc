@@ -104,6 +104,7 @@ class DocumentsViewModelTest {
         restoreVersion = RestoreDocumentVersionUseCase(repository),
         createDocument = CreateDocumentUseCase(repository),
         updateAttributes = UpdateDocumentAttributesUseCase(repository),
+        deleteDocument = DeleteDocumentUseCase(repository),
         roleProvider = { role },
         dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
     )

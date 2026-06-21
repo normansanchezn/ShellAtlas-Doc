@@ -2,34 +2,28 @@ package com.shelldocs.feature.documents.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.awaitEachGesture
+import androidx.compose.ui.input.pointer.awaitPointerEvent
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
-import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
+import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
-import com.shelldocs.core.designsystem.icons.IconBookmark
-import com.shelldocs.core.designsystem.icons.IconChevronDown
-import com.shelldocs.core.designsystem.icons.IconChevronRight
-import com.shelldocs.core.designsystem.icons.IconFileText
-import com.shelldocs.core.designsystem.icons.IconPlus
+import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
@@ -59,9 +53,9 @@ fun ExplorerTreePanel(
         ) {
             ShellSectionLabel(text = "Explorer", modifier = Modifier.weight(1f))
             if (state.canEdit) {
-                ShellPrimaryButton(
-                    text = "New",
+                ShellIconButton(
                     icon = IconPlus,
+                    contentDescription = "New document",
                     onClick = { onIntent(DocumentsIntent.StartCreatingDocument) },
                     modifier = Modifier.testTag(DemoTestTags.DocumentsNew),
                 )
@@ -76,8 +70,14 @@ fun ExplorerTreePanel(
             if (state.bookmarkedDocumentIds.isNotEmpty()) {
                 BookmarksSection(state = state, onIntent = onIntent)
             }
-            state.tree?.let { root ->
-                TreeNode(node = root, depth = 0, state = state, onIntent = onIntent)
+            state.filteredTree?.let { root ->
+                TreeNode(
+                    node = root,
+                    depth = 0,
+                    state = state,
+                    onIntent = onIntent,
+                    forceExpanded = state.filterQuery.isNotBlank(),
+                )
             }
         }
     }
@@ -131,62 +131,109 @@ private fun BookmarksSection(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TreeNode(
     node: DocumentNode,
     depth: Int,
     state: DocumentsState,
     onIntent: (DocumentsIntent) -> Unit,
+    forceExpanded: Boolean = false,
 ) {
     val colors = ShellTheme.colors
-    val isExpanded = node.id in state.expandedFolders
+    val isExpanded = forceExpanded || node.id in state.expandedFolders
     val isSelected = node.documentId != null && node.documentId == state.selectedDocument?.id
     val background by animateColorAsState(
         targetValue = if (isSelected) colors.surfaceSelected else colors.surface,
         animationSpec = tween(ShellMotion.durationMedium),
         label = "treeNodeBackground",
     )
+    var showContextMenu by remember(node.id) { mutableStateOf(false) }
+    val canDelete = state.canDelete && node.type == DocumentNodeType.DOCUMENT && node.documentId != null
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(ShellRadius.sm))
-            .background(background)
-            .clickable {
-                when (node.type) {
-                    DocumentNodeType.FOLDER -> onIntent(DocumentsIntent.ToggleFolder(node.id))
-                    DocumentNodeType.DOCUMENT ->
-                        node.documentId?.let { onIntent(DocumentsIntent.SelectDocument(it)) }
-                }
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(ShellRadius.sm))
+                .background(background)
+                .combinedClickable(
+                    onClick = {
+                        when (node.type) {
+                            DocumentNodeType.FOLDER -> onIntent(DocumentsIntent.ToggleFolder(node.id))
+                            DocumentNodeType.DOCUMENT ->
+                                node.documentId?.let { onIntent(DocumentsIntent.SelectDocument(it)) }
+                        }
+                    },
+                    onLongClick = { if (canDelete) showContextMenu = true },
+                )
+                .then(
+                    if (canDelete) {
+                        Modifier.pointerInput(node.id) {
+                            awaitEachGesture {
+                                val event = awaitPointerEvent()
+                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                    showContextMenu = true
+                                }
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(start = (depth * 14).dp + 6.dp, top = 5.dp, bottom = 5.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                imageVector = when {
+                    node.type == DocumentNodeType.DOCUMENT -> IconFileText
+                    isExpanded -> IconChevronDown
+                    else -> IconChevronRight
+                },
+                contentDescription = null,
+                tint = if (isSelected) colors.brand else colors.textMuted,
+                modifier = Modifier.size(12.dp),
+            )
+            Text(
+                text = node.title,
+                style = ShellTheme.typography.label,
+                color = when {
+                    isSelected -> colors.brand
+                    node.type == DocumentNodeType.FOLDER -> colors.textPrimary
+                    else -> colors.textSecondary
+                },
+                maxLines = 1,
+            )
+        }
+
+        if (canDelete) {
+            DropdownMenu(expanded = showContextMenu, onDismissRequest = { showContextMenu = false }) {
+                DropdownMenuItem(
+                    text = { Text("Delete", color = ShellTheme.colors.danger) },
+                    leadingIcon = {
+                        Icon(imageVector = IconTrash, contentDescription = null, tint = ShellTheme.colors.danger)
+                    },
+                    onClick = {
+                        showContextMenu = false
+                        node.documentId?.let {
+                            onIntent(DocumentsIntent.RequestDeleteDocument(it, node.title))
+                        }
+                    },
+                )
             }
-            .padding(start = (depth * 14).dp + 6.dp, top = 5.dp, bottom = 5.dp, end = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Icon(
-            imageVector = when {
-                node.type == DocumentNodeType.DOCUMENT -> IconFileText
-                isExpanded -> IconChevronDown
-                else -> IconChevronRight
-            },
-            contentDescription = null,
-            tint = if (isSelected) colors.brand else colors.textMuted,
-            modifier = Modifier.size(12.dp),
-        )
-        Text(
-            text = node.title,
-            style = ShellTheme.typography.label,
-            color = when {
-                isSelected -> colors.brand
-                node.type == DocumentNodeType.FOLDER -> colors.textPrimary
-                else -> colors.textSecondary
-            },
-            maxLines = 1,
-        )
+        }
     }
+
     if (node.type == DocumentNodeType.FOLDER && isExpanded) {
         node.children.forEach { child ->
-            TreeNode(node = child, depth = depth + 1, state = state, onIntent = onIntent)
+            TreeNode(
+                node = child,
+                depth = depth + 1,
+                state = state,
+                onIntent = onIntent,
+                forceExpanded = forceExpanded,
+            )
         }
     }
 }

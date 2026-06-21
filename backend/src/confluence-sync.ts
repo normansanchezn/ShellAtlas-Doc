@@ -696,6 +696,24 @@ export async function pushDocumentToConfluence(
     };
 }
 
+/**
+ * Moves a Confluence page to trash (soft delete — recoverable from the
+ * Confluence trash for a limited time, mirroring our own `deleted_at` flag).
+ * No-ops if the page is already gone (404), since the end state we want is
+ * already true.
+ */
+export async function deletePageFromConfluence(config: ConfluenceConfig, pageId: string): Promise<void> {
+    const url = `${config.baseUrl}/wiki/api/v2/pages/${pageId}`;
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: {Authorization: config.authHeader, Accept: "application/json"},
+    });
+    if (!response.ok && response.status !== 404) {
+        const text = await response.text().catch(() => "");
+        throw new Error(`Confluence API ${response.status}: ${text.slice(0, 300)}`);
+    }
+}
+
 async function logSyncRun(db: SupabaseClient, result: SyncResult): Promise<void> {
     await db.from("sync_runs").insert({
         source_type: "confluence",

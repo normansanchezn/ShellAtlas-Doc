@@ -29,6 +29,7 @@ class DocumentsViewModel(
     private val restoreVersion: RestoreDocumentVersionUseCase,
     private val createDocument: CreateDocumentUseCase,
     private val updateAttributes: UpdateDocumentAttributesUseCase,
+    private val deleteDocument: DeleteDocumentUseCase,
     private val roleProvider: () -> UserRole,
     dispatchers: DispatcherProvider,
     openDocumentRequests: StateFlow<String?> = MutableStateFlow(null),
@@ -121,6 +122,18 @@ class DocumentsViewModel(
             is DocumentsIntent.ToggleBookmark -> toggleBookmark(intent.documentId)
             DocumentsIntent.ExportPdf -> exportPdf()
             is DocumentsIntent.BreadcrumbNavigate -> breadcrumbNavigate(intent.folderId)
+            is DocumentsIntent.RequestDeleteDocument ->
+                setState {
+                    copy(
+                        pendingDeleteDocumentId = intent.documentId,
+                        pendingDeleteDocumentTitle = intent.documentTitle,
+                    )
+                }
+
+            DocumentsIntent.CancelDeleteDocument ->
+                setState { copy(pendingDeleteDocumentId = null, pendingDeleteDocumentTitle = "") }
+
+            DocumentsIntent.ConfirmDeleteDocument -> confirmDeleteDocument()
         }
     }
 
@@ -564,6 +577,43 @@ class DocumentsViewModel(
         }
         collect(this)
         return ids
+    }
+
+    private suspend fun confirmDeleteDocument() {
+        val documentId = currentState.pendingDeleteDocumentId ?: return
+        setState { copy(isDeletingDocument = true, errorDialog = null) }
+        withContext(dispatchers.io) {
+            deleteDocument(currentState.role, documentId)
+        }
+            .onSuccess {
+                val documents = withContext(dispatchers.io) {
+                    getDocuments().getOrDefault(currentState.documents)
+                }
+                val tree = withContext(dispatchers.default) {
+                    getDocumentTree().getOrDefault(currentState.tree)
+                }
+                setState {
+                    copy(
+                        documents = documents,
+                        tree = tree,
+                        selectedDocument = selectedDocument?.takeIf { it.id != documentId },
+                        isEditing = if (selectedDocument?.id == documentId) false else isEditing,
+                        isDeletingDocument = false,
+                        pendingDeleteDocumentId = null,
+                        pendingDeleteDocumentTitle = "",
+                        bookmarkedDocumentIds = bookmarkedDocumentIds - documentId,
+                    )
+                }
+                sendEffect(DocumentsEffect.ShowNotice("Document deleted"))
+            }
+            .onFailure { error ->
+                setState {
+                    copy(
+                        isDeletingDocument = false,
+                        errorDialog = error.toErrorDialogState("delete this document"),
+                    )
+                }
+            }
     }
 
     private suspend fun refreshAfterMutation(selectedId: String) {
