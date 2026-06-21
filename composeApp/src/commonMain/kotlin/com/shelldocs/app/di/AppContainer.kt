@@ -9,6 +9,7 @@ import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.id.RandomIdGenerator
 import com.shelldocs.core.common.logging.AppLogger
 import com.shelldocs.core.common.logging.LogTags
+import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.time.SystemTimeProvider
 import com.shelldocs.core.data.assistant.CompositeAssistantEngine
 import com.shelldocs.core.data.assistant.GroundedAssistantEngine
@@ -52,6 +53,7 @@ import com.shelldocs.feature.sources.presentation.SourcesViewModel
 import com.shelldocs.feature.updates.presentation.AiUpdateViewModel
 import com.shelldocs.feature.updates.presentation.UpdatesViewModel
 import io.ktor.client.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
@@ -81,6 +83,14 @@ class AppContainer(
         HttpClient {
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true; isLenient = true })
+            }
+            // Local LLM generation on a big prompt can take minutes on CPU-only
+            // Ollama; the per-engine defaults (10s on OkHttp/Darwin) cut that off
+            // far too early, so override them platform-wide.
+            install(HttpTimeout) {
+                requestTimeoutMillis = 5 * 60 * 1000
+                connectTimeoutMillis = 30 * 1000
+                socketTimeoutMillis = 5 * 60 * 1000
             }
         }
     }
@@ -225,6 +235,10 @@ class AppContainer(
         }
         client.isReachable()
     }
+
+    /** Count for the sidebar/rail badge: documents flagged by the health audit as needing review. */
+    suspend fun pendingUpdatesCount(): Int =
+        GetPendingUpdatesUseCase(pendingUpdatesRepository)().getOrDefault(emptyList()).size
 
     private suspend fun checkIntegrations() {
         val integrationLogger = AppLogger.tag(LogTags.INTEGRATION)

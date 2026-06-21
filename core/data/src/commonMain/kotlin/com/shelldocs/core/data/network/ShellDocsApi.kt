@@ -4,10 +4,10 @@ import com.shelldocs.core.common.logging.AppLogger
 import com.shelldocs.core.common.logging.LogTags
 import com.shelldocs.core.data.network.dto.*
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.serialization.json.Json
 
 /**
  * Client for the ShellDocs documents backend, preserving the original
@@ -21,53 +21,54 @@ class ShellDocsApi(
 
     suspend fun documents(): List<DocumentDto> {
         logger.d("READ v1/documents")
-        return get("v1/documents").body()
+        return get("v1/documents").parse<DocumentListResponseDto>().documents
+            .also { logger.d("READ v1/documents -> ${it.size} document(s)") }
     }
 
     suspend fun document(id: String): DocumentDto {
         logger.d("READ v1/documents/$id")
-        return get("v1/documents/$id").body()
+        return get("v1/documents/$id").parse()
     }
 
     suspend fun search(query: String): List<DocumentDto> {
         logger.d("READ v1/search?q=$query")
-        return get("v1/search?q=${query.encodeURLParameter()}").body()
+        return get("v1/search?q=${query.encodeURLParameter()}").parse<DocumentListResponseDto>().documents
     }
 
     suspend fun create(request: CreateDocumentRequestDto): DocumentDto {
         logger.i("CREATE v1/documents")
-        return post("v1/documents", request).body<DocumentDto>()
+        return post("v1/documents", request).parse<DocumentDto>()
             .also { logger.i("CREATE v1/documents succeeded id=${it.id}") }
     }
 
     suspend fun publish(id: String, request: PublishDocumentRequestDto): DocumentDto {
         logger.i("UPDATE v1/documents/$id/publish")
-        return post("v1/documents/$id/publish", request).body()
+        return post("v1/documents/$id/publish", request).parse()
     }
 
     suspend fun saveDraft(id: String, request: SaveDraftRequestDto): DraftReceiptDto {
         logger.i("UPDATE v1/documents/$id/draft")
-        return post("v1/documents/$id/draft", request).body()
+        return post("v1/documents/$id/draft", request).parse()
     }
 
     suspend fun versions(id: String): List<DocumentVersionDto> {
         logger.d("READ v1/documents/$id/versions")
-        return get("v1/documents/$id/versions").body()
+        return get("v1/documents/$id/versions").parse()
     }
 
     suspend fun restore(id: String, versionId: String): DocumentDto {
         logger.i("UPDATE v1/documents/$id/restore/$versionId")
-        return postWithoutBody("v1/documents/$id/restore/$versionId").body()
+        return postWithoutBody("v1/documents/$id/restore/$versionId").parse()
     }
 
     suspend fun updateAttributes(id: String, request: DocumentAttributesDto): DocumentDto {
         logger.i("UPDATE v1/documents/$id/attributes")
-        return post("v1/documents/$id/attributes", request).body()
+        return post("v1/documents/$id/attributes", request).parse()
     }
 
     suspend fun connectionsStatus(): ConnectionsStatusDto {
         logger.d("READ v1/connections/status")
-        return get("v1/connections/status").body()
+        return get("v1/connections/status").parse()
     }
 
     suspend fun delete(id: String) {
@@ -77,6 +78,20 @@ class ShellDocsApi(
             .onSuccess { logger.i("DELETE v1/documents/$id succeeded") }
             .onFailure { error -> logger.e("DELETE v1/documents/$id failed: ${error.message}", error) }
             .getOrThrow()
+    }
+
+    private suspend inline fun <reified T> HttpResponse.parse(): T {
+        val raw = bodyAsText()
+        return try {
+            PARSE_JSON.decodeFromString(raw)
+        } catch (error: Exception) {
+            logger.e(
+                "Failed to parse response from ${request.url} (${error.message}). " +
+                        "Raw body (first 800 chars): ${raw.take(800)}",
+                error,
+            )
+            throw error
+        }
     }
 
     private suspend fun get(path: String): HttpResponse =
@@ -108,5 +123,9 @@ class ShellDocsApi(
         if (status == HttpStatusCode.NotFound) throw ShellDocsApiException.NotFound
         if (status == HttpStatusCode.Unauthorized) throw ShellDocsApiException.Unauthorized
         throw ShellDocsApiException.Http(status.value)
+    }
+
+    private companion object {
+        val PARSE_JSON = Json { ignoreUnknownKeys = true; isLenient = true }
     }
 }

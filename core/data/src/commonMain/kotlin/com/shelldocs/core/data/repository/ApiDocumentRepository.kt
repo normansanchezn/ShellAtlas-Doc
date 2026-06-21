@@ -80,6 +80,8 @@ class ApiDocumentRepository(private val api: ShellDocsApi) : DocumentRepository 
                     platform = attributes.platform,
                     parentFolderId = attributes.parentFolderId,
                     tags = attributes.tags,
+                    area = attributes.area?.name ?: "",
+                    applicationVersion = attributes.applicationVersion,
                 ),
             ),
         )

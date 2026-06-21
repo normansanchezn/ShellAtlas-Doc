@@ -42,6 +42,9 @@ const ATTRIBUTE_KEYS = [
     "parent_folder_id",
     "platform",
     "domain",
+    "area",
+    "application_version",
+    "confluence_page_id",
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -95,6 +98,9 @@ interface AttributesMap {
     parent_folder_id?: string;
     platform?: string;
     domain?: string;
+    area?: string;
+    application_version?: string;
+    confluence_page_id?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +168,8 @@ function buildDocumentResponse(
             parent_folder_id: attrs.parent_folder_id ?? "",
             platform: attrs.platform ?? "",
             domain: attrs.domain ?? "",
+            area: attrs.area ?? "",
+            application_version: attrs.application_version ?? "",
         },
         created_at: doc.created_at,
         updated_at: doc.updated_at,
@@ -612,6 +620,31 @@ app.post("/v1/documents/:id/draft", async (c) => {
     }
 
     return c.json({document_id: id, draft_saved: true});
+});
+
+// ---------------------------------------------------------------------------
+// POST /v1/documents/:id/attributes
+// ---------------------------------------------------------------------------
+
+app.post("/v1/documents/:id/attributes", async (c) => {
+    const id = c.req.param("id");
+
+    const {data: doc, error: docErr} = await db
+        .from("documents")
+        .select("id")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single<{ id: string }>();
+
+    if (docErr || !doc) {
+        return c.json({error: "Document not found"}, 404);
+    }
+
+    const body = await c.req.json<Partial<AttributesMap>>();
+    await upsertAttributes(id, body);
+
+    const [result] = await fetchDocuments([id]);
+    return c.json(result);
 });
 
 // ---------------------------------------------------------------------------

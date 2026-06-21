@@ -1,11 +1,7 @@
 package com.shelldocs.core.data.mapper
 
 import com.shelldocs.core.data.network.dto.DocumentDto
-import com.shelldocs.core.domain.entity.document.Document
-import com.shelldocs.core.domain.entity.document.DocumentAttributes
-import com.shelldocs.core.domain.entity.document.DocumentClassification
-import com.shelldocs.core.domain.entity.document.DocumentContent
-import com.shelldocs.core.domain.entity.document.DocumentStatus
+import com.shelldocs.core.domain.entity.document.*
 import kotlin.time.ExperimentalTime
 
 object DocumentDtoMapper {
@@ -30,6 +26,8 @@ object DocumentDtoMapper {
             platform = dto.attributes.platform,
             parentFolderId = dto.attributes.parentFolderId,
             tags = dto.attributes.tags,
+            area = Area.fromKey(dto.attributes.area),
+            applicationVersion = dto.attributes.applicationVersion,
         ),
         createdAt = parseInstant(dto.createdAt),
         updatedAt = parseInstant(dto.updatedAt),

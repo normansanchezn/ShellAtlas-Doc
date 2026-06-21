@@ -5,6 +5,7 @@ import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.auth.Permission
 import com.shelldocs.core.domain.entity.auth.RolePermissions
 import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.entity.document.Document
 import com.shelldocs.core.domain.entity.document.DocumentNode
 import com.shelldocs.core.domain.entity.document.DocumentVersion
@@ -16,6 +17,8 @@ data class AttributesDraft(
     val team: String = "",
     val platform: String = "",
     val tagsText: String = "",
+    val area: Area? = null,
+    val applicationVersion: String = "",
 )
 
 enum class DocumentsEditorStep {

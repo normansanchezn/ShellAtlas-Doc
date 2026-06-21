@@ -379,7 +379,7 @@ async function createDocument(
     const attributes = [
         {document_id: doc.id, key: "module", value: ancestors[ancestors.length - 1] ?? space.name, source: "confluence"},
         {document_id: doc.id, key: "domain", value: space.name, source: "confluence"},
-        {document_id: doc.id, key: "platform", value: "confluence", source: "confluence"},
+        {document_id: doc.id, key: "platform", value: "Confluence", source: "confluence"},
         {document_id: doc.id, key: "summary", value: parsed.plainText.slice(0, 300), source: "confluence"},
     ];
     await db.from("document_attributes").upsert(attributes, {onConflict: "document_id,key"});

@@ -8,7 +8,10 @@ enum class Area(val displayName: String) {
     DESIGN("Design"),
     MANAGEMENT("Management"),
     ARCHITECTURE("Architecture"),
-    PI("PI");
+    PI("PI"),
+    QA("QA"),
+    OWNERS("Owners"),
+    PRODUCT("Producto");
 
     companion object {
         fun fromKey(key: String?): Area? =

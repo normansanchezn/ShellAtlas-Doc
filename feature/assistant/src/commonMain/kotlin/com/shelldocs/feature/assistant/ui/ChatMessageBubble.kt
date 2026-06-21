@@ -2,26 +2,22 @@ package com.shelldocs.feature.assistant.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
-import com.shelldocs.core.designsystem.icons.IconAlertTriangle
-import com.shelldocs.core.designsystem.icons.IconLanguage
-import com.shelldocs.core.designsystem.icons.IconSparkles
+import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -29,6 +25,8 @@ import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
 import com.shelldocs.core.domain.entity.assistant.AnswerSource
 import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.MessageRole
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * One chat turn. User questions render as yellow chips on the right;
@@ -100,6 +98,7 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
     val colors = ShellTheme.colors
     Column(modifier = modifier.fillMaxWidth().widthIn(max = 640.dp)) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
         ) {
@@ -120,6 +119,8 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
                     )
                 }
             }
+            Box(modifier = Modifier.weight(1f))
+            CopyMessageButton(text = message.markdown)
         }
         Column(
             modifier = Modifier
@@ -177,6 +178,35 @@ private fun UnavailableBubble(message: AssistantMessage, modifier: Modifier) {
         )
         Text(text = message.markdown, style = ShellTheme.typography.body, color = colors.textPrimary)
     }
+}
+
+/** Subtle copy-to-clipboard affordance: ghost icon that briefly flips to a checkmark on click. */
+@Composable
+private fun CopyMessageButton(text: String) {
+    val colors = ShellTheme.colors
+    val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    var justCopied by remember { mutableStateOf(false) }
+
+    Icon(
+        imageVector = if (justCopied) IconCheckCircle else IconCopy,
+        contentDescription = "Copy message",
+        tint = if (justCopied) colors.success else colors.textMuted,
+        modifier = Modifier
+            .size(14.dp)
+            .clip(CircleShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                clipboard.setText(AnnotatedString(text))
+                justCopied = true
+                scope.launch {
+                    delay(1200)
+                    justCopied = false
+                }
+            },
+    )
 }
 
 @Composable

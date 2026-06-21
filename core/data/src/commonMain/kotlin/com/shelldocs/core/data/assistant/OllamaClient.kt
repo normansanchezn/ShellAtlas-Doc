@@ -20,7 +20,14 @@ class OllamaClient(
         val response = try {
             httpClient.post("${config.baseUrl.trimEnd('/')}/api/generate") {
                 contentType(ContentType.Application.Json)
-                setBody(OllamaGenerateRequestDto(model = config.model, prompt = prompt, stream = false))
+                setBody(
+                    OllamaGenerateRequestDto(
+                        model = config.model,
+                        prompt = prompt,
+                        stream = false,
+                        options = OllamaOptionsDto(numCtx = config.contextWindow),
+                    ),
+                )
             }
         } catch (error: Exception) {
             logger.e("generate() failed to reach Ollama at ${config.baseUrl}: ${error.message}", error)

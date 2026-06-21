@@ -11,4 +11,6 @@ data class DocumentAttributesDto(
     val platform: String = "",
     @SerialName("parent_folder_id") val parentFolderId: String? = null,
     val tags: List<String> = emptyList(),
+    val area: String = "",
+    @SerialName("application_version") val applicationVersion: String = "",
 )

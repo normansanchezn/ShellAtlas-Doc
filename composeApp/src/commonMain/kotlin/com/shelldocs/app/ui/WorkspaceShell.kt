@@ -43,6 +43,9 @@ fun WorkspaceShell(
     // multi-column layout on its own (rail takes 72dp off the width).
     val isRailContentWide = isRail && (availableWidthDp - 72) >= CONTENT_WIDE_MIN_WIDTH_DP
     var searchQuery by remember { mutableStateOf("") }
+    val pendingUpdatesCount by produceState(initialValue = 0, container, route) {
+        value = container.pendingUpdatesCount()
+    }
 
     when {
         isWide -> {
@@ -51,7 +54,7 @@ fun WorkspaceShell(
                 Row(modifier = Modifier.fillMaxSize()) {
                     WorkspaceSidebar(
                         activeRoute = route,
-                        pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                        pendingUpdatesCount = pendingUpdatesCount,
                         user = session?.user,
                         isDarkTheme = isDarkTheme,
                         searchQuery = searchQuery,
@@ -83,7 +86,7 @@ fun WorkspaceShell(
                 Row(modifier = Modifier.fillMaxSize()) {
                     WorkspaceRail(
                         activeRoute = route,
-                        pendingUpdatesCount = PENDING_BADGE_PLACEHOLDER,
+                        pendingUpdatesCount = pendingUpdatesCount,
                         isDarkTheme = isDarkTheme,
                         onNavigate = container.navigator::navigate,
                         onToggleTheme = onToggleTheme,
@@ -219,4 +222,3 @@ const val RAIL_LAYOUT_MIN_WIDTH_DP = 600
 /** Minimum content width (next to the rail) for screens to use multi-column layouts. */
 private const val CONTENT_WIDE_MIN_WIDTH_DP = 700
 
-private const val PENDING_BADGE_PLACEHOLDER = 12
