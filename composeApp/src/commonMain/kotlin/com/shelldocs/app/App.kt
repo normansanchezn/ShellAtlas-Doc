@@ -90,6 +90,7 @@ fun App(
                     SignInScreen(
                         viewModel = authViewModel,
                         isDemoMode = config.isDemoMode,
+                        isDarkTheme = isDarkTheme,
                         isMobile = isMobile,
                         onSignedIn = { /* session flow drives the switch */ },
                     )

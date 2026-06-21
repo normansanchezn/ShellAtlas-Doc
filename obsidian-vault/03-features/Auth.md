@@ -6,7 +6,7 @@ platform: "Android/iOS/Desktop/Web"
 area: "ShellAtlas"
 owner: "Product Engineering"
 created: 2026-06-11
-updated: 2026-06-16
+updated: 2026-06-20
 tags:
   - shellatlas
   - auth
@@ -36,7 +36,12 @@ Authentication and role management entry flow for ShellAtlas.
 - The password field now includes a show/hide control, and sign-in errors explain when the local Supabase stack is unavailable.
 - Supabase client auth now ignores `sb_secret_*` keys so a backend service-role secret cannot accidentally disable demo mode in local development.
 - Test auth sessions now use future expiry dates so auth fixtures do not look stale during debugging.
+- The sign-in experience is now theme-aware end to end: the persisted light preference no longer renders against the
+  dark network background.
+- Dark mode keeps the animated node graph, while light mode now uses a separate warm editorial background with soft
+  glows and contour bands.
 
 ## Mermaid Diagram
 
 - `obsidian-vault/08-diagrams/Auth Runtime Selection Flow.md`
+- `obsidian-vault/08-diagrams/Auth Theme Background Flow.md`

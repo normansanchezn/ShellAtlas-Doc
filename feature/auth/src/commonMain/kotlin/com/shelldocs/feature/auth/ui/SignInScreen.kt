@@ -1,21 +1,7 @@
 package com.shelldocs.feature.auth.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -30,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,7 +27,6 @@ import com.shelldocs.core.designsystem.atoms.ShellTextField
 import com.shelldocs.core.designsystem.icons.IconShellPecten
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
-import com.shelldocs.core.designsystem.theme.ShellDocsTheme
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -64,6 +48,7 @@ import com.shelldocs.feature.auth.presentation.AuthViewModel
 fun SignInScreen(
     viewModel: AuthViewModel,
     isDemoMode: Boolean,
+    isDarkTheme: Boolean,
     onSignedIn: () -> Unit,
     isMobile: Boolean,
     modifier: Modifier = Modifier,
@@ -83,18 +68,14 @@ fun SignInScreen(
             .fillMaxSize()
             .testTag(DemoTestTags.SignInRoot),
     ) {
-        // Background fills the entire screen — behind notch, Dynamic Island,
-        // and home indicator — so no bare window colour is ever visible.
-        ShellLoginBackground()
+        ShellLoginBackground(isDarkTheme = isDarkTheme)
 
         if (isMobile) {
-            ShellDocsTheme(darkTheme = true) {
-                MobileSignInContent(
-                    state = state,
-                    viewModel = viewModel,
-                    isDemoMode = isDemoMode,
-                )
-            }
+            MobileSignInContent(
+                state = state,
+                viewModel = viewModel,
+                isDemoMode = isDemoMode,
+            )
         } else {
             DesktopSignInContent(
                 state = state,
@@ -126,6 +107,8 @@ private fun MobileSignInContent(
 ) {
     val colors = ShellTheme.colors
     val typography = ShellTheme.typography
+    val bodyColor = colors.textPrimary
+    val supportingColor = colors.textMuted
 
     Column(
         modifier = Modifier
@@ -159,13 +142,13 @@ private fun MobileSignInContent(
         Text(
             "ShellAtlas",
             style = typography.displayTitle,
-            color = Color.White,
+            color = bodyColor,
         )
         Spacer(Modifier.height(ShellSpacing.xs))
         Text(
             "Knowledge Platform",
             style = typography.body,
-            color = Color.White.copy(alpha = 0.55f),
+            color = supportingColor,
         )
 
         if (isDemoMode) {
@@ -173,7 +156,7 @@ private fun MobileSignInContent(
             Text(
                 "Demo mode: any corporate email and an 8+ character password will sign in.",
                 style = typography.caption,
-                color = Color.White.copy(alpha = 0.45f),
+                color = supportingColor,
             )
         }
 
