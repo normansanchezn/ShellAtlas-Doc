@@ -10,4 +10,5 @@ data class ProfileRowDto(
     @SerialName("full_name") val fullName: String = "",
     val team: String = "",
     val email: String = "",
+    val language: String = "en",
 )

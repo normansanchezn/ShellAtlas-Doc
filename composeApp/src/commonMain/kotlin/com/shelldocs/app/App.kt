@@ -1,9 +1,11 @@
 package com.shelldocs.app
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.pointerInput
@@ -14,8 +16,13 @@ import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.ui.RAIL_LAYOUT_MIN_WIDTH_DP
 import com.shelldocs.app.ui.WorkspaceShell
 import com.shelldocs.core.common.testing.DemoTestTags
+import com.shelldocs.core.designsystem.i18n.LocalAppStrings
+import com.shelldocs.core.designsystem.i18n.stringsFor
+import com.shelldocs.core.designsystem.molecules.ShellLottieLoader
 import com.shelldocs.core.designsystem.theme.ShellDocsTheme
+import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellTypography
+import com.shelldocs.core.domain.entity.auth.AppLanguage
 import com.shelldocs.feature.auth.ui.SignInScreen
 
 /**
@@ -35,7 +42,11 @@ fun App(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val container = remember(config) { AppContainer(config, sessionPrefs) }
-        LaunchedEffect(container) { container.runStartupDiagnostics() }
+        var isAppLaunching by remember { mutableStateOf(true) }
+        LaunchedEffect(container) {
+            container.runStartupDiagnostics()
+            isAppLaunching = false
+        }
         val systemDark = isSystemInDarkTheme()
         val focusManager = LocalFocusManager.current
         val widthDp = maxWidth.value.toInt()
@@ -55,6 +66,8 @@ fun App(
 
         ShellDocsTheme(darkTheme = isDarkTheme, typography = baseTypography, textScale = textScale) {
             val session by container.authRepository.session.collectAsState()
+            val strings = stringsFor(session?.user?.language ?: AppLanguage.ENGLISH)
+            CompositionLocalProvider(LocalAppStrings provides strings) {
             // BoxWithConstraints intentionally has NO windowInsetsPadding here.
             // The login screen background bleeds edge-to-edge (behind Dynamic Island
             // and home indicator). WorkspaceShell owns its own inset padding.
@@ -85,7 +98,14 @@ fun App(
                         }
                     },
             ) {
-                if (session == null) {
+                if (isAppLaunching) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(ShellTheme.colors.background),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ShellLottieLoader()
+                    }
+                } else if (session == null) {
                     val authViewModel = remember(container) { container.authViewModel() }
                     DisposableEffect(authViewModel) { onDispose(authViewModel::clear) }
                     SignInScreen(
@@ -114,6 +134,7 @@ fun App(
                         )
                     }
                 }
+            }
             }
         }
     }

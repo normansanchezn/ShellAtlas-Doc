@@ -2,8 +2,10 @@ package com.shelldocs.core.data.demo
 
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.time.TimeProvider
+import com.shelldocs.core.domain.entity.auth.AppLanguage
 import com.shelldocs.core.domain.entity.auth.AuthSession
 import com.shelldocs.core.domain.entity.auth.SignInCredentials
+import com.shelldocs.core.domain.entity.auth.UserProfile
 import com.shelldocs.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +45,15 @@ class DemoAuthRepository(
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
+
+    override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> {
+        val current = mutableSession.value ?: return DomainResult.failure(
+            com.shelldocs.core.common.error.AppError.Unauthorized(),
+        )
+        val updatedUser = current.user.copy(language = language)
+        mutableSession.value = current.copy(user = updatedUser)
+        return DomainResult.success(updatedUser)
+    }
 
     companion object {
         @OptIn(ExperimentalTime::class)

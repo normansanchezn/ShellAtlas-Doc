@@ -15,6 +15,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
+import com.shelldocs.core.designsystem.i18n.AppStrings
+import com.shelldocs.core.designsystem.i18n.LocalAppStrings
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
@@ -22,11 +24,18 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
-import com.shelldocs.feature.settings.SettingsStringRes
 import com.shelldocs.feature.settings.presentation.SettingsEffect
 import com.shelldocs.feature.settings.presentation.SettingsIntent
 import com.shelldocs.feature.settings.presentation.SettingsSection
 import com.shelldocs.feature.settings.presentation.SettingsViewModel
+
+private fun SettingsSection.label(strings: AppStrings): String = when (this) {
+    SettingsSection.GENERAL -> strings.settingsSectionGeneral
+    SettingsSection.AI_ASSISTANT -> strings.settingsSectionAiAssistant
+    SettingsSection.TEAM_AND_ACCESS -> strings.settingsSectionTeamAccess
+    SettingsSection.NOTIFICATIONS -> strings.settingsSectionNotifications
+    SettingsSection.INTEGRATIONS -> strings.settingsSectionIntegrations
+}
 
 /** Settings: section rail + the selected section's panel. */
 @Composable
@@ -40,6 +49,7 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = ShellTheme.colors
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(viewModel) {
         viewModel.onIntent(SettingsIntent.Initialize)
@@ -53,14 +63,15 @@ fun SettingsScreen(
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             ShellScreenToolbar(
-                title = SettingsStringRes.TITLE,
-                subtitle = SettingsStringRes.SUBTITLE,
+                title = strings.settingsTitle,
+                subtitle = strings.settingsSubtitle,
                 modifier = Modifier.padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
             )
             Row(modifier = Modifier.weight(1f)) {
                 if (isWide) {
                     SectionRail(
                         selected = state.selectedSection,
+                        strings = strings,
                         onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
                         modifier = Modifier.width(180.dp).fillMaxHeight().padding(horizontal = ShellSpacing.lg),
                     )
@@ -76,6 +87,7 @@ fun SettingsScreen(
                     if (!isWide) {
                         SectionChipsRow(
                             selected = state.selectedSection,
+                            strings = strings,
                             onSelect = { viewModel.onIntent(SettingsIntent.SelectSection(it)) },
                         )
                     }
@@ -84,6 +96,9 @@ fun SettingsScreen(
                             isDarkTheme = isDarkTheme,
                             onToggleTheme = onToggleTheme,
                             onSignOut = { viewModel.onIntent(SettingsIntent.SignOut) },
+                            language = state.language,
+                            onLanguageChange = { viewModel.onIntent(SettingsIntent.SetLanguage(it)) },
+                            strings = strings,
                         )
                         SettingsSection.AI_ASSISTANT -> AiAssistantSection()
                         SettingsSection.TEAM_AND_ACCESS -> TeamAccessSection(
@@ -116,6 +131,7 @@ fun SettingsScreen(
 @Composable
 private fun SectionRail(
     selected: SettingsSection,
+    strings: AppStrings,
     onSelect: (SettingsSection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -133,12 +149,13 @@ private fun SectionRail(
                 animationSpec = tween(ShellMotion.durationMedium),
                 label = "settingsRailContent",
             )
+            val label = section.label(strings)
             Text(
-                text = section.displayName,
+                text = label,
                 style = ShellTheme.typography.label,
                 color = contentColor,
                 modifier = Modifier
-                    .testTag(DemoTestTags.settingsSection(section.displayName))
+                    .testTag(DemoTestTags.settingsSection(label))
                     .fillMaxWidth()
                     .heightIn(min = 32.dp)
                     .clip(RoundedCornerShape(ShellRadius.sm))
@@ -153,6 +170,7 @@ private fun SectionRail(
 @Composable
 private fun SectionChipsRow(
     selected: SettingsSection,
+    strings: AppStrings,
     onSelect: (SettingsSection) -> Unit,
 ) {
     val colors = ShellTheme.colors
@@ -174,13 +192,14 @@ private fun SectionChipsRow(
                 animationSpec = tween(ShellMotion.durationMedium),
                 label = "settingsChipContent",
             )
+            val label = section.label(strings)
             Text(
-                text = section.displayName,
+                text = label,
                 style = ShellTheme.typography.caption,
                 color = contentColor,
                 maxLines = 1,
                 modifier = Modifier
-                    .testTag(DemoTestTags.settingsSection(section.displayName))
+                    .testTag(DemoTestTags.settingsSection(label))
                     .clip(RoundedCornerShape(ShellRadius.full))
                     .background(background)
                     .clickable { onSelect(section) }

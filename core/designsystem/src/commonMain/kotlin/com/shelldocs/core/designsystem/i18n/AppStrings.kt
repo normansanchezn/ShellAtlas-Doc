@@ -1,0 +1,138 @@
+package com.shelldocs.core.designsystem.i18n
+
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.shelldocs.core.domain.entity.auth.AppLanguage
+
+/**
+ * Pilot of the app's i18n system (Login + Settings). Translations are plain
+ * Kotlin objects rather than Compose-resources `strings.xml` because CMP 1.9's
+ * resource-locale override (`LocalComposeEnvironment`) is `internal` — there is
+ * no public API yet to switch language independently of the OS locale. This
+ * keeps runtime language switching simple and dependency-free; it can be
+ * swapped for `stringResource()` later if JetBrains exposes that API.
+ */
+data class AppStrings(
+    val languageEnglish: String,
+    val languageSpanish: String,
+    val languageFrench: String,
+
+    val loginSubtitle: String,
+    val loginEmailPlaceholder: String,
+    val loginPasswordPlaceholder: String,
+    val loginSignInLoading: String,
+    val loginSignIn: String,
+
+    val settingsTitle: String,
+    val settingsSubtitle: String,
+    val settingsSectionGeneral: String,
+    val settingsSectionAiAssistant: String,
+    val settingsSectionTeamAccess: String,
+    val settingsSectionNotifications: String,
+    val settingsSectionIntegrations: String,
+    val settingsGeneralTitle: String,
+    val settingsDarkMode: String,
+    val settingsDarkModeDescription: String,
+    val settingsLanguage: String,
+    val settingsLanguageDescription: String,
+    val settingsSignOut: String,
+    val settingsLoadingSettings: String,
+    val settingsUpdatingTeamAccess: String,
+    val settingsSavingSettings: String,
+    val settingsChangesSaved: String,
+    val settingsSigningOut: String,
+)
+
+private val English = AppStrings(
+    languageEnglish = "English",
+    languageSpanish = "Spanish",
+    languageFrench = "French",
+    loginSubtitle = "Keeping Project Knowledge Organized, Accessible and Up To Date",
+    loginEmailPlaceholder = "Work email",
+    loginPasswordPlaceholder = "Password",
+    loginSignInLoading = "Signing in...",
+    loginSignIn = "Sign in",
+    settingsTitle = "Settings",
+    settingsSubtitle = "Platform configuration and preferences",
+    settingsSectionGeneral = "General",
+    settingsSectionAiAssistant = "AI Assistant",
+    settingsSectionTeamAccess = "Team & Access",
+    settingsSectionNotifications = "Notifications",
+    settingsSectionIntegrations = "Integrations",
+    settingsGeneralTitle = "General",
+    settingsDarkMode = "Dark mode",
+    settingsDarkModeDescription = "Switch between the light and dark Figma palettes",
+    settingsLanguage = "Language",
+    settingsLanguageDescription = "Choose the language used across the app",
+    settingsSignOut = "Sign out",
+    settingsLoadingSettings = "Loading settings...",
+    settingsUpdatingTeamAccess = "Updating team access...",
+    settingsSavingSettings = "Saving settings...",
+    settingsChangesSaved = "Changes saved",
+    settingsSigningOut = "Signing out...",
+)
+
+private val Spanish = AppStrings(
+    languageEnglish = "Inglés",
+    languageSpanish = "Español",
+    languageFrench = "Francés",
+    loginSubtitle = "Manteniendo el conocimiento del proyecto organizado, accesible y al día",
+    loginEmailPlaceholder = "Correo laboral",
+    loginPasswordPlaceholder = "Contraseña",
+    loginSignInLoading = "Iniciando sesión...",
+    loginSignIn = "Iniciar sesión",
+    settingsTitle = "Configuración",
+    settingsSubtitle = "Configuración de la plataforma y preferencias",
+    settingsSectionGeneral = "General",
+    settingsSectionAiAssistant = "Asistente IA",
+    settingsSectionTeamAccess = "Equipo y accesos",
+    settingsSectionNotifications = "Notificaciones",
+    settingsSectionIntegrations = "Integraciones",
+    settingsGeneralTitle = "General",
+    settingsDarkMode = "Modo oscuro",
+    settingsDarkModeDescription = "Alterna entre las paletas claras y oscuras de Figma",
+    settingsLanguage = "Idioma",
+    settingsLanguageDescription = "Elige el idioma usado en toda la app",
+    settingsSignOut = "Cerrar sesión",
+    settingsLoadingSettings = "Cargando configuración...",
+    settingsUpdatingTeamAccess = "Actualizando acceso del equipo...",
+    settingsSavingSettings = "Guardando configuración...",
+    settingsChangesSaved = "Cambios guardados",
+    settingsSigningOut = "Cerrando sesión...",
+)
+
+private val French = AppStrings(
+    languageEnglish = "Anglais",
+    languageSpanish = "Espagnol",
+    languageFrench = "Français",
+    loginSubtitle = "Maintenir les connaissances du projet organisées, accessibles et à jour",
+    loginEmailPlaceholder = "E-mail professionnel",
+    loginPasswordPlaceholder = "Mot de passe",
+    loginSignInLoading = "Connexion en cours...",
+    loginSignIn = "Se connecter",
+    settingsTitle = "Paramètres",
+    settingsSubtitle = "Configuration de la plateforme et préférences",
+    settingsSectionGeneral = "Général",
+    settingsSectionAiAssistant = "Assistant IA",
+    settingsSectionTeamAccess = "Équipe et accès",
+    settingsSectionNotifications = "Notifications",
+    settingsSectionIntegrations = "Intégrations",
+    settingsGeneralTitle = "Général",
+    settingsDarkMode = "Mode sombre",
+    settingsDarkModeDescription = "Basculer entre les palettes Figma claires et sombres",
+    settingsLanguage = "Langue",
+    settingsLanguageDescription = "Choisissez la langue utilisée dans toute l'application",
+    settingsSignOut = "Se déconnecter",
+    settingsLoadingSettings = "Chargement des paramètres...",
+    settingsUpdatingTeamAccess = "Mise à jour de l'accès de l'équipe...",
+    settingsSavingSettings = "Enregistrement des paramètres...",
+    settingsChangesSaved = "Modifications enregistrées",
+    settingsSigningOut = "Déconnexion...",
+)
+
+fun stringsFor(language: AppLanguage): AppStrings = when (language) {
+    AppLanguage.ENGLISH -> English
+    AppLanguage.SPANISH -> Spanish
+    AppLanguage.FRENCH -> French
+}
+
+val LocalAppStrings = staticCompositionLocalOf { English }

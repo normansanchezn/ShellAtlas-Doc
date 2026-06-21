@@ -28,10 +28,7 @@ import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.repository.RoleRepository
 import com.shelldocs.core.domain.usecase.assistant.*
-import com.shelldocs.core.domain.usecase.auth.AssignRoleUseCase
-import com.shelldocs.core.domain.usecase.auth.GetTeamMembersUseCase
-import com.shelldocs.core.domain.usecase.auth.SignInUseCase
-import com.shelldocs.core.domain.usecase.auth.SignOutUseCase
+import com.shelldocs.core.domain.usecase.auth.*
 import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignmentsUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
@@ -130,6 +127,9 @@ class AppContainer(
 
     private fun currentRole(): UserRole =
         authRepository.session.value?.user?.role ?: UserRole.VIEWER
+
+    fun currentLanguage(): com.shelldocs.core.domain.entity.auth.AppLanguage =
+        authRepository.session.value?.user?.language ?: com.shelldocs.core.domain.entity.auth.AppLanguage.ENGLISH
 
     private fun currentArea() =
         Area.fromKey(authRepository.session.value?.user?.team)
@@ -342,7 +342,9 @@ class AppContainer(
         getTeamMembers = GetTeamMembersUseCase(roleRepository),
         assignRole = AssignRoleUseCase(roleRepository),
         signOut = SignOutUseCase(authRepository),
+        updateLanguage = UpdateLanguageUseCase(authRepository),
         roleProvider = ::currentRole,
+        languageProvider = ::currentLanguage,
         dispatchers = dispatchers,
     )
 }

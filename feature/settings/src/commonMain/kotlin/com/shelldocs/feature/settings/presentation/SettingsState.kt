@@ -2,15 +2,13 @@ package com.shelldocs.feature.settings.presentation
 
 import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
-import com.shelldocs.core.domain.entity.auth.Permission
-import com.shelldocs.core.domain.entity.auth.RolePermissions
-import com.shelldocs.core.domain.entity.auth.TeamMember
-import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.auth.*
 
 /** Snapshot of the Settings page. */
 data class SettingsState(
     val selectedSection: SettingsSection = SettingsSection.GENERAL,
     val role: UserRole = UserRole.VIEWER,
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val members: List<TeamMember> = emptyList(),
     val twoFactorRequired: Boolean = false,
     val auditLogEnabled: Boolean = true,

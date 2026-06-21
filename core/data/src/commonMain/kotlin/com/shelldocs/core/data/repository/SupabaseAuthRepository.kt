@@ -10,6 +10,7 @@ import com.shelldocs.core.data.supabase.SupabaseAuthApi
 import com.shelldocs.core.data.supabase.SupabaseAuthException
 import com.shelldocs.core.data.supabase.SupabasePostgrestException
 import com.shelldocs.core.data.supabase.SupabaseProfileDataSource
+import com.shelldocs.core.domain.entity.auth.AppLanguage
 import com.shelldocs.core.domain.entity.auth.AuthSession
 import com.shelldocs.core.domain.entity.auth.SignInCredentials
 import com.shelldocs.core.domain.entity.auth.UserProfile
@@ -79,6 +80,7 @@ class SupabaseAuthRepository(
                 fullName = profile?.fullName ?: credentials.email.substringBefore('@'),
                 team = profile?.team ?: "",
                 role = role,
+                language = AppLanguage.fromCode(profile?.language),
             ),
         )
         mutableSession.value = authSession
@@ -107,4 +109,18 @@ class SupabaseAuthRepository(
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> {
+        val current = mutableSession.value ?: return DomainResult.failure(AppError.Unauthorized())
+        return try {
+            profiles.updateLanguage(current.user.id, language.code, current.accessToken)
+            val updatedUser = current.user.copy(language = language)
+            mutableSession.value = current.copy(user = updatedUser)
+            DomainResult.success(updatedUser)
+        } catch (exception: Exception) {
+            logger.e("Language update failed: ${exception.message}", exception)
+            DomainResult.failure(AppError.Network(exception.message ?: "Could not save language preference"))
+        }
+    }
 }

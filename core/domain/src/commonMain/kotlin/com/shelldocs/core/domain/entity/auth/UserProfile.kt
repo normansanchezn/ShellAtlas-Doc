@@ -7,6 +7,7 @@ data class UserProfile(
     val fullName: String,
     val team: String,
     val role: UserRole,
+    val language: AppLanguage = AppLanguage.ENGLISH,
 ) {
     val initials: String =
         fullName.split(' ')

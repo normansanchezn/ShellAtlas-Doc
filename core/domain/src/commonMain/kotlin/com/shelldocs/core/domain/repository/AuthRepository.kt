@@ -1,8 +1,10 @@
 package com.shelldocs.core.domain.repository
 
 import com.shelldocs.core.common.result.DomainResult
+import com.shelldocs.core.domain.entity.auth.AppLanguage
 import com.shelldocs.core.domain.entity.auth.AuthSession
 import com.shelldocs.core.domain.entity.auth.SignInCredentials
+import com.shelldocs.core.domain.entity.auth.UserProfile
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -18,4 +20,7 @@ interface AuthRepository {
     suspend fun signOut(): DomainResult<Unit>
 
     suspend fun restoreSession(): DomainResult<AuthSession?>
+
+    /** Persists the user's display-language preference (`profiles.language`). */
+    suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile>
 }

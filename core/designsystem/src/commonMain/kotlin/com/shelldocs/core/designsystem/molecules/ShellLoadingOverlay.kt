@@ -1,11 +1,7 @@
 package com.shelldocs.core.designsystem.molecules
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,7 +36,7 @@ fun ShellLoadingOverlay(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    CircularProgressIndicator(color = colors.brand, strokeWidth = 3.dp)
+                    ShellLottieLoader(modifier = Modifier.size(72.dp))
                     Text(
                         text = message,
                         style = ShellTheme.typography.bodyStrong,

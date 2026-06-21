@@ -4,10 +4,7 @@ package com.shelldocs.core.domain.fixtures
 
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
-import com.shelldocs.core.domain.entity.auth.AuthSession
-import com.shelldocs.core.domain.entity.auth.SignInCredentials
-import com.shelldocs.core.domain.entity.auth.UserProfile
-import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.auth.*
 import com.shelldocs.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +32,13 @@ class FakeAuthRepository : AuthRepository {
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
+
+    override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> {
+        val current = mutableSession.value ?: return DomainResult.failure(AppError.Unauthorized())
+        val updatedUser = current.user.copy(language = language)
+        mutableSession.value = current.copy(user = updatedUser)
+        return DomainResult.success(updatedUser)
+    }
 
     companion object {
         fun sampleSession(role: UserRole = UserRole.OWNER): AuthSession = AuthSession(

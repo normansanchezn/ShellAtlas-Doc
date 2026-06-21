@@ -2,8 +2,10 @@ package com.shelldocs.app
 
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.onSuccess
+import com.shelldocs.core.domain.entity.auth.AppLanguage
 import com.shelldocs.core.domain.entity.auth.AuthSession
 import com.shelldocs.core.domain.entity.auth.SignInCredentials
+import com.shelldocs.core.domain.entity.auth.UserProfile
 import com.shelldocs.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,4 +31,7 @@ internal class AppAuthRepository(
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         delegate.restoreSession()
+
+    override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> =
+        delegate.updateLanguage(language)
 }

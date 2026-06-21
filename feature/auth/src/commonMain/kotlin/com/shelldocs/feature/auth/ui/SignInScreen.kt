@@ -25,6 +25,8 @@ import com.shelldocs.core.designsystem.atoms.ShellBrandBadge
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
+import com.shelldocs.core.designsystem.i18n.AppStrings
+import com.shelldocs.core.designsystem.i18n.LocalAppStrings
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -34,11 +36,6 @@ import com.shelldocs.feature.auth.presentation.AuthEffect
 import com.shelldocs.feature.auth.presentation.AuthIntent
 import com.shelldocs.feature.auth.presentation.AuthState
 import com.shelldocs.feature.auth.presentation.AuthViewModel
-import com.shelldocs.feature.auth.presentation.strings.StringRes.EMAIL_PLACEHOLDER
-import com.shelldocs.feature.auth.presentation.strings.StringRes.LOGIN_TEXT_SUBTITLE
-import com.shelldocs.feature.auth.presentation.strings.StringRes.PASSWORD_PLACEHOLDER
-import com.shelldocs.feature.auth.presentation.strings.StringRes.SIGN_IN_LOADING_TXT
-import com.shelldocs.feature.auth.presentation.strings.StringRes.SIGN_IN_TXT
 
 @Composable
 fun SignInScreen(
@@ -50,6 +47,7 @@ fun SignInScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
+    val strings = LocalAppStrings.current
     val animateBackground = !isInstrumentedUiTestRuntime()
 
     LaunchedEffect(viewModel) {
@@ -75,17 +73,19 @@ fun SignInScreen(
                 state = state,
                 viewModel = viewModel,
                 isDemoMode = isDemoMode,
+                strings = strings,
             )
         } else {
             DesktopSignInContent(
                 state = state,
                 viewModel = viewModel,
                 isDemoMode = isDemoMode,
+                strings = strings,
             )
         }
 
         if (state.isLoading) {
-            ShellLoadingOverlay(message = "Signing you in...")
+            ShellLoadingOverlay(message = strings.loginSignInLoading)
         }
     }
 
@@ -102,6 +102,7 @@ private fun MobileSignInContent(
     state: AuthState,
     viewModel: AuthViewModel,
     isDemoMode: Boolean,
+    strings: AppStrings,
 ) {
     val colors = ShellTheme.colors
     val typography = ShellTheme.typography
@@ -126,7 +127,7 @@ private fun MobileSignInContent(
         if (isDemoMode) {
             Spacer(Modifier.height(ShellSpacing.sm))
             Text(
-                LOGIN_TEXT_SUBTITLE,
+                strings.loginSubtitle,
                 style = typography.caption,
                 color = supportingColor,
             )
@@ -142,7 +143,7 @@ private fun MobileSignInContent(
                 value = state.email,
                 onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
                 modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInEmail),
-                placeholder = EMAIL_PLACEHOLDER,
+                placeholder = strings.loginEmailPlaceholder,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next,
@@ -152,7 +153,7 @@ private fun MobileSignInContent(
                 value = state.password,
                 onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
                 modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInPassword),
-                placeholder = PASSWORD_PLACEHOLDER,
+                placeholder = strings.loginPasswordPlaceholder,
                 isPassword = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
@@ -165,7 +166,7 @@ private fun MobileSignInContent(
         Spacer(Modifier.height(ShellSpacing.xl))
 
         ShellPrimaryButton(
-            text = if (state.isLoading) SIGN_IN_LOADING_TXT else SIGN_IN_TXT,
+            text = if (state.isLoading) strings.loginSignInLoading else strings.loginSignIn,
             onClick = { viewModel.onIntent(AuthIntent.Submit) },
             enabled = state.canSubmit,
             modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInSubmit),
@@ -180,6 +181,7 @@ private fun DesktopSignInContent(
     state: AuthState,
     viewModel: AuthViewModel,
     isDemoMode: Boolean,
+    strings: AppStrings,
 ) {
     val colors = ShellTheme.colors
 
@@ -216,7 +218,7 @@ private fun DesktopSignInContent(
                     if (isDemoMode) {
                         Spacer(Modifier.height(ShellSpacing.sm))
                         Text(
-                            LOGIN_TEXT_SUBTITLE,
+                            strings.loginSubtitle,
                             style = ShellTheme.typography.caption,
                             color = colors.textMuted,
                         )
@@ -230,7 +232,7 @@ private fun DesktopSignInContent(
                             value = state.email,
                             onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
                             modifier = Modifier.testTag(DemoTestTags.SignInEmail),
-                            placeholder = "Work email",
+                            placeholder = strings.loginEmailPlaceholder,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email,
                                 imeAction = ImeAction.Next,
@@ -240,7 +242,7 @@ private fun DesktopSignInContent(
                             value = state.password,
                             onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
                             modifier = Modifier.testTag(DemoTestTags.SignInPassword),
-                            placeholder = "Password",
+                            placeholder = strings.loginPasswordPlaceholder,
                             isPassword = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(
@@ -251,7 +253,7 @@ private fun DesktopSignInContent(
                     }
                     Spacer(Modifier.height(ShellSpacing.lg))
                     ShellPrimaryButton(
-                        text = if (state.isLoading) "Signing in..." else "Sign in",
+                        text = if (state.isLoading) strings.loginSignInLoading else strings.loginSignIn,
                         onClick = { viewModel.onIntent(AuthIntent.Submit) },
                         enabled = state.canSubmit,
                         modifier = Modifier.width(160.dp).testTag(DemoTestTags.SignInSubmit),

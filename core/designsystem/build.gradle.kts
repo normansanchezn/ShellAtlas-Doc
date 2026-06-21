@@ -29,6 +29,7 @@ kotlin {
             api(compose.ui)
             api(compose.components.resources)
             implementation(projects.core.domain)
+            implementation(libs.compottie)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

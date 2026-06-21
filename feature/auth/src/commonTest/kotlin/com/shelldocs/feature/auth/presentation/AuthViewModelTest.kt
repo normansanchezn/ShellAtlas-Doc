@@ -5,10 +5,7 @@ package com.shelldocs.feature.auth.presentation
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
-import com.shelldocs.core.domain.entity.auth.AuthSession
-import com.shelldocs.core.domain.entity.auth.SignInCredentials
-import com.shelldocs.core.domain.entity.auth.UserProfile
-import com.shelldocs.core.domain.entity.auth.UserRole
+import com.shelldocs.core.domain.entity.auth.*
 import com.shelldocs.core.domain.repository.AuthRepository
 import com.shelldocs.core.domain.usecase.auth.SignInUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,12 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private class StubAuthRepository(var result: DomainResult<AuthSession>) : AuthRepository {
     private val mutableSession = MutableStateFlow<AuthSession?>(null)
@@ -32,6 +24,8 @@ private class StubAuthRepository(var result: DomainResult<AuthSession>) : AuthRe
     override suspend fun signIn(credentials: SignInCredentials) = result
     override suspend fun signOut() = DomainResult.success(Unit)
     override suspend fun restoreSession(): DomainResult<AuthSession?> = DomainResult.success(null)
+    override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> =
+        DomainResult.failure(AppError.Unauthorized())
 }
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
