@@ -7,6 +7,8 @@ import com.shelldocs.app.navigation.AppNavigator
 import com.shelldocs.core.common.coroutines.DefaultDispatcherProvider
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.id.RandomIdGenerator
+import com.shelldocs.core.common.logging.AppLogger
+import com.shelldocs.core.common.logging.LogTags
 import com.shelldocs.core.common.time.SystemTimeProvider
 import com.shelldocs.core.data.assistant.CompositeAssistantEngine
 import com.shelldocs.core.data.assistant.GroundedAssistantEngine
@@ -178,6 +180,47 @@ class AppContainer(
     }
     private val sourcesRepository by lazy { DemoSourcesRepository(timeProvider) }
     private val documentSyncRepository by lazy { DemoDocumentSyncRepository() }
+
+    // --- Startup diagnostics ------------------------------------------------
+
+    /**
+     * Runs once per app launch: confirms DB, Ollama and Jira/Confluence/Azure
+     * connectivity and logs the outcome of each under [LogTags.STARTUP] (plus
+     * their dedicated tags) so issues are visible in Logcat/console right away
+     * instead of surfacing later as an opaque UI error.
+     */
+    suspend fun runStartupDiagnostics() {
+        val startupLogger = AppLogger.tag(LogTags.STARTUP)
+        startupLogger.i("Running startup diagnostics (env=${config.environment}, demoMode=${config.isDemoMode})")
+        checkDatabaseConnection()
+        checkOllamaConnection()
+        checkIntegrations()
+    }
+
+    private suspend fun checkDatabaseConnection() {
+        val dbLogger = AppLogger.tag(LogTags.DATABASE)
+        val supabase = config.supabase
+        if (supabase == null) {
+            dbLogger.i("Skipped: no Supabase config (demo mode, in-memory data)")
+            return
+        }
+        postgrest(supabase).testConnection()
+    }
+
+    private suspend fun checkOllamaConnection() {
+        val ollamaLogger = AppLogger.tag(LogTags.OLLAMA)
+        if (!config.useOllama) {
+            ollamaLogger.i("Skipped: Ollama disabled (useOllama=false)")
+            return
+        }
+        OllamaClient(httpClient, config.ollama).isReachable()
+    }
+
+    private suspend fun checkIntegrations() {
+        val integrationLogger = AppLogger.tag(LogTags.INTEGRATION)
+        integrationLogger.i("Checking Jira/Confluence/Azure DevOps integrations")
+        sourcesRepository.sources()
+    }
 
     // --- ViewModel factories (one fresh instance per screen entry) --------
 

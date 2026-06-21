@@ -1,21 +1,21 @@
 package com.shelldocs.app
 
-import com.shelldocs.app.di.AppConfig
-import com.shelldocs.app.di.normalizeSupabaseAnonKey
-import com.shelldocs.app.di.resolveAppEnvironment
-import com.shelldocs.app.di.resolveBooleanSetting
-import com.shelldocs.app.di.resolveProfileSetting
+import com.shelldocs.app.di.*
+import com.shelldocs.core.common.logging.AppLogger
+import com.shelldocs.core.common.logging.LogTags
 import com.shelldocs.core.data.assistant.OllamaConfig
 import com.shelldocs.core.data.network.ApiConfig
 import com.shelldocs.core.data.supabase.SupabaseConfig
 import java.io.File
+
+private val logger = AppLogger.tag(LogTags.STARTUP)
 
 fun loadDesktopAppConfig(): AppConfig {
     val flavor = System.getProperty("shelldocs.flavor")
         ?: System.getenv("SHELLDOC_FLAVOR")
         ?: "demo"
     if (flavor.lowercase() == "demo") {
-        println("[ShellDocsAuth] Desktop config: DEMO mode (in-memory data, local Ollama)")
+        logger.i("Desktop config: DEMO mode (in-memory data, local Ollama)")
         return AppConfig()
     }
 
@@ -51,9 +51,11 @@ fun loadDesktopAppConfig(): AppConfig {
         useOllama = useOllama,
     )
 
-    println(
-        "[ShellDocsAuth] Desktop config loaded. env=${config.environment}, " +
-            "demoMode=${config.isDemoMode}, supabaseUrl=${config.supabase?.url ?: "none"}",
+    logger.i(
+        "Desktop config loaded. env=${config.environment}, " +
+                "demoMode=${config.isDemoMode}, supabaseUrl=${config.supabase?.url ?: "none"}, " +
+                "ollamaUrl=${config.ollama.baseUrl}, useOllama=${config.useOllama}, " +
+                "apiBaseUrl=${config.api?.baseUrl ?: "none"}",
     )
 
     return config

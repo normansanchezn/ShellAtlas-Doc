@@ -35,6 +35,7 @@ fun App(
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val container = remember(config) { AppContainer(config, sessionPrefs) }
+        LaunchedEffect(container) { container.runStartupDiagnostics() }
         val systemDark = isSystemInDarkTheme()
         val focusManager = LocalFocusManager.current
         val widthDp = maxWidth.value.toInt()

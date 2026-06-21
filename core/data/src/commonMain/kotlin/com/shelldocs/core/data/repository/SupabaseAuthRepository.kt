@@ -1,6 +1,8 @@
 package com.shelldocs.core.data.repository
 
 import com.shelldocs.core.common.error.AppError
+import com.shelldocs.core.common.logging.AppLogger
+import com.shelldocs.core.common.logging.LogTags
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.time.TimeProvider
@@ -29,6 +31,7 @@ class SupabaseAuthRepository(
     private val timeProvider: TimeProvider,
 ) : AuthRepository {
 
+    private val logger = AppLogger.tag(LogTags.AUTH)
     private val mutableSession = MutableStateFlow<AuthSession?>(null)
     override val session: StateFlow<AuthSession?> = mutableSession.asStateFlow()
 
@@ -39,33 +42,33 @@ class SupabaseAuthRepository(
 
     @OptIn(ExperimentalTime::class)
     override suspend fun signIn(credentials: SignInCredentials): DomainResult<AuthSession> = try {
-        println("[ShellDocsAuth] Starting Supabase sign-in for ${credentials.email}")
+        logger.i("Starting Supabase sign-in for ${credentials.email}")
         val token = authApi.signInWithPassword(credentials.email, credentials.password)
-        println("[ShellDocsAuth] Password grant succeeded for user ${token.user.id}")
+        logger.i("Password grant succeeded for user ${token.user.id}")
         val profile = runCatching {
             profiles.profile(token.user.id, token.accessToken)
         }.getOrElse { error ->
             if (error is SupabasePostgrestException) {
-                println("[ShellDocsAuth] Profile fetch skipped: ${error.message}")
+                logger.w("Profile fetch skipped: ${error.message}")
                 null
             } else {
                 throw error
             }
         }
-        println("[ShellDocsAuth] Profile fetch completed for ${token.user.id}")
+        logger.i("Profile fetch completed for ${token.user.id}")
         val role = runCatching {
             roleRepository
                 .roleOf(token.user.id, token.accessToken)
                 .getOrDefault(com.shelldocs.core.domain.entity.auth.UserRole.VIEWER)
         }.getOrElse { error ->
             if (error is SupabasePostgrestException) {
-                println("[ShellDocsAuth] Role fetch skipped: ${error.message}")
+                logger.w("Role fetch skipped: ${error.message}")
                 com.shelldocs.core.domain.entity.auth.UserRole.VIEWER
             } else {
                 throw error
             }
         }
-        println("[ShellDocsAuth] Role fetch completed: ${role.key}")
+        logger.i("Role fetch completed: ${role.key}")
         val authSession = AuthSession(
             accessToken = token.accessToken,
             refreshToken = token.refreshToken,
@@ -79,15 +82,15 @@ class SupabaseAuthRepository(
             ),
         )
         mutableSession.value = authSession
-        println("[ShellDocsAuth] Supabase sign-in success as ${authSession.user.email}")
+        logger.i("Supabase sign-in success as ${authSession.user.email}")
         DomainResult.success(authSession)
     } catch (exception: SupabaseAuthException) {
         mutableSession.value = null
-        println("[ShellDocsAuth] Supabase sign-in rejected: ${exception.message}")
+        logger.w("Supabase sign-in rejected: ${exception.message}")
         DomainResult.failure(AppError.Unauthorized(exception.message ?: "Invalid credentials"))
     } catch (exception: Exception) {
         mutableSession.value = null
-        println("[ShellDocsAuth] Supabase sign-in failed: ${exception.message}")
+        logger.e("Supabase sign-in failed: ${exception.message}", exception)
         DomainResult.failure(AppError.Network(exception.message ?: "Could not reach Supabase"))
     }
 
