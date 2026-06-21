@@ -204,6 +204,7 @@ class AppContainer(
         completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(knowledgeCheckpointRepository),
         timeProvider = timeProvider,
         idGenerator = idGenerator,
+        sessionPrefs = sessionPrefs,
         dispatchers = dispatchers,
     )
 

@@ -1,9 +1,10 @@
 package com.shelldocs.feature.assistant.presentation
 
-import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.coroutines.DispatcherProvider
+import com.shelldocs.core.common.error.toErrorDialogState
 import com.shelldocs.core.common.id.IdGenerator
 import com.shelldocs.core.common.mvi.MviViewModel
+import com.shelldocs.core.common.persistence.SessionPreferences
 import com.shelldocs.core.common.result.getOrDefault
 import com.shelldocs.core.common.result.onFailure
 import com.shelldocs.core.common.result.onSuccess
@@ -13,22 +14,13 @@ import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
-import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
-import com.shelldocs.core.domain.usecase.assistant.BuildWelcomeMessageUseCase
-import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
-import com.shelldocs.core.domain.usecase.assistant.DetectAssistantLanguageUseCase
-import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
-import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
+import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.domain.usecase.onboarding.BuildKnowledgeTransferMessageUseCase
-import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
-import com.shelldocs.core.domain.usecase.onboarding.DetectCheckpointCompletionUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
-import kotlin.time.ExperimentalTime
+import com.shelldocs.core.domain.usecase.onboarding.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import kotlin.time.ExperimentalTime
 
 class AssistantViewModel(
     private val askAssistant: AskAssistantUseCase,
@@ -41,6 +33,7 @@ class AssistantViewModel(
     private val completeKnowledgeCheckpoint: CompleteKnowledgeCheckpointUseCase,
     private val timeProvider: TimeProvider,
     private val idGenerator: IdGenerator,
+    private val sessionPrefs: SessionPreferences,
     dispatchers: DispatcherProvider,
     private val buildWelcomeMessage: BuildWelcomeMessageUseCase = BuildWelcomeMessageUseCase(),
     private val detectLanguage: DetectAssistantLanguageUseCase = DetectAssistantLanguageUseCase(),
@@ -55,7 +48,7 @@ class AssistantViewModel(
             AssistantIntent.SendQuestion -> send()
             is AssistantIntent.SelectConversation -> select(intent.conversationId)
             AssistantIntent.DismissError -> setState { copy(errorDialog = null) }
-            AssistantIntent.StartNewConversation ->
+            AssistantIntent.StartNewConversation -> {
                 setState {
                     copy(
                         activeConversationId = null,
@@ -65,6 +58,8 @@ class AssistantViewModel(
                         activeCheckpointId = null,
                     )
                 }
+                sessionPrefs.saveAssistantConversationId(NEW_CONVERSATION_SENTINEL)
+            }
             AssistantIntent.StartKnowledgeTransfer -> startKnowledgeTransfer()
         }
     }
@@ -85,17 +80,24 @@ class AssistantViewModel(
                 progressDeferred.await().getOrDefault(KnowledgeProgress(0, 0)),
             )
         }
+        val restoredConversation = resolveInitialConversation(conversations)
         setState {
             copy(
                 isInitializing = false,
                 availability = availability,
                 conversations = conversations,
                 indexedDocuments = documents.size,
-                messages = if (messages.isEmpty()) listOf(welcomeMessage()) else messages,
+                messages = restoredConversation?.messages
+                    ?: if (messages.isEmpty()) listOf(welcomeMessage()) else messages,
                 checkpoints = checkpoints,
                 knowledgeProgress = progress,
+                activeConversationId = restoredConversation?.id,
+                conversationLanguage = restoredConversation?.let { resolveConversationLanguage(it) }
+                    ?: conversationLanguage,
+                activeCheckpointId = if (restoredConversation == null) activeCheckpointId else null,
             )
         }
+        restoredConversation?.id?.let(sessionPrefs::saveAssistantConversationId)
     }
 
     @OptIn(ExperimentalTime::class)
@@ -167,11 +169,7 @@ class AssistantViewModel(
 
     private suspend fun select(conversationId: String) {
         val conversation = currentState.conversations.firstOrNull { it.id == conversationId } ?: return
-        val language = conversation.messages
-            .lastOrNull { it.role == MessageRole.USER }
-            ?.markdown
-            ?.let { detectLanguage(it, default = currentState.conversationLanguage) }
-            ?: currentState.conversationLanguage
+        val language = conversationLanguage(conversation)
         setState {
             copy(
                 activeConversationId = conversation.id,
@@ -180,6 +178,7 @@ class AssistantViewModel(
                 conversationLanguage = language,
             )
         }
+        sessionPrefs.saveAssistantConversationId(conversation.id)
     }
 
     @OptIn(ExperimentalTime::class)
@@ -211,8 +210,9 @@ class AssistantViewModel(
             return
         }
 
+        val conversationMessages = currentState.messages
         withContext(dispatchers.default) {
-            askAssistant(question, language)
+            askAssistant(question, conversationMessages, language)
         }
             .onSuccess { answer ->
                 val assistantMessage = AssistantMessage(
@@ -256,9 +256,35 @@ class AssistantViewModel(
             getConversations().getOrDefault(snapshot.conversations)
         }
         setState { copy(activeConversationId = conversation.id, conversations = refreshed) }
+        sessionPrefs.saveAssistantConversationId(conversation.id)
     }
 
     private companion object {
         const val MAX_TITLE_LENGTH = 38
+        const val NEW_CONVERSATION_SENTINEL = "__assistant_new_conversation__"
     }
+
+    private fun resolveInitialConversation(conversations: List<Conversation>): Conversation? {
+        val persistedId = sessionPrefs.loadAssistantConversationId()
+        if (persistedId == NEW_CONVERSATION_SENTINEL) return null
+        if (persistedId != null) {
+            conversations.firstOrNull { it.id == persistedId }?.let { return it }
+        }
+        return conversations.firstOrNull()
+    }
+
+    private fun conversationLanguage(
+        conversation: Conversation,
+        fallback: AssistantLanguage = currentState.conversationLanguage,
+    ): AssistantLanguage =
+        conversation.messages
+            .lastOrNull { it.role == MessageRole.USER }
+            ?.markdown
+            ?.let { detectLanguage(it, default = fallback) }
+            ?: fallback
+
+    private fun resolveConversationLanguage(
+        conversation: Conversation,
+        fallback: AssistantLanguage = currentState.conversationLanguage,
+    ): AssistantLanguage = conversationLanguage(conversation, fallback)
 }

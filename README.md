@@ -12,15 +12,15 @@ Figma file (light and dark palettes, Shell yellow `#FFD100`, 4dp radii, Inter ty
 
 ## Features
 
-| Screen | What it does |
-| --- | --- |
-| **AI Assistant** | Grounded Q&A over indexed docs: explains flows/processes step by step, decides when a document *should not* be improved, cites sources with relevance %, caches answers. Local LLM (Ollama) optional with graceful fallback. |
-| **Documents** | Explorer tree → document list → reader with attributes rail; split Markdown editor with live preview, autosaved drafts, publish, version history and restore. |
-| **Updates Pending** | Maintenance triage computed from real document health: Critical/High/Medium/Low risk, age, impact and owner. |
-| **Dashboard** | Knowledge health ring, module coverage, status donut, AI usage chart, recent activity and needs-attention banners — derived from the live corpus. |
-| **Sources** | Confluence / Azure DevOps / Jira integrations with sync, reconnect and the sync activity log. |
-| **Settings** | General (theme), AI Assistant, **Team & Access** (role delegation), Notifications, Integrations. |
-| **Auth** | Email/password sign-in via Supabase GoTrue. The AUTH feature is the reference clean-architecture example. |
+| Screen            | What it does                                                                                                                                                                                                                 |
+|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **AI Assistant**  | Grounded Q&A over indexed docs: explains flows/processes step by step, decides when a document *should not* be improved, cites sources with relevance %, caches answers. Local LLM (Ollama) optional with graceful fallback. |
+| **Documents**     | Explorer tree → document list → reader with attributes rail; split Markdown editor with live preview, autosaved drafts, publish, version history and restore.                                                                |
+| **Notifications** | Maintenance triage computed from real document health: Critical/High/Medium/Low risk, age, impact and owner.                                                                                                                 |
+| **Dashboard**     | Knowledge health ring, module coverage, status donut, AI usage chart, recent activity and needs-attention banners — derived from the live corpus.                                                                            |
+| **Sources**       | Confluence / Azure DevOps / Jira integrations with sync, reconnect and the sync activity log.                                                                                                                                |
+| **Settings**      | General (theme), AI Assistant, **Team & Access** (role delegation), Notifications, Integrations.                                                                                                                             |
+| **Auth**          | Email/password sign-in via Supabase GoTrue. The AUTH feature is the reference clean-architecture example.                                                                                                                    |
 
 ## Demo Knowledge Corpus
 

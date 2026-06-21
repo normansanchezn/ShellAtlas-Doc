@@ -9,7 +9,7 @@ import kotlin.time.ExperimentalTime
 
 /**
  * Deterministic health audit used by both the assistant and the
- * Updates Pending triage. Penalizes staleness, bad status, thin content
+ * Notifications triage. Penalizes staleness, bad status, thin content
  * and unfinished markers; never relies on an LLM so it is fully testable.
  */
 class EvaluateDocumentHealthUseCase(private val timeProvider: TimeProvider) {

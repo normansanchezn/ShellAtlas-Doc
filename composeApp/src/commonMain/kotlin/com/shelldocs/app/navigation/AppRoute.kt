@@ -4,7 +4,7 @@ package com.shelldocs.app.navigation
 enum class AppRoute(val title: String) {
     ASSISTANT("AI Assistant"),
     DOCUMENTS("Documents"),
-    UPDATES("Updates Pending"),
+    UPDATES("Notifications"),
     DASHBOARD("Dashboard"),
     SOURCES("Sources"),
     SETTINGS("Settings"),

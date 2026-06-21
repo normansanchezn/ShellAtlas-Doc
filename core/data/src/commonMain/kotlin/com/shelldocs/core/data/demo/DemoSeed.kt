@@ -320,7 +320,7 @@ object DemoSeed {
 
                 ## Dónde vive la documentación
 
-                Toda la documentación del proyecto está organizada por carpetas en **Documentos**, agrupada por plataforma (iOS, Android, Cross-platform, Process, Onboarding). Cada documento tiene un owner, un módulo y un estado (Published, Draft, Outdated, Updates Pending).
+                Toda la documentación del proyecto está organizada por carpetas en **Documentos**, agrupada por plataforma (iOS, Android, Cross-platform, Process, Onboarding). Cada documento tiene un owner, un módulo y un estado (Published, Draft, Outdated, Notifications).
 
                 ## Cómo usar el asistente de IA
 

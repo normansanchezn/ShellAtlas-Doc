@@ -1,13 +1,10 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.shelldocs.core.domain.usecase.assistant
 
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.result.getOrNull
-import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
-import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
-import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
-import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
-import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
-import com.shelldocs.core.domain.entity.assistant.ScoredDocument
+import com.shelldocs.core.domain.entity.assistant.*
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.fixtures.DocumentFixtures
 import com.shelldocs.core.domain.fixtures.FakeDocumentRepository
@@ -15,16 +12,13 @@ import com.shelldocs.core.domain.repository.AssistantCacheRepository
 import com.shelldocs.core.domain.repository.AssistantEngine
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private class RecordingEngine : AssistantEngine {
     var invocations = 0
     var lastIntent: AssistantIntentType? = null
     var lastGrounding: List<ScoredDocument> = emptyList()
+    var lastQuestion: String? = null
 
     override suspend fun answer(
         question: String,
@@ -35,6 +29,7 @@ private class RecordingEngine : AssistantEngine {
         invocations++
         lastIntent = intent
         lastGrounding = groundingDocuments
+        lastQuestion = question
         return DomainResult.success(
             AssistantAnswer(
                 markdown = "Grounded answer",
@@ -105,6 +100,55 @@ class AskAssistantUseCaseTest {
 
         assertEquals(AssistantIntentType.EXPLAIN_FLOW, engine.lastIntent)
         assertEquals(listOf("auth"), engine.lastGrounding.map { it.document.id })
+    }
+
+    @Test
+    fun followUpQuestionUsesPriorChatContext() = runTest {
+        val history = listOf(
+            AssistantMessage(
+                id = "msg-1",
+                role = MessageRole.USER,
+                markdown = "We are on the KT for the authentication flow.",
+                createdAt = kotlinx.datetime.Instant.parse("2026-06-11T10:00:00Z"),
+            ),
+            AssistantMessage(
+                id = "msg-2",
+                role = MessageRole.ASSISTANT,
+                markdown = "Next we review token refresh and sign-out.",
+                createdAt = kotlinx.datetime.Instant.parse("2026-06-11T10:01:00Z"),
+            ),
+        )
+
+        useCase("what next?", conversationMessages = history)
+
+        assertNotNull(engine.lastQuestion)
+        assertTrue(engine.lastQuestion!!.contains("Conversation context:"))
+        assertTrue(engine.lastQuestion!!.contains("authentication flow"))
+        assertTrue(engine.lastQuestion!!.contains("Current question:"))
+    }
+
+    @Test
+    fun explicitTopicShiftIgnoresPriorChatContext() = runTest {
+        val history = listOf(
+            AssistantMessage(
+                id = "msg-1",
+                role = MessageRole.USER,
+                markdown = "We are on the KT for the authentication flow.",
+                createdAt = kotlinx.datetime.Instant.parse("2026-06-11T10:00:00Z"),
+            ),
+            AssistantMessage(
+                id = "msg-2",
+                role = MessageRole.ASSISTANT,
+                markdown = "Next we review token refresh and sign-out.",
+                createdAt = kotlinx.datetime.Instant.parse("2026-06-11T10:01:00Z"),
+            ),
+        )
+
+        useCase("new topic: what changed in release notes?", conversationMessages = history)
+
+        assertNotNull(engine.lastQuestion)
+        assertTrue(engine.lastQuestion!!.startsWith("new topic: what changed in release notes?"))
+        assertTrue("Conversation context:" !in engine.lastQuestion!!)
     }
 
     @Test

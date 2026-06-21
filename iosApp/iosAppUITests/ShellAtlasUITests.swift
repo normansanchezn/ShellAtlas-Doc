@@ -157,7 +157,7 @@ final class ShellAtlasUITests: XCTestCase {
 
     func test_updatesScanAndFilter() {
         signIn(app: app)
-        navigateTo("Updates Pending", in: app)
+        navigateTo("Notifications", in: app)
         waitForElement(Tag.updatesScreen, in: app)
 
         tapElement(Tag.updatesScan, in: app)

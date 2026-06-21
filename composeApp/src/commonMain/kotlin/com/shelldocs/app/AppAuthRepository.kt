@@ -22,7 +22,10 @@ internal class AppAuthRepository(
         delegate.signIn(credentials).onSuccess { sessionPrefs.saveSessionFlag(true) }
 
     override suspend fun signOut(): DomainResult<Unit> =
-        delegate.signOut().also { sessionPrefs.saveSessionFlag(false) }
+        delegate.signOut().also {
+            sessionPrefs.saveSessionFlag(false)
+            sessionPrefs.saveAssistantConversationId(null)
+        }
 
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         delegate.restoreSession()

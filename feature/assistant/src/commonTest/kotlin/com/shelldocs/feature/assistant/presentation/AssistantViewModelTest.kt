@@ -5,55 +5,28 @@ package com.shelldocs.feature.assistant.presentation
 import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.id.IdGenerator
+import com.shelldocs.core.common.persistence.SessionPreferences
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.common.time.TimeProvider
-import com.shelldocs.core.domain.entity.assistant.AnswerConfidence
-import com.shelldocs.core.domain.entity.assistant.AssistantAnswer
-import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
-import com.shelldocs.core.domain.entity.assistant.AssistantIntentType
-import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
-import com.shelldocs.core.domain.entity.assistant.Conversation
-import com.shelldocs.core.domain.entity.assistant.MessageRole
-import com.shelldocs.core.domain.entity.assistant.ScoredDocument
-import com.shelldocs.core.domain.entity.document.Document
-import com.shelldocs.core.domain.entity.document.DocumentAttributes
-import com.shelldocs.core.domain.entity.document.DocumentClassification
-import com.shelldocs.core.domain.entity.document.DocumentContent
-import com.shelldocs.core.domain.entity.document.DocumentStatus
-import com.shelldocs.core.domain.entity.document.DocumentVersion
-import com.shelldocs.core.domain.entity.document.DraftReceipt
+import com.shelldocs.core.domain.entity.assistant.*
 import com.shelldocs.core.domain.entity.auth.UserRole
-import com.shelldocs.core.domain.repository.AssistantCacheRepository
-import com.shelldocs.core.domain.repository.AssistantEngine
-import com.shelldocs.core.domain.repository.ConversationRepository
-import com.shelldocs.core.domain.repository.DocumentRepository
+import com.shelldocs.core.domain.entity.document.*
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
-import com.shelldocs.core.domain.repository.KnowledgeCheckpointRepository
-import com.shelldocs.core.domain.usecase.assistant.AskAssistantUseCase
-import com.shelldocs.core.domain.usecase.assistant.CheckAssistantAvailabilityUseCase
-import com.shelldocs.core.domain.usecase.assistant.CreateDocumentFromAssistantUseCase
-import com.shelldocs.core.domain.usecase.assistant.DetectAssistantIntentUseCase
-import com.shelldocs.core.domain.usecase.assistant.GetConversationsUseCase
-import com.shelldocs.core.domain.usecase.assistant.RetrieveGroundingDocumentsUseCase
-import com.shelldocs.core.domain.usecase.assistant.SaveConversationUseCase
+import com.shelldocs.core.domain.repository.*
+import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 import kotlin.time.ExperimentalTime
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
@@ -150,6 +123,18 @@ private class FakeKnowledgeCheckpointRepository : KnowledgeCheckpointRepository 
         DomainResult.success(KnowledgeProgress(completed = 1, total = 1))
 }
 
+private class FakeSessionPreferences : SessionPreferences {
+    private var assistantConversationId: String? = null
+
+    override fun loadSessionFlag(): Boolean = true
+    override fun saveSessionFlag(loggedIn: Boolean) = Unit
+
+    override fun loadAssistantConversationId(): String? = assistantConversationId
+    override fun saveAssistantConversationId(conversationId: String?) {
+        assistantConversationId = conversationId
+    }
+}
+
 class AssistantViewModelTest {
 
     private val engine = FixedEngine()
@@ -157,6 +142,7 @@ class AssistantViewModelTest {
     private fun viewModel(
         scheduler: TestCoroutineScheduler,
         assistantEngine: AssistantEngine = engine,
+        sessionPreferences: SessionPreferences = FakeSessionPreferences(),
     ): AssistantViewModel {
         val documents = SingleDocumentRepository()
         val conversations = TestConversationRepository()
@@ -180,6 +166,7 @@ class AssistantViewModelTest {
             completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(checkpoints),
             timeProvider = TimeProvider { Instant.parse("2026-06-11T10:00:00Z") },
             idGenerator = IdGenerator { "id-${++idCounter}" },
+            sessionPrefs = sessionPreferences,
             dispatchers = SingleDispatcher(StandardTestDispatcher(scheduler)),
         )
     }

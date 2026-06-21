@@ -1,14 +1,8 @@
 package com.shelldocs.app.demo
 
 import android.content.pm.ActivityInfo
-import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextClearance
-import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -131,7 +125,7 @@ class ShellAtlasDemoTest {
     fun demo_updatesScanAndFilterWalkthrough() {
         signIn()
 
-        navigateTo("Updates Pending")
+        navigateTo("Notifications")
         waitForTag(DemoTestTags.UpdatesScreen)
         waitForText("Maintenance triage")
         pauseForRecording()
@@ -240,7 +234,7 @@ class ShellAtlasDemoTest {
     fun flow_updatesPendingComplete() {
         signIn()
 
-        navigateTo("Updates Pending")
+        navigateTo("Notifications")
         waitForTag(DemoTestTags.UpdatesScreen)
         waitForText("Maintenance triage")
         pauseForRecording()

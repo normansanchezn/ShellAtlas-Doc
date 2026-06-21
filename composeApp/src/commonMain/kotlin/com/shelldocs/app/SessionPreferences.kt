@@ -1,18 +1,8 @@
 package com.shelldocs.app
 
-/**
- * Persists whether the user has an active session so the app can skip the
- * login screen on next launch.  Each platform provides a concrete
- * implementation backed by its native key-value store.
- *
- * [NoOpSessionPreferences] is used in previews and tests.
- */
-interface SessionPreferences {
-    fun loadSessionFlag(): Boolean
-    fun saveSessionFlag(loggedIn: Boolean)
-}
+import com.shelldocs.core.common.persistence.NoOpSessionPreferences as CoreNoOpSessionPreferences
+import com.shelldocs.core.common.persistence.SessionPreferences as CoreSessionPreferences
 
-object NoOpSessionPreferences : SessionPreferences {
-    override fun loadSessionFlag() = false
-    override fun saveSessionFlag(loggedIn: Boolean) {}
-}
+typealias SessionPreferences = CoreSessionPreferences
+
+object NoOpSessionPreferences : SessionPreferences by CoreNoOpSessionPreferences

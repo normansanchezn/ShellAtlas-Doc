@@ -6,7 +6,7 @@ platform: "Android/iOS/Desktop/Web"
 area: "ShellDoc"
 owner: "Product Engineering"
 created: 2026-06-11
-updated: 2026-06-17
+updated: 2026-06-20
 tags:
   - shelldoc
   - assistant
@@ -17,7 +17,11 @@ tags:
 
 ## Summary
 
-Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It now answers with longer structured sections, can render context-aware Mermaid diagrams inside the conversation, can still turn a chat request into a new draft document, and on mobile now keeps each reply in the detected language of the current user turn instead of mixing bilingual system copy into the thread.
+Deterministic grounded assistant for Q&A, flow explanation, improvement guidance and document creation. It now resumes
+the last active conversation for authenticated users, preserves the current chat instead of opening a blank thread on
+tab re-entry, uses recent chat context to keep KT / follow-up questions on topic, can render context-aware Mermaid
+diagrams inside the conversation, can still turn a chat request into a new draft document, and on mobile now keeps each
+reply in the detected language of the current user turn instead of mixing bilingual system copy into the thread.
 
 ## Related Files
 
@@ -27,7 +31,8 @@ Deterministic grounded assistant for Q&A, flow explanation, improvement guidance
 
 ## Data Flow
 
-Question -> intent detection -> grounding retrieval -> assistant engine -> cited answer.
+Question + recent chat context -> intent detection -> context resolver -> grounding retrieval -> assistant engine ->
+cited answer.
 
 `CREATE_DOCUMENT` intent skips grounding/cache and goes straight to `CreateDocumentFromAssistantUseCase`, which creates a draft via `CreateDocumentUseCase` and confirms it back to the user with a link-style source.
 
@@ -44,6 +49,9 @@ When the detected intent is a flow/process explanation, `GroundedAssistantEngine
 - `BuildWelcomeMessageUseCase` returns a localized (EN/ES/FR) greeting shown by `AssistantViewModel` whenever `messages` is empty — on `Initialize` and on `StartNewConversation`.
 - The greeting tells the user it can: open/show a document, point to where to find documentation on a topic, share documentation analytics, walk through a guided KT for new collaborators, or create a new draft document.
 - No DI wiring needed: `BuildWelcomeMessageUseCase` has a no-arg constructor and `AssistantViewModel`'s `buildWelcomeMessage` param defaults to `BuildWelcomeMessageUseCase()`.
+- `SessionPreferences` now persists the active assistant conversation id so authenticated users return to the same chat
+  thread after leaving the assistant tab; `StartNewConversation` stores a sentinel so a deliberate blank chat also
+  reopens as blank.
 
 ## Multilingual Replies (EN/ES/FR)
 
@@ -68,3 +76,5 @@ When the detected intent is a flow/process explanation, `GroundedAssistantEngine
 - `AssistantMermaidBuilder` chooses `flowchart`, `sequenceDiagram` or `gantt` heuristically from the question and top grounding document.
 - Flow/process questions now explicitly prefer `flowchart`; `gantt` is reserved for requests that clearly ask for timeline/schedule/milestone style output.
 - `AssistantRichContent` parses Mermaid fences and renders a responsive Compose representation for flow, sequence and timeline diagrams inside `ChatMessageBubble`.
+- `AskAssistantUseCase` now folds in recent assistant messages when the user is clearly continuing the thread, so KT
+  questions keep the previous topic unless the user explicitly signals a topic change.
