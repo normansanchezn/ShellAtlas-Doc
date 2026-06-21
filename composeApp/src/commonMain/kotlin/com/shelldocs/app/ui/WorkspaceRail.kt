@@ -18,9 +18,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
-import com.shelldocs.app.strings.StringRes.APP_BRAND_CONTENT_DESCRIPTION
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellBadge
+import com.shelldocs.core.designsystem.atoms.ShellBrandBadge
 import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
@@ -50,20 +50,7 @@ fun WorkspaceRail(
             .padding(vertical = ShellSpacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(ShellRadius.sm))
-                .background(colors.brand),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = IconShellPecten,
-                contentDescription = APP_BRAND_CONTENT_DESCRIPTION,
-                tint = colors.onBrand,
-                modifier = Modifier.size(22.dp),
-            )
-        }
+        ShellBrandBadge(size = 44.dp, iconSize = 26.dp)
         Column(
             modifier = Modifier.weight(1f).padding(top = ShellSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),

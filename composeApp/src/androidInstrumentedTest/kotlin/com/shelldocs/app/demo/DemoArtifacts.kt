@@ -1,19 +1,13 @@
 package com.shelldocs.app.demo
 
 import android.app.Instrumentation
-import android.graphics.Bitmap
 import android.os.Environment
 import android.util.Log
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.onRoot
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 private const val DemoArtifactsTag = "ShellAtlasDemoArtifacts"
 
@@ -51,6 +45,8 @@ class DemoArtifacts(private val instrumentation: Instrumentation) {
         snapshotName: String,
     ): File? {
         if (!captureDemoSnapshots) return null
+        @Suppress("UNUSED_PARAMETER")
+        val ignoredRule = composeRule
 
         val outputDir = File(
             instrumentation.targetContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
@@ -59,12 +55,14 @@ class DemoArtifacts(private val instrumentation: Instrumentation) {
         outputDir.mkdirs()
 
         val outputFile = File(outputDir, "${timestamp()}-${safeArtifactName(snapshotName)}.png")
-        val bitmap = composeRule.onRoot().captureToImage().asAndroidBitmap()
-        FileOutputStream(outputFile).use { stream ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        shell("screencap -p \"${outputFile.absolutePath}\"")
+        val capturedFile = outputFile.takeIf { it.exists() }
+        if (capturedFile != null) {
+            Log.i(DemoArtifactsTag, "Saved demo snapshot: ${capturedFile.absolutePath}")
+        } else {
+            Log.w(DemoArtifactsTag, "Device screencap did not produce a snapshot file")
         }
-        Log.i(DemoArtifactsTag, "Saved demo snapshot: ${outputFile.absolutePath}")
-        return outputFile
+        return capturedFile
     }
 
     private fun shell(command: String) {

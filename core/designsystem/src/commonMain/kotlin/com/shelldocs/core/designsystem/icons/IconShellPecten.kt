@@ -1,9 +1,8 @@
 package com.shelldocs.core.designsystem.icons
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/** Simplified Shell pecten (scallop) mark used in the app logo chip. */
+/** Simplified Shell pecten (scallop) mark used in fallback monochrome icon chips. */
 val IconShellPecten: ImageVector by lazy {
     shellIcon("IconShellPecten") {
         moveTo(12f, 21f)

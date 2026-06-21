@@ -244,9 +244,9 @@ fun ShellLoginBackground(
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFF5F1E7),
-                        Color(0xFFF8FAFC),
-                        Color(0xFFF2F5F8),
+                        Color(0xFFF5F1E8),
+                        Color(0xFFF9F8F4),
+                        Color(0xFFEEF3F4),
                     ),
                 ),
             )
@@ -267,59 +267,67 @@ fun ShellLoginBackground(
                 )
             }
 
-            val arcColor = Color(0x338B939F)
+            val contourColor = Color(0x1E7F8A93)
             repeat(5) { index ->
-                val inset = index * (w * 0.065f)
-                val top = -h * (0.28f - index * 0.035f) + sin(time * 0.12f + index) * 14f
+                val inset = index * (w * 0.072f)
+                val top = -h * (0.2f - index * 0.028f) + sin(time * 0.09f + index) * 10f
                 drawRoundRect(
-                    color = arcColor.copy(alpha = 0.14f - index * 0.018f),
-                    topLeft = Offset(-w * 0.12f + inset, top),
+                    color = contourColor.copy(alpha = 0.10f - index * 0.013f),
+                    topLeft = Offset(-w * 0.04f + inset, top),
                     size = androidx.compose.ui.geometry.Size(
-                        width = w * 0.96f,
-                        height = h * 0.7f,
+                        width = w * 0.84f,
+                        height = h * 0.56f,
                     ),
-                    cornerRadius = CornerRadius(w * 0.22f, w * 0.22f),
-                    style = Stroke(width = 1.1f, cap = StrokeCap.Round),
+                    cornerRadius = CornerRadius(w * 0.2f, w * 0.2f),
+                    style = Stroke(width = 0.8f, cap = StrokeCap.Round),
                 )
                 drawRoundRect(
-                    color = arcColor.copy(alpha = 0.10f - index * 0.014f),
-                    topLeft = Offset(w * 0.42f - inset * 0.55f, h * 0.36f + index * 10f),
+                    color = contourColor.copy(alpha = 0.07f - index * 0.01f),
+                    topLeft = Offset(w * 0.56f - inset * 0.46f, h * 0.5f + index * 10f),
                     size = androidx.compose.ui.geometry.Size(
-                        width = w * 0.72f,
-                        height = h * 0.48f,
+                        width = w * 0.48f,
+                        height = h * 0.26f,
                     ),
-                    cornerRadius = CornerRadius(w * 0.18f, w * 0.18f),
-                    style = Stroke(width = 0.9f, cap = StrokeCap.Round),
+                    cornerRadius = CornerRadius(w * 0.16f, w * 0.16f),
+                    style = Stroke(width = 0.7f, cap = StrokeCap.Round),
                 )
             }
 
-            val bandColor = Color(0x29FFFFFF)
-            repeat(7) { index ->
-                val y = h * (0.14f + index * 0.11f) + sin(time * 0.08f + index) * 8f
+            val bandColor = Color(0x14888F99)
+            repeat(3) { index ->
+                val y = h * (0.24f + index * 0.2f) + sin(time * 0.06f + index) * 5f
                 drawLine(
-                    color = bandColor.copy(alpha = 0.22f - index * 0.018f),
+                    color = bandColor.copy(alpha = 0.13f - index * 0.018f),
                     start = Offset(x = 0f, y = y),
-                    end = Offset(x = w, y = y + 18f),
-                    strokeWidth = 1f,
+                    end = Offset(x = w, y = y + 10f),
+                    strokeWidth = 0.7f,
                 )
             }
 
-            repeat(24) { index ->
-                val column = index % 6
-                val row = index / 6
-                val baseX = w * (0.12f + column * 0.15f)
-                val baseY = h * (0.18f + row * 0.18f)
-                val drift = sin(time * 0.18f + index) * 10f
+            repeat(10) { index ->
+                val column = index % 5
+                val row = index / 5
+                val baseX = w * (0.16f + column * 0.17f)
+                val baseY = h * (0.3f + row * 0.28f)
+                val drift = sin(time * 0.12f + index) * 6f
                 drawCircle(
-                    color = Color(0x1C8B939F),
-                    radius = 2.2f,
-                    center = Offset(baseX + drift, baseY + drift * 0.3f),
+                    color = Color(0x16838B95),
+                    radius = 1.6f,
+                    center = Offset(baseX + drift, baseY + drift * 0.24f),
                 )
-                drawCircle(
-                    color = Color(0x12FFD100),
-                    radius = 6.8f,
-                    center = Offset(baseX + drift, baseY + drift * 0.3f),
-                    style = Stroke(width = 0.8f),
+            }
+
+            repeat(3) { index ->
+                val x = w * (0.16f + index * 0.27f)
+                val y = h * (0.16f + index * 0.22f)
+                drawRoundRect(
+                    color = Color(0x12FFFFFF),
+                    topLeft = Offset(x, y),
+                    size = androidx.compose.ui.geometry.Size(
+                        width = w * 0.14f,
+                        height = h * 0.06f,
+                    ),
+                    cornerRadius = CornerRadius(24f, 24f),
                 )
             }
         }

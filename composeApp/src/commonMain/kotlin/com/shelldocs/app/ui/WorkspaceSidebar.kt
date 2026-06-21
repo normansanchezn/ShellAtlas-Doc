@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
-import com.shelldocs.app.strings.StringRes.APP_BRAND_CONTENT_DESCRIPTION
 import com.shelldocs.app.strings.StringRes.APP_BRAND_NAME
 import com.shelldocs.app.strings.StringRes.CONFLUENCE_TXT
 import com.shelldocs.app.strings.StringRes.DARK_MODE_TXT
@@ -29,6 +28,7 @@ import com.shelldocs.app.strings.StringRes.SEARCH_TXT
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
+import com.shelldocs.core.designsystem.atoms.ShellBrandBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellKbdHint
@@ -140,20 +140,7 @@ private fun SidebarHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(ShellRadius.sm))
-                .background(colors.brand),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = IconShellPecten,
-                contentDescription = APP_BRAND_CONTENT_DESCRIPTION,
-                tint = colors.onBrand,
-                modifier = Modifier.size(22.dp),
-            )
-        }
+        ShellBrandBadge(size = 44.dp, iconSize = 26.dp)
         Text(APP_BRAND_NAME, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
     }
 }
