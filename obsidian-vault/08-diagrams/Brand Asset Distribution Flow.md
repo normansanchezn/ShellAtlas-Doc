@@ -13,10 +13,11 @@ tags:
 
 ```mermaid
 flowchart LR
-    A[shell_atlas_icon.svg] --> B[WorkspaceSidebar]
-    A --> C[WorkspaceRail]
-    A --> D[ShellAtlas.icns]
-    E[shell_atlas_logo.svg] --> B
-    D --> F[macOS nativeDistributions]
-    F --> G[Installed desktop app icon]
+    A[IconShellAtlasBrand shared vector] --> B[ShellBrandBadge]
+    B --> C[WorkspaceSidebar]
+    B --> D[WorkspaceRail]
+    B --> E[SignInScreen]
+    B --> F[AssistantRichContent]
+    G[composeApp desktop ShellAtlas.icns] --> H[macOS nativeDistributions]
+    H --> I[Installed desktop app icon]
 ```

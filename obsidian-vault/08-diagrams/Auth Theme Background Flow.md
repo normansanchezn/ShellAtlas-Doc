@@ -18,7 +18,9 @@ flowchart TD
     B --> C[SignInScreen]
     C --> D{Dark theme?}
     D -->|Yes| E[Animated node graph background]
-    D -->|No| F[Warm light background with glows and contour bands]
-    C --> G[Mobile and desktop auth content]
+    D -->|No| F[Warm light background with glows, contour bands and soft guide marks]
+    C --> G[Shared ShellBrandBadge header]
+    C --> H[Mobile and desktop auth content]
     B --> G
+    B --> H
 ```

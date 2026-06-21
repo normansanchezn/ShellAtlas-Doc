@@ -127,9 +127,14 @@ private fun WelcomeLogo() {
 private fun RotatingCapabilityChip(options: List<String>, modifier: Modifier = Modifier) {
     if (options.isEmpty()) return
     val colors = ShellTheme.colors
+    val isInstrumentedRuntime = isInstrumentedUiTestRuntime()
     var index by remember { mutableStateOf(0) }
 
-    LaunchedEffect(options) {
+    LaunchedEffect(options, isInstrumentedRuntime) {
+        if (isInstrumentedRuntime) {
+            index = 0
+            return@LaunchedEffect
+        }
         while (true) {
             delay(2600)
             index = (index + 1) % options.size

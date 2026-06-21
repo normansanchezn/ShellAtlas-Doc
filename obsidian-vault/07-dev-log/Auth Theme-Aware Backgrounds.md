@@ -18,6 +18,9 @@ tags:
 - Kept the existing animated node-and-star background for dark mode only.
 - Added a separate animated light background built from warm gradients, soft glows and contour bands.
 - Updated mobile auth copy colors to use the active theme rather than hardcoded white text.
+- Removed the extra `Knowledge Platform` subtitle from the auth hero so the new brand mark carries the header alone.
+- Softened desktop auth elevation with a larger, lower-opacity blur pass instead of a sharper card lift.
+- Refined the light-mode background again with quieter contour spacing and lighter structural accents.
 
 ## Files created
 
@@ -30,6 +33,7 @@ tags:
 - `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth/ui/SignInScreen.kt`
 - `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth/ui/ShellLoginBackground.kt`
 - `obsidian-vault/03-features/Auth.md`
+- `docs/project-tree.md`
 
 ## Decisions made
 

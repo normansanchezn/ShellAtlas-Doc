@@ -44,6 +44,7 @@ fun SignInScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsState()
+    val animateBackground = !isInstrumentedUiTestRuntime()
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -58,7 +59,10 @@ fun SignInScreen(
             .fillMaxSize()
             .testTag(DemoTestTags.SignInRoot),
     ) {
-        ShellLoginBackground(isDarkTheme = isDarkTheme)
+        ShellLoginBackground(
+            isDarkTheme = isDarkTheme,
+            animate = animateBackground,
+        )
 
         if (isMobile) {
             MobileSignInContent(

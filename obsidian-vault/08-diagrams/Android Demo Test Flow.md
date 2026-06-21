@@ -6,7 +6,7 @@ platform: "Android"
 area: "ShellAtlas"
 owner: "Product Engineering"
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 tags:
   - shellatlas
   - android
@@ -24,5 +24,5 @@ flowchart LR
     D --> E["Exercise existing ViewModels and UseCases"]
     D --> F["Pause between steps for recording"]
     F --> G["Optional device screenrecord captures demo clip"]
-    D --> H["Capture final Compose root snapshot"]
+    D --> H["Capture final device screencap snapshot"]
 ```

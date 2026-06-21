@@ -117,17 +117,22 @@ private fun buildGlowOrbs(): List<GlowOrb> =
 @Composable
 fun ShellLoginBackground(
     isDarkTheme: Boolean,
+    animate: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     // Monotonically increasing clock — never resets, so sin/cos never jump at cycle boundaries.
     var time by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(Unit) {
-        var lastMs = 0L
-        while (true) {
-            withFrameMillis { ms ->
-                if (lastMs != 0L) time += (ms - lastMs) / 22_000f * TWO_PI
-                lastMs = ms
+    LaunchedEffect(animate) {
+        if (animate) {
+            var lastMs = 0L
+            while (true) {
+                withFrameMillis { ms ->
+                    if (lastMs != 0L) time += (ms - lastMs) / 22_000f * TWO_PI
+                    lastMs = ms
+                }
             }
+        } else {
+            time = 0f
         }
     }
 
@@ -152,7 +157,8 @@ fun ShellLoginBackground(
     Canvas(
         modifier = modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
+            .pointerInput(animate) {
+                if (!animate) return@pointerInput
                 awaitPointerEventScope {
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Main)

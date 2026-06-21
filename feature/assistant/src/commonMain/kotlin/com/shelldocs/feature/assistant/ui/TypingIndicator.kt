@@ -1,11 +1,6 @@
 package com.shelldocs.feature.assistant.ui
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,12 +18,17 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 /** Three pulsing dots shown while the assistant is answering. */
 @Composable
 fun TypingIndicator(modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition()
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart),
-    )
+    val phase = if (isInstrumentedUiTestRuntime()) {
+        0f
+    } else {
+        val transition = rememberInfiniteTransition()
+        val animatedPhase by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart),
+        )
+        animatedPhase
+    }
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(3) { index ->
             val offset = (phase + index / 3f) % 1f

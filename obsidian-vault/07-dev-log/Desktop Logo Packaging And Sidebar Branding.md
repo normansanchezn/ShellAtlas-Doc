@@ -18,6 +18,8 @@ tags:
 - Removed the `Knowledge Platform` subtitle from the sidebar header.
 - Increased the rail brand chip size so compact and wide shells share the same visual anchor.
 - Added shared SVG logo assets and wired the macOS desktop package icon to a generated `.icns`.
+- Replaced the remaining prominent in-app legacy brand surfaces with a shared `ShellBrandBadge` backed by a shared
+  `IconShellAtlasBrand` vector, including auth and assistant entry points.
 
 ## Files created
 
@@ -33,6 +35,10 @@ tags:
 - `composeApp/src/commonMain/kotlin/com/shelldocs/app/strings/StringRes.kt`
 - `composeApp/src/commonMain/kotlin/com/shelldocs/app/ui/WorkspaceRail.kt`
 - `composeApp/src/commonMain/kotlin/com/shelldocs/app/ui/WorkspaceSidebar.kt`
+- `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/atoms/ShellBrandBadge.kt`
+- `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/icons/IconShellAtlasBrand.kt`
+- `feature/assistant/src/commonMain/kotlin/com/shelldocs/feature/assistant/ui/AssistantRichContent.kt`
+- `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth/ui/SignInScreen.kt`
 - `docs/project-tree.md`
 - `obsidian-vault/03-features/Workspace View Hierarchy.md`
 

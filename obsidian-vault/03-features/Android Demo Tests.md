@@ -6,7 +6,7 @@ platform: "Android"
 area: "ShellAtlas"
 owner: "Product Engineering"
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 tags:
   - shellatlas
   - android
@@ -33,7 +33,7 @@ Manual demos are inconsistent and slow to reproduce when recording stakeholder v
 - Demo tests sign in using demo mode.
 - Tests navigate the main app surfaces in a repeatable order.
 - Optional pauses make it easier to capture clean screen recordings.
-- Each flow can save a final snapshot automatically.
+- Each flow can save a final snapshot automatically without depending on Compose root image capture.
 - Each flow can save an `.mp4` automatically when `recordDemoVideo=true`.
 
 ## Related Files
@@ -103,8 +103,13 @@ Manual demos are inconsistent and slow to reproduce when recording stakeholder v
 - Route-level tags are centralized in `DemoTestTags`.
 - Recording pauses are configurable with `demoPauseMs`.
 - Instrumented flows now force landscape via the Activity instead of depending on `UiDevice`.
-- Final snapshots are saved automatically from the Compose root.
+- Final snapshots are now saved through device-level `screencap`, which avoids Compose measurement crashes while the
+  UI is still animating.
 - Demo videos can be saved automatically to `/sdcard/Movies/ShellAtlasDemo/`.
+- The latest local failure mode was not `GetPendingUpdatesUseCase` missing from the APK. The reproducible crash path
+  came from snapshot capture during active layout/animation work.
+- The auth background and assistant perpetual animations now disable themselves only during instrumented runtime so
+  Compose idling stays stable.
 - Paparazzi was intentionally not used for video capture because it is a screenshot tool, not an end-to-end recorder.
 
 ## Open Questions

@@ -39,7 +39,12 @@ Authentication and role management entry flow for ShellAtlas.
 - The sign-in experience is now theme-aware end to end: the persisted light preference no longer renders against the
   dark network background.
 - Dark mode keeps the animated node graph, while light mode now uses a separate warm editorial background with soft
-  glows and contour bands.
+  glows, contour bands and quieter structural markers that fit the daytime theme.
+- Auth branding now uses the shared ShellAtlas SVG badge, and the `Knowledge Platform` subtitle was removed so the
+  top area stays centered and cleaner on both mobile and desktop.
+- Desktop sign-in card elevation is now carried by a softer blurred glow instead of a harder shadow edge.
+- Android instrumented UI tests now render the same auth background statically so Compose can reach idle state while
+  demo flows and artifact generation are running.
 
 ## Mermaid Diagram
 

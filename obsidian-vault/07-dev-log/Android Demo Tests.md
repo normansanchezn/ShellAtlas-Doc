@@ -2,7 +2,7 @@
 title: "Dev Log - Android Demo Tests"
 type: "dev-log"
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-20
 tags:
   - shellatlas
   - dev-log
@@ -20,6 +20,10 @@ tags:
 - Replaced `UiDevice` orientation control with Activity-managed landscape orientation.
 - Added automatic final snapshots for each flow and optional on-device `.mp4` recording.
 - Forced a newer Espresso version in `androidTest` to avoid the `InputManager.getInstance()` crash path from the older transitive stack.
+- Replaced Compose-root snapshot capture with device `screencap` so animated screens no longer crash instrumentation
+  while generating demo artifacts.
+- Disabled auth background animation and assistant perpetual motion only during instrumented runtime so Compose reaches
+  idle state for demo flows.
 
 ## Files created
 
@@ -49,11 +53,14 @@ tags:
 - Keep recording outside the test process and make the UI flow deterministic inside the test.
 - Use landscape orientation so phone-size devices can expose the wider workspace navigation.
 - Prefer built-in Compose snapshots plus device `screenrecord` over Paparazzi for end-to-end demo flows.
+- After the Compose layout crash was reproduced, stable device-level capture became the default snapshot strategy.
 
 ## Issues found
 
 - The app needed stable semantics tags before Android UI automation would be reliable.
 - The instrumented stack was resolving `espresso-core:3.5.0`, which is too old for the current emulator/device API combination that throws `NoSuchMethodException` on `InputManager.getInstance()`.
+- The latest failing local run did not reproduce a `GetPendingUpdatesUseCase` class loading issue. It failed in
+  Compose measurement while trying to capture the final snapshot.
 
 ## Tests added
 
