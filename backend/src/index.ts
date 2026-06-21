@@ -3,7 +3,13 @@ import {Hono} from "hono";
 import {cors} from "hono/cors";
 import {createClient} from "@supabase/supabase-js";
 import {parseMarkdown} from "./markdown-parser.ts";
-import {confluenceConfigFromEnv, syncConfluence, fetchPageTree} from "./confluence-sync.ts";
+import {type ConfluenceConfig, confluenceConfigFromEnv, fetchPageTree, syncConfluence} from "./confluence-sync.ts";
+import {
+    buildAuthorizationUrl,
+    completeOAuthLogin,
+    confluenceConfigFromOAuth,
+    hasStoredOAuthSession
+} from "./confluence-oauth.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase client
@@ -846,13 +852,45 @@ app.post("/v1/assistant/intelligence", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// Confluence auth resolution — prefer OAuth (required on sites that disabled
+// Basic auth with API tokens); fall back to the legacy Basic-auth path.
+// ---------------------------------------------------------------------------
+
+async function resolveConfluenceConfig(): Promise<ConfluenceConfig | null> {
+    if (hasStoredOAuthSession()) {
+        return confluenceConfigFromOAuth();
+    }
+    return confluenceConfigFromEnv();
+}
+
+// ---------------------------------------------------------------------------
+// GET /v1/sources/confluence/oauth/start — redirects to Atlassian consent
+// ---------------------------------------------------------------------------
+
+app.get("/v1/sources/confluence/oauth/start", (c) => {
+    const state = crypto.randomUUID();
+    return c.redirect(buildAuthorizationUrl(state));
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/sources/confluence/oauth/callback — exchanges code for tokens
+// ---------------------------------------------------------------------------
+
+app.get("/v1/sources/confluence/oauth/callback", async (c) => {
+    const code = c.req.query("code");
+    if (!code) return c.json({error: "Missing ?code= from Atlassian redirect"}, 400);
+    await completeOAuthLogin(code);
+    return c.json({authorized: true});
+});
+
+// ---------------------------------------------------------------------------
 // POST /v1/sources/confluence/sync
 // ---------------------------------------------------------------------------
 
 app.post("/v1/sources/confluence/sync", async (c) => {
-    const confluenceConfig = confluenceConfigFromEnv();
+    const confluenceConfig = await resolveConfluenceConfig();
     if (!confluenceConfig) {
-        return c.json({error: "Confluence is not configured (missing CONFLUENCE_BASE_URL, CONFLUENCE_API_TOKEN, or CONFLUENCE_USER_EMAIL)"}, 400);
+        return c.json({error: "Confluence is not configured — visit GET /v1/sources/confluence/oauth/start to authorize"}, 400);
     }
     const result = await syncConfluence(confluenceConfig, db);
     return c.json(result);
@@ -863,9 +901,9 @@ app.post("/v1/sources/confluence/sync", async (c) => {
 // ---------------------------------------------------------------------------
 
 app.get("/v1/sources/confluence/tree", async (c) => {
-    const confluenceConfig = confluenceConfigFromEnv();
+    const confluenceConfig = await resolveConfluenceConfig();
     if (!confluenceConfig) {
-        return c.json({error: "Confluence is not configured"}, 400);
+        return c.json({error: "Confluence is not configured — visit GET /v1/sources/confluence/oauth/start to authorize"}, 400);
     }
     const tree = await fetchPageTree(confluenceConfig);
     return c.json({pages: tree, total: tree.length});

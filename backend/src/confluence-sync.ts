@@ -8,28 +8,31 @@ import {parseMarkdown} from "./markdown-parser.ts";
 
 export interface ConfluenceConfig {
     baseUrl: string;
-    apiToken: string;
-    userEmail: string;
+    /** Full `Authorization` header value — e.g. `Basic xxx` or `Bearer xxx`. */
+    authHeader: string;
 }
 
+/**
+ * Legacy path: Basic auth (email + API token) directly against the site
+ * domain. Only works on sites that haven't disabled API-token Basic auth —
+ * see `confluence-oauth.ts` for the OAuth 2.0 (3LO) path required on sites
+ * that enforce `WWW-Authenticate: OAuth`.
+ */
 export function confluenceConfigFromEnv(): ConfluenceConfig | null {
     const baseUrl = process.env.CONFLUENCE_BASE_URL;
     const apiToken = process.env.CONFLUENCE_API_TOKEN;
     const userEmail = process.env.CONFLUENCE_USER_EMAIL;
     if (!baseUrl || !apiToken || !userEmail) return null;
-    return {baseUrl: baseUrl.replace(/\/+$/, ""), apiToken, userEmail};
+    const credentials = Buffer.from(`${userEmail}:${apiToken}`).toString("base64");
+    return {baseUrl: baseUrl.replace(/\/+$/, ""), authHeader: `Basic ${credentials}`};
 }
 
 // ---------------------------------------------------------------------------
 // Confluence REST helpers
 // ---------------------------------------------------------------------------
 
-function authHeader(config: ConfluenceConfig): string {
-    const credentials = Buffer.from(`${config.userEmail}:${config.apiToken}`).toString("base64");
-    return `Basic ${credentials}`;
-}
-
 interface ConfluenceSpace {
+    id: string;
     key: string;
     name: string;
 }
@@ -38,21 +41,19 @@ interface ConfluencePage {
     id: string;
     title: string;
     status: string;
+    parentId: string | null;
     body?: {storage?: {value: string}};
     version?: {number: number; when: string};
-    space?: {key: string; name: string};
     ancestors?: Array<{id: string; title: string}>;
-    _links?: {webui?: string};
 }
 
-interface ConfluencePageList {
-    results: ConfluencePage[];
-    _links?: {next?: string};
-    size: number;
-}
+// ---------------------------------------------------------------------------
+// Confluence REST API v2 helpers
+// (v1 `/rest/api/*` is gone on sites that enforce OAuth — see `confluence-oauth.ts`)
+// ---------------------------------------------------------------------------
 
-interface ConfluenceSpaceList {
-    results: ConfluenceSpace[];
+interface V2List<T> {
+    results: T[];
     _links?: {next?: string};
 }
 
@@ -60,7 +61,7 @@ async function confluenceFetch<T>(config: ConfluenceConfig, path: string): Promi
     const url = path.startsWith("http") ? path : `${config.baseUrl}${path}`;
     const response = await fetch(url, {
         headers: {
-            Authorization: authHeader(config),
+            Authorization: config.authHeader,
             Accept: "application/json",
         },
     });
@@ -71,27 +72,72 @@ async function confluenceFetch<T>(config: ConfluenceConfig, path: string): Promi
     return response.json() as Promise<T>;
 }
 
-async function fetchAllSpaces(config: ConfluenceConfig): Promise<ConfluenceSpace[]> {
-    const spaces: ConfluenceSpace[] = [];
-    let path: string | null = "/rest/api/space?limit=25&type=global";
+async function confluenceFetchAllPages<T>(config: ConfluenceConfig, firstPath: string): Promise<T[]> {
+    const items: T[] = [];
+    let path: string | null = firstPath;
     while (path) {
-        const batch = await confluenceFetch<ConfluenceSpaceList>(config, path);
-        spaces.push(...batch.results);
-        path = batch._links?.next ?? null;
+        const batch = await confluenceFetch<V2List<T>>(config, path);
+        items.push(...batch.results);
+        path = batch._links?.next
+            ? batch._links.next.startsWith("http")
+                ? batch._links.next
+                : `${config.baseUrl}${batch._links.next}`
+            : null;
     }
-    return spaces;
+    return items;
 }
 
-async function fetchPagesInSpace(config: ConfluenceConfig, spaceKey: string): Promise<ConfluencePage[]> {
-    const pages: ConfluencePage[] = [];
-    let path: string | null =
-        `/rest/api/content?spaceKey=${spaceKey}&type=page&expand=body.storage,version,space,ancestors&limit=25`;
-    while (path) {
-        const batch = await confluenceFetch<ConfluencePageList>(config, path);
-        pages.push(...batch.results);
-        path = batch._links?.next ? `${config.baseUrl}${batch._links.next}` : null;
+async function fetchAllSpaces(config: ConfluenceConfig): Promise<ConfluenceSpace[]> {
+    type RawSpace = { id: string; key: string; name: string; type: string };
+    const raw = await confluenceFetchAllPages<RawSpace>(config, "/wiki/api/v2/spaces?limit=25");
+    return raw.filter((s) => s.type !== "personal").map((s) => ({id: s.id, key: s.key, name: s.name}));
+}
+
+/** Resolves the ancestor chain (root → immediate parent) for every page in a space, using only data already fetched. */
+function resolveAncestors(pages: Array<{ id: string; title: string; parentId: string | null }>): Map<string, Array<{
+    id: string;
+    title: string
+}>> {
+    const byId = new Map(pages.map((p) => [p.id, p]));
+    const result = new Map<string, Array<{ id: string; title: string }>>();
+    for (const page of pages) {
+        const chain: Array<{ id: string; title: string }> = [];
+        let parentId = page.parentId;
+        const seen = new Set<string>();
+        while (parentId && byId.has(parentId) && !seen.has(parentId)) {
+            seen.add(parentId);
+            const parent = byId.get(parentId)!;
+            chain.unshift({id: parent.id, title: parent.title});
+            parentId = parent.parentId;
+        }
+        result.set(page.id, chain);
     }
-    return pages;
+    return result;
+}
+
+async function fetchPagesInSpace(config: ConfluenceConfig, space: ConfluenceSpace): Promise<ConfluencePage[]> {
+    type RawPage = {
+        id: string;
+        status: string;
+        title: string;
+        parentId: string | null;
+        body?: { storage?: { value: string } };
+        version?: { number: number; createdAt: string };
+    };
+    const raw = await confluenceFetchAllPages<RawPage>(
+        config,
+        `/wiki/api/v2/spaces/${space.id}/pages?limit=50&body-format=storage`,
+    );
+    const ancestors = resolveAncestors(raw);
+    return raw.map((p) => ({
+        id: p.id,
+        title: p.title,
+        status: p.status,
+        parentId: p.parentId,
+        body: p.body,
+        version: p.version ? {number: p.version.number, when: p.version.createdAt} : undefined,
+        ancestors: ancestors.get(p.id) ?? [],
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -108,24 +154,18 @@ export interface PageTreeNode {
 
 export async function fetchPageTree(config: ConfluenceConfig): Promise<PageTreeNode[]> {
     const spaces = await fetchAllSpaces(config);
+    const siteBaseUrl = (process.env.CONFLUENCE_BASE_URL ?? "").replace(/\/+$/, "");
     const tree: PageTreeNode[] = [];
     for (const space of spaces) {
-        let path: string | null =
-            `/rest/api/content?spaceKey=${space.key}&type=page&expand=ancestors&limit=50`;
-        while (path) {
-            const batch = await confluenceFetch<ConfluencePageList>(config, path);
-            for (const page of batch.results) {
-                tree.push({
-                    id: page.id,
-                    title: page.title,
-                    spaceKey: space.key,
-                    ancestors: (page.ancestors ?? []).map((a) => a.title),
-                    webUrl: page._links?.webui
-                        ? `${config.baseUrl}${page._links.webui}`
-                        : null,
-                });
-            }
-            path = batch._links?.next ? `${config.baseUrl}${batch._links.next}` : null;
+        const pages = await fetchPagesInSpace(config, space);
+        for (const page of pages) {
+            tree.push({
+                id: page.id,
+                title: page.title,
+                spaceKey: space.key,
+                ancestors: (page.ancestors ?? []).map((a) => a.title),
+                webUrl: siteBaseUrl ? `${siteBaseUrl}/spaces/${space.key}/pages/${page.id}` : null,
+            });
         }
     }
     return tree;
@@ -153,12 +193,31 @@ function storageToMarkdown(html: string): string {
     md = md.replace(/<ac:[\s\S]*?<\/ac:[^>]+>/gi, "");
     md = md.replace(/<ac:[^/]*\/>/gi, "");
     md = stripTags(md);
+    md = decodeHtmlEntities(md);
     md = md.replace(/\n{3,}/g, "\n\n");
     return md.trim();
 }
 
 function stripTags(html: string): string {
     return html.replace(/<[^>]+>/g, "");
+}
+
+const NAMED_ENTITIES: Record<string, string> = {
+    amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ",
+    aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú",
+    Aacute: "Á", Eacute: "É", Iacute: "Í", Oacute: "Ó", Uacute: "Ú",
+    ntilde: "ñ", Ntilde: "Ñ", uuml: "ü", Uuml: "Ü",
+    ccedil: "ç", Ccedil: "Ç", agrave: "à", egrave: "è",
+    iexcl: "¡", iquest: "¿", hellip: "…", mdash: "—", ndash: "–",
+    laquo: "«", raquo: "»", ldquo: "“", rdquo: "”",
+    lsquo: "‘", rsquo: "’", trade: "™", copy: "©", reg: "®",
+};
+
+function decodeHtmlEntities(text: string): string {
+    return text
+        .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+        .replace(/&([a-zA-Z]+);/g, (match, name) => NAMED_ENTITIES[name] ?? match);
 }
 
 // ---------------------------------------------------------------------------
@@ -202,7 +261,7 @@ export async function syncConfluence(
     for (const space of spaces) {
         let pages: ConfluencePage[];
         try {
-            pages = await fetchPagesInSpace(config, space.key);
+            pages = await fetchPagesInSpace(config, space);
         } catch (err) {
             result.errors.push(`Failed to fetch space ${space.key}: ${(err as Error).message}`);
             result.failed++;
