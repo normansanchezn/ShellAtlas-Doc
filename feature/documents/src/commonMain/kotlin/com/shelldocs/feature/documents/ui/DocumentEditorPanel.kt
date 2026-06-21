@@ -6,10 +6,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
@@ -17,8 +15,10 @@ import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.molecules.MarkdownEditorField
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.documents.DocumentsStringRes
 import com.shelldocs.feature.documents.presentation.DocumentsEditorStep
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
 import com.shelldocs.feature.documents.presentation.DocumentsState
@@ -67,10 +67,10 @@ private fun DocumentEditorHeader(
     isWide: Boolean,
 ) {
     val titleText = buildString {
-        append("Editing")
+        append(DocumentsStringRes.EDITING)
         if (!isWide) {
             append(" · ")
-            append(if (state.editorStep == DocumentsEditorStep.Edit) "Source" else "Preview")
+            append(if (state.editorStep == DocumentsEditorStep.Edit) DocumentsStringRes.SOURCE else DocumentsStringRes.PREVIEW)
         }
         state.selectedDocument?.title?.takeIf { it.isNotBlank() }?.let {
             append(" · ")
@@ -78,68 +78,44 @@ private fun DocumentEditorHeader(
         }
     }
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
-        ) {
-            if (isWide) {
+        ShellScreenToolbar(
+            title = titleText,
+            subtitle = state.draftMessage,
+            leadingContent = {
+                if (isWide) {
+                    ShellGhostButton(
+                        text = DocumentsStringRes.BACK_TO_WORKSPACE,
+                        icon = IconChevronLeft,
+                        onClick = { onIntent(DocumentsIntent.CancelEditing) },
+                        enabled = !state.isBusy,
+                    )
+                } else {
+                    ShellIconButton(
+                        icon = IconChevronLeft,
+                        contentDescription = DocumentsStringRes.BACK_TO_WORKSPACE,
+                        onClick = { onIntent(DocumentsIntent.CancelEditing) },
+                    )
+                }
+            },
+            trailingContent = {
                 ShellGhostButton(
-                    text = "Back to workspace",
-                    icon = IconChevronLeft,
-                    onClick = { onIntent(DocumentsIntent.CancelEditing) },
+                    text = if (state.loadingMessage == "Saving draft...") "Saving..." else "Save draft",
+                    onClick = { onIntent(DocumentsIntent.SaveDraft) },
                     enabled = !state.isBusy,
+                    modifier = Modifier.testTag(DemoTestTags.DocumentsSaveDraft),
                 )
-                Text(
-                    text = titleText,
-                    style = ShellTheme.typography.sectionTitle,
-                    color = ShellTheme.colors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f).padding(start = ShellSpacing.sm),
-                )
-            } else {
-                ShellIconButton(
-                    icon = IconChevronLeft,
-                    contentDescription = "Back to workspace",
-                    onClick = { onIntent(DocumentsIntent.CancelEditing) },
-                )
-                // Title moves to its own row below — a long doc title here would
-                // wrap across several lines and push the back/save controls apart.
-                Spacer(modifier = Modifier.weight(1f))
-            }
-            state.draftMessage?.let { message ->
-                Text(
-                    text = message,
-                    style = ShellTheme.typography.caption,
-                    color = ShellTheme.colors.success,
-                    maxLines = 1,
-                )
-            }
-            ShellGhostButton(
-                text = if (state.loadingMessage == "Saving draft...") "Saving..." else "Save draft",
-                onClick = { onIntent(DocumentsIntent.SaveDraft) },
-                enabled = !state.isBusy,
-                modifier = Modifier.testTag(DemoTestTags.DocumentsSaveDraft),
-            )
-            if (isWide && state.canPublish) {
-                ShellPrimaryButton(
-                    text = if (state.loadingMessage == "Publishing document...") "Publishing..." else "Publish",
-                    onClick = { onIntent(DocumentsIntent.Publish("Updated content")) },
-                    enabled = !state.isBusy,
-                    modifier = Modifier.testTag(DemoTestTags.DocumentsPublish),
-                )
-            }
-        }
+                if (state.canPublish) {
+                    ShellPrimaryButton(
+                        text = if (state.loadingMessage == "Publishing document...") "Publishing..." else "Publish",
+                        onClick = { onIntent(DocumentsIntent.Publish("Updated content")) },
+                        enabled = !state.isBusy,
+                        modifier = Modifier.testTag(DemoTestTags.DocumentsPublish),
+                    )
+                }
+            },
+        )
         if (!isWide) {
-            Text(
-                text = titleText,
-                style = ShellTheme.typography.sectionTitle,
-                color = ShellTheme.colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth().padding(top = ShellSpacing.xs),
-            )
+            Spacer(modifier = Modifier.height(ShellSpacing.xs))
         }
     }
 }

@@ -29,7 +29,7 @@ import com.shelldocs.core.domain.usecase.auth.AssignRoleUseCase
 import com.shelldocs.core.domain.usecase.auth.GetTeamMembersUseCase
 import com.shelldocs.core.domain.usecase.auth.SignInUseCase
 import com.shelldocs.core.domain.usecase.auth.SignOutUseCase
-import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
+import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignmentsUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.dashboard.GetDashboardMetricsUseCase
@@ -227,7 +227,7 @@ class AppContainer(
         scanForUpdates = ScanForUpdatesUseCase(pendingUpdatesRepository),
         getMetadataIssues = GetMetadataIssuesUseCase(documentClassificationRepository),
         getHealthyDocuments = GetHealthyDocumentsUseCase(pendingUpdatesRepository),
-        acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(documentClassificationRepository),
+        applyMetadataAssignments = ApplyMetadataAssignmentsUseCase(documentClassificationRepository),
         assignMetadata = AssignMetadataUseCase(documentClassificationRepository),
         setManualRiskLevel = SetManualRiskLevelUseCase(pendingUpdatesRepository),
         currentUserRole = currentRole(),

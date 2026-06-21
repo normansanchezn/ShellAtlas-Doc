@@ -8,5 +8,9 @@ import com.shelldocs.core.domain.repository.PendingUpdatesRepository
 class GetHealthyDocumentsUseCase(private val pendingUpdatesRepository: PendingUpdatesRepository) {
 
     suspend operator fun invoke(): DomainResult<List<PendingUpdate>> =
-        pendingUpdatesRepository.healthyDocuments().map { it.sortedBy { row -> row.documentTitle.lowercase() } }
+        pendingUpdatesRepository.healthyDocuments().map { rows ->
+            rows
+                .distinctBy { it.documentId }
+                .sortedBy { row -> row.documentTitle.lowercase() }
+        }
 }

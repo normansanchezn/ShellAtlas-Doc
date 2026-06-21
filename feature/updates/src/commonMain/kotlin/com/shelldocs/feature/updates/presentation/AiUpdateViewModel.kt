@@ -90,6 +90,7 @@ class AiUpdateViewModel(
                             attributes = suggestion.attributes,
                             currentContentBlocks = suggestion.currentContentBlocks,
                             suggestedMarkdown = suggestion.suggestedMarkdown,
+                            hasSuggestedChanges = suggestion.hasSuggestedChanges,
                         )
                     }
                 },

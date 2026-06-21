@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
@@ -18,8 +17,10 @@ import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.atoms.ShellTextField
 import com.shelldocs.core.designsystem.icons.IconChevronLeft
 import com.shelldocs.core.designsystem.molecules.MarkdownEditorField
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.documents.DocumentsStringRes
 import com.shelldocs.feature.documents.presentation.AttributesDraft
 import com.shelldocs.feature.documents.presentation.DocumentsEditorStep
 import com.shelldocs.feature.documents.presentation.DocumentsIntent
@@ -34,48 +35,41 @@ fun NewDocumentEditorPanel(
 ) {
     val colors = ShellTheme.colors
     Column(modifier = modifier.background(colors.background).padding(ShellSpacing.lg)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
-        ) {
-            if (isWide) {
-                ShellGhostButton(
-                    text = "Back to workspace",
-                    icon = IconChevronLeft,
-                    onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
-                    enabled = !state.isBusy,
-                )
-            } else {
-                ShellIconButton(
-                    icon = IconChevronLeft,
-                    contentDescription = "Back to workspace",
-                    onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
-                )
-            }
-            Text(
-                text = buildString {
-                    append("New document")
-                    if (!isWide) {
-                        append(" · ")
-                        append(if (state.newDocumentStep == DocumentsEditorStep.Edit) "Source" else "Preview")
-                    }
-                },
-                style = ShellTheme.typography.sectionTitle,
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(start = ShellSpacing.sm),
-            )
-            if (isWide) {
-                ShellPrimaryButton(
-                    text = if (state.loadingMessage == "Creating document...") "Creating..." else "Create document",
-                    onClick = { onIntent(DocumentsIntent.SubmitNewDocument) },
-                    enabled = !state.isBusy,
-                    modifier = Modifier.testTag(DemoTestTags.DocumentsCreate),
-                )
-            }
-        }
+        ShellScreenToolbar(
+            title = buildString {
+                append(DocumentsStringRes.NEW_DOCUMENT)
+                if (!isWide) {
+                    append(" · ")
+                    append(if (state.newDocumentStep == DocumentsEditorStep.Edit) DocumentsStringRes.SOURCE else DocumentsStringRes.PREVIEW)
+                }
+            },
+            leadingContent = {
+                if (isWide) {
+                    ShellGhostButton(
+                        text = DocumentsStringRes.BACK_TO_WORKSPACE,
+                        icon = IconChevronLeft,
+                        onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
+                        enabled = !state.isBusy,
+                    )
+                } else {
+                    ShellIconButton(
+                        icon = IconChevronLeft,
+                        contentDescription = DocumentsStringRes.BACK_TO_WORKSPACE,
+                        onClick = { onIntent(DocumentsIntent.CancelNewDocument) },
+                    )
+                }
+            },
+            trailingContent = {
+                if (isWide) {
+                    ShellPrimaryButton(
+                        text = if (state.loadingMessage == "Creating document...") "Creating..." else "Create document",
+                        onClick = { onIntent(DocumentsIntent.SubmitNewDocument) },
+                        enabled = !state.isBusy,
+                        modifier = Modifier.testTag(DemoTestTags.DocumentsCreate),
+                    )
+                }
+            },
+        )
 
         if (isWide) {
             WideNewDocumentEditor(

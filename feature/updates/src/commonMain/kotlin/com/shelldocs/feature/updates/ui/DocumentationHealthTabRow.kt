@@ -44,7 +44,7 @@ fun DocumentationHealthTabRow(
                     .clip(RoundedCornerShape(ShellRadius.sm))
                     .background(if (isSelected) colors.brand else colors.surfaceSubtle)
                     .clickable { onSelect(tab) }
-                    .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
+                    .padding(horizontal = ShellSpacing.md, vertical = ShellSpacing.xs),
             )
         }
     }

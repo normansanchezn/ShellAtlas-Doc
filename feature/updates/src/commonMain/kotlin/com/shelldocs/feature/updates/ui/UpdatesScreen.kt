@@ -4,9 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.shelldocs.core.common.testing.DemoTestTags
@@ -14,9 +12,12 @@ import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.icons.IconRefresh
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
-import com.shelldocs.core.domain.entity.document.MetadataAttribute
+import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
+import com.shelldocs.core.domain.entity.document.MetadataAssignment
+import com.shelldocs.feature.updates.UpdatesStringRes
 import com.shelldocs.feature.updates.presentation.DocumentationHealthTab
 import com.shelldocs.feature.updates.presentation.UpdatesEffect
 import com.shelldocs.feature.updates.presentation.UpdatesIntent
@@ -33,7 +34,10 @@ fun UpdatesScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = ShellTheme.colors
-    var editTarget by remember { mutableStateOf<Pair<String, MetadataAttribute>?>(null) }
+    var editTarget by remember { mutableStateOf<DocumentClassificationResult?>(null) }
+    var pendingConfirmation by remember {
+        mutableStateOf<Pair<DocumentClassificationResult, List<MetadataAssignment>>?>(null)
+    }
 
     LaunchedEffect(viewModel) { viewModel.onIntent(UpdatesIntent.Initialize) }
     LaunchedEffect(viewModel) {
@@ -51,29 +55,22 @@ fun UpdatesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(ShellSpacing.lg),
+                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Documentation Health", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                    Text(
-                        text = "${state.updates.size} documents need attention · Maintenance triage",
-                        style = ShellTheme.typography.caption,
-                        color = colors.textMuted,
+            ShellScreenToolbar(
+                title = UpdatesStringRes.PAGE_TITLE,
+                subtitle = "${state.updates.size} ${UpdatesStringRes.PAGE_SUBTITLE_SUFFIX}",
+                trailingContent = {
+                    ShellGhostButton(
+                        text = if (state.isScanning) UpdatesStringRes.SCANNING else UpdatesStringRes.SCAN_NOW,
+                        icon = IconRefresh,
+                        onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
+                        enabled = !state.isScanning && !state.isLoading,
+                        modifier = Modifier.testTag(DemoTestTags.UpdatesScan),
                     )
-                }
-                ShellGhostButton(
-                    text = if (state.isScanning) "Scanning..." else "Scan now",
-                    icon = IconRefresh,
-                    onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
-                    enabled = !state.isScanning && !state.isLoading,
-                    modifier = Modifier.testTag(DemoTestTags.UpdatesScan),
-                )
-            }
+                },
+            )
 
             DocumentationHealthTabRow(
                 selectedTab = state.selectedTab,
@@ -96,10 +93,7 @@ fun UpdatesScreen(
                         issues = state.metadataIssues,
                         isAdmin = state.isAdmin,
                         isWide = isWide,
-                        onAcceptSuggestion = { documentId, attribute ->
-                            viewModel.onIntent(UpdatesIntent.AcceptMetadataSuggestion(documentId, attribute))
-                        },
-                        onEditMetadata = { documentId, attribute -> editTarget = documentId to attribute },
+                        onEditMetadata = { issue -> editTarget = issue },
                     )
                 }
                 DocumentationHealthTab.HEALTHY -> {
@@ -113,12 +107,12 @@ fun UpdatesScreen(
         }
 
         when {
-            state.isLoading -> ShellLoadingOverlay(message = "Loading pending updates...")
-            state.isScanning -> ShellLoadingOverlay(message = "Scanning documentation health...")
+            state.isLoading -> ShellLoadingOverlay(message = UpdatesStringRes.LOADING_PENDING_UPDATES)
+            state.isScanning -> ShellLoadingOverlay(message = UpdatesStringRes.LOADING_DOCUMENTATION_HEALTH)
             state.isLoadingMetadataIssues && state.selectedTab == DocumentationHealthTab.METADATA_ISSUES ->
-                ShellLoadingOverlay(message = "Classifying documents...")
+                ShellLoadingOverlay(message = UpdatesStringRes.LOADING_CLASSIFYING_DOCUMENTS)
             state.isLoadingHealthyDocuments && state.selectedTab == DocumentationHealthTab.HEALTHY ->
-                ShellLoadingOverlay(message = "Loading healthy documents...")
+                ShellLoadingOverlay(message = UpdatesStringRes.LOADING_HEALTHY_DOCUMENTS)
         }
     }
 
@@ -129,14 +123,25 @@ fun UpdatesScreen(
         )
     }
 
-    editTarget?.let { (documentId, attribute) ->
+    editTarget?.let { issue ->
         EditMetadataDialog(
-            documentId = documentId,
-            attribute = attribute,
+            issue = issue,
             onDismiss = { editTarget = null },
-            onConfirm = { id, attr, value ->
-                viewModel.onIntent(UpdatesIntent.AssignMetadata(id, attr, value))
+            onAccept = { _, assignments ->
+                pendingConfirmation = issue to assignments
                 editTarget = null
+            },
+        )
+    }
+
+    pendingConfirmation?.let { (issue, assignments) ->
+        ConfirmMetadataUpdateDialog(
+            issue = issue,
+            assignments = assignments,
+            onDismiss = { pendingConfirmation = null },
+            onConfirm = {
+                viewModel.onIntent(UpdatesIntent.ApplyMetadataAssignments(issue.documentId, assignments))
+                pendingConfirmation = null
             },
         )
     }

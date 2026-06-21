@@ -2,18 +2,7 @@ package com.shelldocs.feature.assistant.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
@@ -33,6 +22,7 @@ import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.assistant.AssistantStringRes
 import com.shelldocs.feature.assistant.presentation.AssistantEffect
 import com.shelldocs.feature.assistant.presentation.AssistantIntent
 import com.shelldocs.feature.assistant.presentation.AssistantViewModel
@@ -104,7 +94,7 @@ fun AssistantScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        contentPadding = PaddingValues(
                             horizontal = ShellSpacing.xxl,
                             vertical = ShellSpacing.lg,
                         ),
@@ -137,7 +127,7 @@ fun AssistantScreen(
         }
 
         if (state.isInitializing) {
-            ShellLoadingOverlay(message = "Preparing assistant...")
+            ShellLoadingOverlay(message = AssistantStringRes.PREPARING)
         }
     }
 

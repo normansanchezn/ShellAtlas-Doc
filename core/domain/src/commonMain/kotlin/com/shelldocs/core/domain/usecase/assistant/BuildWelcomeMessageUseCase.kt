@@ -10,7 +10,7 @@ import com.shelldocs.core.domain.entity.assistant.AssistantLanguage
  */
 class BuildWelcomeMessageUseCase {
 
-    operator fun invoke(language: AssistantLanguage = AssistantLanguage.ENGLISH): String = when (language) {
+    operator fun invoke(language: AssistantLanguage = AssistantLanguage.SPANISH): String = when (language) {
         AssistantLanguage.SPANISH -> SPANISH
         AssistantLanguage.FRENCH -> FRENCH
         AssistantLanguage.ENGLISH -> ENGLISH

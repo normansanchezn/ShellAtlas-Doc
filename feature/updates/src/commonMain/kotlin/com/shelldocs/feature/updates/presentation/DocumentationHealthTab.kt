@@ -1,8 +1,10 @@
 package com.shelldocs.feature.updates.presentation
 
+import com.shelldocs.feature.updates.UpdatesStringRes
+
 /** Sections within the Documentation Health screen. */
 enum class DocumentationHealthTab(val label: String) {
-    HEALTH("Documentation Health"),
-    METADATA_ISSUES("Metadata Issues"),
-    HEALTHY("Documentation Healthy"),
+    HEALTH(UpdatesStringRes.TAB_HEALTH),
+    METADATA_ISSUES(UpdatesStringRes.TAB_METADATA_ISSUES),
+    HEALTHY(UpdatesStringRes.TAB_HEALTHY),
 }

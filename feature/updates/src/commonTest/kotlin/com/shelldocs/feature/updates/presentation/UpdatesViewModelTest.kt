@@ -13,7 +13,7 @@ import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
 import com.shelldocs.core.domain.repository.DocumentClassificationRepository
 import com.shelldocs.core.domain.repository.PendingUpdatesRepository
-import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
+import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignmentsUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
@@ -21,6 +21,7 @@ import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
@@ -56,6 +57,7 @@ private class FakePendingUpdatesRepository(var failScan: Boolean = false) : Pend
     override suspend fun pendingUpdates() = DomainResult.success(data)
     override suspend fun scanNow(): DomainResult<List<PendingUpdate>> {
         if (failScan) return DomainResult.failure(AppError.Network("Scanner offline"))
+        delay(1)
         scans++
         return DomainResult.success(data)
     }
@@ -90,7 +92,7 @@ class UpdatesViewModelTest {
         scanForUpdates = ScanForUpdatesUseCase(repository),
         getMetadataIssues = GetMetadataIssuesUseCase(classificationRepository),
         getHealthyDocuments = GetHealthyDocumentsUseCase(repository),
-        acceptMetadataSuggestion = AcceptMetadataSuggestionUseCase(classificationRepository),
+        applyMetadataAssignments = ApplyMetadataAssignmentsUseCase(classificationRepository),
         assignMetadata = AssignMetadataUseCase(classificationRepository),
         setManualRiskLevel = SetManualRiskLevelUseCase(repository),
         currentUserRole = UserRole.VIEWER,

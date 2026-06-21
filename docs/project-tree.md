@@ -1,6 +1,6 @@
 # ShellAtlas Project Tree
 
-Updated: 2026-06-17
+Updated: 2026-06-20
 
 ## Overview
 
@@ -111,7 +111,7 @@ core/data/src/commonMain/kotlin/com/shelldocs/core/data/
 core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/
 ├── atoms/
 ├── icons/
-├── molecules/                       ← Includes shared loading overlays and modal error dialogs
+├── molecules/                       ← Includes shared loading overlays, modal dialogs and the cross-feature `ShellScreenToolbar`
 ├── theme/
 └── tokens/
 ```
@@ -132,7 +132,17 @@ Current feature responsibilities:
 - `documents`: explorer, reader, dedicated create-document editor, full editor and version history.
 - `settings`: theme, AI and integration preferences.
 - `sources`: mock integrations and sync state.
-- `updates`: triage of outdated or risky documents.
+- `updates`: triage of outdated or risky documents, metadata issue remediation flow, confirmation dialogs, module-local
+  UI strings in `feature/updates/UpdatesStringRes.kt`, and deterministic suggested-update generation that proposes
+  document content instead of audit bullets.
+
+Feature-local UI copy now also exists in:
+
+- `feature/assistant/AssistantStringRes.kt`
+- `feature/dashboard/DashboardStringRes.kt`
+- `feature/documents/DocumentsStringRes.kt`
+- `feature/settings/SettingsStringRes.kt`
+- `feature/sources/SourcesStringRes.kt`
 
 Shared UX feedback pattern:
 

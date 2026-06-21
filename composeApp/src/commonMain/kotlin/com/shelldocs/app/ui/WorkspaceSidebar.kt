@@ -5,17 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,19 +19,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.app.strings.StringRes.CONFLUENCE_TXT
+import com.shelldocs.app.strings.StringRes.DARK_MODE_TXT
+import com.shelldocs.app.strings.StringRes.LIGHT_MODE_TXT
+import com.shelldocs.app.strings.StringRes.SEARCH_SHORTCUT
+import com.shelldocs.app.strings.StringRes.SEARCH_TXT
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
-import com.shelldocs.core.designsystem.icons.IconAlertTriangle
-import com.shelldocs.core.designsystem.icons.IconFileText
-import com.shelldocs.core.designsystem.icons.IconLayers
-import com.shelldocs.core.designsystem.icons.IconLayoutGrid
-import com.shelldocs.core.designsystem.icons.IconMessageSquare
-import com.shelldocs.core.designsystem.icons.IconMoon
-import com.shelldocs.core.designsystem.icons.IconSettings
-import com.shelldocs.core.designsystem.icons.IconShellPecten
-import com.shelldocs.core.designsystem.icons.IconSun
+import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellKbdHint
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -69,7 +56,7 @@ fun WorkspaceSidebar(
     val colors = ShellTheme.colors
     Column(
         modifier = modifier
-            .width(240.dp)
+            .width(300.dp)
             .fillMaxHeight()
             .background(colors.surface),
     ) {
@@ -78,8 +65,8 @@ fun WorkspaceSidebar(
             ShellSearchField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = "Search docs...",
-                trailing = { ShellKbdHint(text = "⌘ K") },
+                placeholder = SEARCH_TXT,
+                trailing = { ShellKbdHint(text = SEARCH_SHORTCUT) },
             )
         }
         Column(
@@ -110,12 +97,12 @@ fun WorkspaceSidebar(
                 text = "Sources",
                 modifier = Modifier.padding(start = ShellSpacing.sm, top = ShellSpacing.lg, bottom = ShellSpacing.xs),
             )
-            SidebarSourceItem(IconLayers, "Confluence", activeRoute, onNavigate)
+            SidebarSourceItem(IconLayers, CONFLUENCE_TXT, activeRoute, onNavigate)
         }
         Column(modifier = Modifier.padding(ShellSpacing.sm)) {
             SidebarActionRow(
                 icon = if (isDarkTheme) IconSun else IconMoon,
-                label = if (isDarkTheme) "Light Mode" else "Dark Mode",
+                label = if (isDarkTheme) LIGHT_MODE_TXT else DARK_MODE_TXT,
                 onClick = onToggleTheme,
             )
             SidebarItem(IconSettings, AppRoute.SETTINGS, activeRoute, onNavigate)

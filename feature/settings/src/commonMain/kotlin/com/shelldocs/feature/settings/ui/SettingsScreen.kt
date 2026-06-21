@@ -2,22 +2,9 @@ package com.shelldocs.feature.settings.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,10 +17,12 @@ import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.settings.SettingsStringRes
 import com.shelldocs.feature.settings.presentation.SettingsEffect
 import com.shelldocs.feature.settings.presentation.SettingsIntent
 import com.shelldocs.feature.settings.presentation.SettingsSection
@@ -63,14 +52,11 @@ fun SettingsScreen(
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.padding(ShellSpacing.lg)) {
-                Text("Settings", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                Text(
-                    "Platform configuration and preferences",
-                    style = ShellTheme.typography.caption,
-                    color = colors.textMuted,
-                )
-            }
+            ShellScreenToolbar(
+                title = SettingsStringRes.TITLE,
+                subtitle = SettingsStringRes.SUBTITLE,
+                modifier = Modifier.padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
+            )
             Row(modifier = Modifier.weight(1f)) {
                 if (isWide) {
                     SectionRail(

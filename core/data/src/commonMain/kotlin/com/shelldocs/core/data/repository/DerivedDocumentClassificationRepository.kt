@@ -151,6 +151,12 @@ class DerivedDocumentClassificationRepository(
         MetadataAttribute.PLATFORM -> copy(platform = value)
         MetadataAttribute.TEAM -> copy(team = value)
         MetadataAttribute.DOCUMENT_TYPE -> this
-        MetadataAttribute.TAGS -> copy(tags = tags + value)
+        MetadataAttribute.TAGS -> copy(
+            tags = (
+                    tags + value.split(',')
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                    ).distinct(),
+        )
     }
 }

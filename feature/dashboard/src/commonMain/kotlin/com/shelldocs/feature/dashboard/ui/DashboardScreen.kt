@@ -1,36 +1,25 @@
 package com.shelldocs.feature.dashboard.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellGhostButton
-import com.shelldocs.core.designsystem.icons.IconAlertTriangle
-import com.shelldocs.core.designsystem.icons.IconCheckCircle
-import com.shelldocs.core.designsystem.icons.IconFileText
-import com.shelldocs.core.designsystem.icons.IconMessageSquare
-import com.shelldocs.core.designsystem.icons.IconRefresh
-import com.shelldocs.core.designsystem.icons.IconSparkles
+import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellMetricCard
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.dashboard.DashboardStringRes
 import com.shelldocs.feature.dashboard.presentation.DashboardIntent
 import com.shelldocs.feature.dashboard.presentation.DashboardViewModel
 
@@ -51,26 +40,22 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(ShellSpacing.lg),
+                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Dashboard", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                    Text(
-                        "Knowledge operations overview",
-                        style = ShellTheme.typography.caption,
-                        color = colors.textMuted,
+            ShellScreenToolbar(
+                title = DashboardStringRes.TITLE,
+                subtitle = DashboardStringRes.SUBTITLE,
+                trailingContent = {
+                    ShellGhostButton(
+                        text = if (state.isLoading) DashboardStringRes.REFRESHING else DashboardStringRes.REFRESH,
+                        icon = IconRefresh,
+                        onClick = { viewModel.onIntent(DashboardIntent.Refresh) },
+                        enabled = !state.isLoading,
+                        modifier = Modifier.testTag(DemoTestTags.DashboardRefresh),
                     )
-                }
-                ShellGhostButton(
-                    text = if (state.isLoading) "Refreshing..." else "Refresh",
-                    icon = IconRefresh,
-                    onClick = { viewModel.onIntent(DashboardIntent.Refresh) },
-                    enabled = !state.isLoading,
-                    modifier = Modifier.testTag(DemoTestTags.DashboardRefresh),
-                )
-            }
+                },
+            )
 
             val metrics = state.metrics
             if (metrics != null) {
@@ -118,7 +103,7 @@ fun DashboardScreen(
         }
 
         if (state.isLoading) {
-            ShellLoadingOverlay(message = "Loading dashboard...")
+            ShellLoadingOverlay(message = DashboardStringRes.LOADING)
         }
     }
 
@@ -178,12 +163,12 @@ private fun MetricCards(
         cards.chunked(columns).forEach { row ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
                 row.forEach { card ->
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
+                    Box(modifier = Modifier.weight(1f)) {
                         card(Modifier.fillMaxWidth())
                     }
                 }
                 repeat((columns - row.size).coerceAtLeast(0)) {
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f))
+                    Box(modifier = Modifier.weight(1f))
                 }
             }
         }

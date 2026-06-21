@@ -16,6 +16,7 @@ data class AiUpdateState(
     val attributes: DocumentAttributes = DocumentAttributes(),
     val currentContentBlocks: List<ContentBlock> = emptyList(),
     val suggestedMarkdown: String = "",
+    val hasSuggestedChanges: Boolean = false,
     val showMetadataDialog: Boolean = false,
     val metadataDraft: DocumentAttributes = DocumentAttributes(),
     val showConfirmDialog: Boolean = false,
@@ -28,5 +29,5 @@ data class AiUpdateState(
     val ownerName: String get() = attributes.owner
 
     /** Save Changes is enabled only while the editor still has content. */
-    val canSave: Boolean get() = suggestedMarkdown.isNotBlank() && !isApplying
+    val canSave: Boolean get() = hasSuggestedChanges && suggestedMarkdown.isNotBlank() && !isApplying
 }

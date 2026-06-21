@@ -9,14 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellCard
-import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellColorScheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
-import com.shelldocs.core.domain.entity.document.MetadataAttribute
 import com.shelldocs.core.domain.entity.document.MetadataSuggestion
+import com.shelldocs.feature.updates.UpdatesStringRes
 
 /** Document / Missing Attributes / Confidence / Source / Suggested Values / Actions. */
 @Composable
@@ -24,8 +23,7 @@ fun MetadataIssuesTable(
     issues: List<DocumentClassificationResult>,
     isAdmin: Boolean,
     isWide: Boolean,
-    onAcceptSuggestion: (documentId: String, attribute: MetadataAttribute) -> Unit,
-    onEditMetadata: (documentId: String, attribute: MetadataAttribute) -> Unit,
+    onEditMetadata: (DocumentClassificationResult) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
@@ -38,14 +36,14 @@ fun MetadataIssuesTable(
                     .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                HeaderCell("DOCUMENT", Modifier.weight(2.2f))
-                HeaderCell("MISSING", Modifier.weight(1.6f))
-                if (isWide) HeaderCell("SOURCE", Modifier.weight(1f))
-                HeaderCell("AI SUGGESTION", Modifier.weight(2.2f))
-                if (isAdmin) HeaderCell("ACTIONS", Modifier.width(150.dp))
+                HeaderCell(UpdatesStringRes.HEADER_DOCUMENT, Modifier.weight(2.2f))
+                HeaderCell(UpdatesStringRes.HEADER_MISSING, Modifier.weight(1.6f))
+                if (isWide) HeaderCell(UpdatesStringRes.HEADER_SOURCE, Modifier.weight(1f))
+                HeaderCell(UpdatesStringRes.HEADER_AI_SUGGESTION, Modifier.weight(2.2f))
+                if (isAdmin) HeaderCell(UpdatesStringRes.HEADER_ACTIONS, Modifier.width(120.dp))
             }
             issues.forEach { issue ->
-                MetadataIssueRow(issue = issue, isAdmin = isAdmin, isWide = isWide, onAcceptSuggestion = onAcceptSuggestion, onEditMetadata = onEditMetadata)
+                MetadataIssueRow(issue = issue, isAdmin = isAdmin, isWide = isWide, onEditMetadata = onEditMetadata)
             }
         }
     }
@@ -66,8 +64,7 @@ private fun MetadataIssueRow(
     issue: DocumentClassificationResult,
     isAdmin: Boolean,
     isWide: Boolean,
-    onAcceptSuggestion: (documentId: String, attribute: MetadataAttribute) -> Unit,
-    onEditMetadata: (documentId: String, attribute: MetadataAttribute) -> Unit,
+    onEditMetadata: (DocumentClassificationResult) -> Unit,
 ) {
     val colors = ShellTheme.colors
     Row(
@@ -95,28 +92,15 @@ private fun MetadataIssueRow(
         Column(modifier = Modifier.weight(2.2f), verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
             issue.suggestions.forEach { suggestion -> SuggestionLine(suggestion) }
             if (issue.suggestions.isEmpty()) {
-                Text("No AI suggestion", style = ShellTheme.typography.caption, color = colors.textMuted)
+                Text(UpdatesStringRes.NO_AI_SUGGESTION, style = ShellTheme.typography.caption, color = colors.textMuted)
             }
         }
         if (isAdmin) {
-            Row(
-                modifier = Modifier.width(150.dp),
-                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
-            ) {
-                val primarySuggestion = issue.suggestions.firstOrNull()
-                if (primarySuggestion != null) {
-                    ShellPrimaryButton(
-                        text = "Accept",
-                        onClick = { onAcceptSuggestion(issue.documentId, primarySuggestion.attribute) },
-                    )
-                }
-                val editableAttribute = issue.missingAttributes.firstOrNull()
-                if (editableAttribute != null) {
-                    ShellGhostButton(
-                        text = "Edit",
-                        onClick = { onEditMetadata(issue.documentId, editableAttribute) },
-                    )
-                }
+            Box(modifier = Modifier.width(120.dp)) {
+                ShellPrimaryButton(
+                    text = UpdatesStringRes.EDIT,
+                    onClick = { onEditMetadata(issue) },
+                )
             }
         }
     }

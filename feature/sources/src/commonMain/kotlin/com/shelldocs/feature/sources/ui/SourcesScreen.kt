@@ -1,13 +1,7 @@
 package com.shelldocs.feature.sources.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -15,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.shelldocs.core.designsystem.atoms.ShellPrimaryButton
 import com.shelldocs.core.designsystem.icons.IconClock
@@ -25,8 +18,10 @@ import com.shelldocs.core.designsystem.icons.IconPlus
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellMetricCard
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.feature.sources.SourcesStringRes
 import com.shelldocs.feature.sources.presentation.SourcesIntent
 import com.shelldocs.feature.sources.presentation.SourcesViewModel
 import kotlin.time.ExperimentalTime
@@ -49,20 +44,21 @@ fun SourcesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(ShellSpacing.lg),
+                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Imported Sources", style = ShellTheme.typography.pageTitle, color = colors.textPrimary)
-                    Text(
-                        "Manage external knowledge integrations",
-                        style = ShellTheme.typography.caption,
-                        color = colors.textMuted,
+            ShellScreenToolbar(
+                title = SourcesStringRes.TITLE,
+                subtitle = SourcesStringRes.SUBTITLE,
+                trailingContent = {
+                    ShellPrimaryButton(
+                        text = SourcesStringRes.ADD_INTEGRATION,
+                        icon = IconPlus,
+                        onClick = {},
+                        enabled = !state.isBusy,
                     )
-                }
-                ShellPrimaryButton(text = "Add integration", icon = IconPlus, onClick = {}, enabled = !state.isBusy)
-            }
+                },
+            )
 
             val statCards: List<@Composable (Modifier) -> Unit> = listOf(
                 { m ->
@@ -89,7 +85,7 @@ fun SourcesScreen(
             if (isWide) {
                 Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
                     statCards.forEach { card ->
-                        androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
+                        Box(modifier = Modifier.weight(1f)) {
                             card(Modifier.fillMaxWidth())
                         }
                     }
@@ -98,7 +94,7 @@ fun SourcesScreen(
                 statCards.forEach { card -> card(Modifier.fillMaxWidth()) }
             }
 
-            Text("Integrations", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
+            Text(SourcesStringRes.INTEGRATIONS, style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
             state.sources.forEach { source ->
                 IntegrationRow(
                     source = source,
@@ -112,7 +108,7 @@ fun SourcesScreen(
         }
 
         if (state.isLoading) {
-            ShellLoadingOverlay(message = "Loading sources...")
+            ShellLoadingOverlay(message = SourcesStringRes.LOADING)
         } else {
             state.loadingMessage?.let { message ->
                 ShellLoadingOverlay(message = message)

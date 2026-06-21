@@ -5,25 +5,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,12 +24,14 @@ import androidx.compose.ui.window.PopupProperties
 import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.icons.IconBookOpen
 import com.shelldocs.core.designsystem.icons.IconSparkles
+import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.assistant.AssistantAvailability
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
+import com.shelldocs.feature.assistant.AssistantStringRes
 
 /** Top strip: "AI Assistant — grounded on N documents" + availability dot + Knowledge Transfer entry point. */
 @Composable
@@ -56,31 +45,18 @@ fun AssistantHeader(
 ) {
     val colors = ShellTheme.colors
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = IconSparkles,
-                contentDescription = null,
-                tint = colors.brand,
-                modifier = Modifier.size(16.dp),
-            )
-            Column(modifier = Modifier.weight(1f).padding(start = ShellSpacing.sm)) {
-                Text("AI Assistant", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
-                Text(
-                    text = "Grounded on ShellAtlas knowledge · $indexedDocuments documents indexed",
-                    style = ShellTheme.typography.caption,
-                    color = colors.textMuted,
-                    maxLines = 1,
+        ShellScreenToolbar(
+            title = AssistantStringRes.TITLE,
+            subtitle = "${AssistantStringRes.GROUNDED_SUBTITLE} · $indexedDocuments documents indexed",
+            leadingContent = {
+                Icon(
+                    imageVector = IconSparkles,
+                    contentDescription = null,
+                    tint = colors.brand,
+                    modifier = Modifier.size(16.dp),
                 )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
-            ) {
+            },
+            trailingContent = {
                 if (availability != null) {
                     AvailabilityStatusButton(availability)
                 }
@@ -91,8 +67,8 @@ fun AssistantHeader(
                         onClick = onStartKnowledgeTransfer,
                     )
                 }
-            }
-        }
+            },
+        )
         if (activeCheckpointId != null && knowledgeProgress != null && knowledgeProgress.total > 0) {
             KnowledgeTransferProgressBar(
                 progress = knowledgeProgress,
@@ -111,7 +87,7 @@ private fun AvailabilityStatusButton(availability: AssistantAvailability) {
     val density = LocalDensity.current
     var expanded by remember { mutableStateOf(false) }
     val statusColor = if (availability.isLlmReachable) colors.success else colors.warning
-    val statusText = if (availability.isLlmReachable) "AI available" else "Grounded mode"
+    val statusText = if (availability.isLlmReachable) AssistantStringRes.AVAILABLE else AssistantStringRes.GROUNDED_MODE
     Box {
         Box(
             modifier = Modifier
@@ -167,7 +143,7 @@ private fun KnowledgeTransferButton(
     Box {
         ShellIconButton(
             icon = IconBookOpen,
-            contentDescription = "Knowledge Transfer",
+            contentDescription = AssistantStringRes.KNOWLEDGE_TRANSFER,
             onClick = onClick,
             tint = tint,
         )

@@ -13,6 +13,7 @@ import com.shelldocs.core.designsystem.atoms.ShellGhostButton
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
+import com.shelldocs.feature.updates.UpdatesStringRes
 import kotlin.time.ExperimentalTime
 
 /** Informational only: Document / Area / Version / Owner / Last Review / Open. No maintenance actions. */
@@ -33,12 +34,12 @@ fun HealthyDocumentsTable(
                     .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                HeaderCell("DOCUMENT", Modifier.weight(2.2f))
-                if (isWide) HeaderCell("AREA", Modifier.weight(1.1f))
-                if (isWide) HeaderCell("VERSION", Modifier.width(96.dp))
-                HeaderCell("OWNER", Modifier.width(60.dp))
-                if (isWide) HeaderCell("LAST REVIEW", Modifier.width(96.dp))
-                HeaderCell("ACTION", Modifier.width(110.dp))
+                HeaderCell(UpdatesStringRes.HEADER_DOCUMENT, Modifier.weight(2.1f))
+                if (isWide) HeaderCell(UpdatesStringRes.HEADER_AREA, Modifier.weight(1.05f))
+                if (isWide) HeaderCell(UpdatesStringRes.HEADER_VERSION, Modifier.width(104.dp))
+                HeaderCell(UpdatesStringRes.HEADER_OWNER, Modifier.width(84.dp))
+                if (isWide) HeaderCell(UpdatesStringRes.HEADER_LAST_REVIEW, Modifier.width(116.dp))
+                HeaderCell(UpdatesStringRes.HEADER_ACTION, Modifier.width(84.dp))
             }
             documents.forEach { document -> HealthyDocumentRow(document, isWide, onOpenDocument) }
         }
@@ -69,7 +70,7 @@ private fun HealthyDocumentRow(
             .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(2.2f)) {
+        Column(modifier = Modifier.weight(2.1f)) {
             Text(document.documentTitle, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
             Text(document.module, style = ShellTheme.typography.caption, color = colors.textMuted)
         }
@@ -78,7 +79,7 @@ private fun HealthyDocumentRow(
                 text = document.area?.displayName ?: "—",
                 style = ShellTheme.typography.label,
                 color = colors.textSecondary,
-                modifier = Modifier.weight(1.1f),
+                modifier = Modifier.weight(1.05f),
             )
         }
         if (isWide) {
@@ -86,10 +87,10 @@ private fun HealthyDocumentRow(
                 text = document.documentVersion.ifBlank { "—" },
                 style = ShellTheme.typography.label,
                 color = colors.textSecondary,
-                modifier = Modifier.width(96.dp),
+                modifier = Modifier.width(104.dp),
             )
         }
-        Box(modifier = Modifier.width(60.dp)) {
+        Box(modifier = Modifier.width(84.dp)) {
             ShellAvatar(
                 initials = document.ownerInitials,
                 size = 20.dp,
@@ -102,11 +103,11 @@ private fun HealthyDocumentRow(
                 text = document.lastReview.toString().substringBefore('T'),
                 style = ShellTheme.typography.caption,
                 color = colors.textMuted,
-                modifier = Modifier.width(96.dp),
+                modifier = Modifier.width(116.dp),
             )
         }
-        Box(modifier = Modifier.width(110.dp)) {
-            ShellGhostButton(text = "Open Document", onClick = { onOpenDocument(document.documentId) })
+        Box(modifier = Modifier.width(84.dp)) {
+            ShellGhostButton(text = UpdatesStringRes.OPEN, onClick = { onOpenDocument(document.documentId) })
         }
     }
 }

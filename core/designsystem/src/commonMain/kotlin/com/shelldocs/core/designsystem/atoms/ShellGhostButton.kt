@@ -8,13 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -23,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,9 +51,10 @@ fun ShellGhostButton(
     )
     Box(
         modifier = modifier
+            .alpha(if (enabled) 1f else 0.6f)
             .scale(scale)
-            .defaultMinSize(minWidth = 72.dp)
-            .height(32.dp)
+            .defaultMinSize(minWidth = 88.dp)
+            .height(36.dp)
             .clip(RoundedCornerShape(ShellRadius.sm))
             .background(background)
             .border(1.dp, colors.border, RoundedCornerShape(ShellRadius.sm))

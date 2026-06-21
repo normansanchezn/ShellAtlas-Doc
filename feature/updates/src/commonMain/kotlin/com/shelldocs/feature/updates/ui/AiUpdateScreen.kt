@@ -21,6 +21,7 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.document.ContentBlock
+import com.shelldocs.feature.updates.UpdatesStringRes
 import com.shelldocs.feature.updates.presentation.AiUpdateEffect
 import com.shelldocs.feature.updates.presentation.AiUpdateIntent
 import com.shelldocs.feature.updates.presentation.AiUpdateViewModel
@@ -54,17 +55,22 @@ fun AiUpdateScreen(
             AnalysisProgress(message = analysisStage.message, modifier = Modifier.fillMaxSize())
         } else {
             Column(
-                modifier = Modifier.fillMaxSize().padding(ShellSpacing.lg),
+                modifier = Modifier.fillMaxSize().padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
             ) {
-                Column {
-                    Text(
-                        text = "AI Suggested Update",
-                        style = ShellTheme.typography.pageTitle,
-                        color = colors.textPrimary
-                    )
-                    Text(text = state.documentTitle, style = ShellTheme.typography.caption, color = colors.textMuted)
-                }
+                ShellScreenToolbar(
+                    title = UpdatesStringRes.AI_UPDATE_TITLE,
+                    subtitle = state.documentTitle,
+                    trailingContent = {
+                        if (state.hasSuggestedChanges) {
+                            ShellPrimaryButton(
+                                text = UpdatesStringRes.AI_UPDATE_SAVE_CHANGES,
+                                onClick = { viewModel.onIntent(AiUpdateIntent.SaveChanges) },
+                                enabled = state.canSave,
+                            )
+                        }
+                    },
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth().weight(1f),
@@ -76,22 +82,16 @@ fun AiUpdateScreen(
                     )
                     SuggestedUpdatePanel(
                         markdown = state.suggestedMarkdown,
+                        hasSuggestedChanges = state.hasSuggestedChanges,
                         onMarkdownChange = { viewModel.onIntent(AiUpdateIntent.EditMarkdown(it)) },
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    ShellPrimaryButton(
-                        text = "Save Changes",
-                        onClick = { viewModel.onIntent(AiUpdateIntent.SaveChanges) },
-                        enabled = state.canSave,
-                    )
-                }
             }
 
             if (state.isApplying) {
-                ShellLoadingOverlay(message = state.applyStage?.message ?: "Applying...")
+                ShellLoadingOverlay(message = state.applyStage?.message ?: UpdatesStringRes.AI_UPDATE_APPLYING)
             }
         }
     }
@@ -128,7 +128,7 @@ private fun AnalysisProgress(message: String, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)
         ) {
             Text(
-                text = "Preparing AI Suggested Update",
+                text = UpdatesStringRes.AI_UPDATE_PREPARING,
                 style = ShellTheme.typography.sectionTitle,
                 color = colors.textPrimary
             )
@@ -147,7 +147,11 @@ private fun CurrentDocumentPanel(blocks: List<ContentBlock>, modifier: Modifier 
             .padding(ShellSpacing.lg)
             .verticalScroll(rememberScrollState()),
     ) {
-        Text(text = "CURRENT DOCUMENT", style = ShellTheme.typography.sectionLabel, color = colors.textMuted)
+        Text(
+            text = UpdatesStringRes.AI_UPDATE_CURRENT_DOCUMENT,
+            style = ShellTheme.typography.sectionLabel,
+            color = colors.textMuted
+        )
         MarkdownBlocksView(blocks = blocks, modifier = Modifier.padding(top = ShellSpacing.sm))
     }
 }
@@ -155,18 +159,43 @@ private fun CurrentDocumentPanel(blocks: List<ContentBlock>, modifier: Modifier 
 @Composable
 private fun SuggestedUpdatePanel(
     markdown: String,
+    hasSuggestedChanges: Boolean,
     onMarkdownChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(ShellSpacing.sm)) {
-        Text(text = "AI SUGGESTED UPDATE", style = ShellTheme.typography.sectionLabel, color = colors.textMuted)
-        MarkdownEditorField(
-            markdown = markdown,
-            onMarkdownChange = onMarkdownChange,
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            showToolbar = true,
+        Text(
+            text = UpdatesStringRes.AI_UPDATE_SUGGESTED_DOCUMENT,
+            style = ShellTheme.typography.sectionLabel,
+            color = colors.textMuted
         )
+        if (!hasSuggestedChanges) {
+            ShellCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(ShellSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
+                ) {
+                    Text(
+                        text = UpdatesStringRes.AI_UPDATE_NO_CHANGES,
+                        style = ShellTheme.typography.bodyStrong,
+                        color = colors.textPrimary,
+                    )
+                    Text(
+                        text = UpdatesStringRes.AI_UPDATE_NO_CHANGES_DETAIL,
+                        style = ShellTheme.typography.body,
+                        color = colors.textMuted,
+                    )
+                }
+            }
+        } else {
+            MarkdownEditorField(
+                markdown = markdown,
+                onMarkdownChange = onMarkdownChange,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                showToolbar = true,
+            )
+        }
     }
 }
 
@@ -180,18 +209,16 @@ private fun ApplyUpdateConfirmDialog(
 ) {
     val colors = ShellTheme.colors
     ShellDialog(
-        title = "Apply Documentation Update",
+        title = UpdatesStringRes.AI_UPDATE_CONFIRM_TITLE,
         onDismiss = onCancel,
         actions = {
-            ShellGhostButton(text = "Cancel", onClick = onCancel)
-            ShellPrimaryButton(text = "Confirm", onClick = onConfirm)
+            ShellGhostButton(text = UpdatesStringRes.CANCEL, onClick = onCancel)
+            ShellPrimaryButton(text = UpdatesStringRes.CONFIRM, onClick = onConfirm)
         },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.md)) {
             Text(
-                text = "You are about to publish this document update.\n\n" +
-                        "The changes will be synchronized with all configured sources of truth and recorded in version history.\n\n" +
-                        "This action can be reverted later through document version history.",
+                text = UpdatesStringRes.AI_UPDATE_CONFIRM_BODY,
                 style = ShellTheme.typography.body,
                 color = colors.textSecondary,
             )
@@ -204,13 +231,13 @@ private fun ApplyUpdateConfirmDialog(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Document Owner",
+                                text = UpdatesStringRes.AI_UPDATE_OWNER,
                                 style = ShellTheme.typography.caption,
                                 color = colors.textMuted
                             )
                             Text(text = ownerName, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
                         }
-                        ShellGhostButton(text = "Contact Owner", onClick = onContactOwner)
+                        ShellGhostButton(text = UpdatesStringRes.AI_UPDATE_CONTACT_OWNER, onClick = onContactOwner)
                     }
                 }
             }

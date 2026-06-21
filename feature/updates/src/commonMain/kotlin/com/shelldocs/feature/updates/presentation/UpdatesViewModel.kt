@@ -8,10 +8,11 @@ import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
+import com.shelldocs.core.domain.entity.document.MetadataAssignment
 import com.shelldocs.core.domain.entity.document.MetadataAttribute
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
-import com.shelldocs.core.domain.usecase.classification.AcceptMetadataSuggestionUseCase
+import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignmentsUseCase
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
@@ -25,7 +26,7 @@ class UpdatesViewModel(
     private val scanForUpdates: ScanForUpdatesUseCase,
     private val getMetadataIssues: GetMetadataIssuesUseCase,
     private val getHealthyDocuments: GetHealthyDocumentsUseCase,
-    private val acceptMetadataSuggestion: AcceptMetadataSuggestionUseCase,
+    private val applyMetadataAssignments: ApplyMetadataAssignmentsUseCase,
     private val assignMetadata: AssignMetadataUseCase,
     private val setManualRiskLevel: SetManualRiskLevelUseCase,
     private val currentUserRole: UserRole,
@@ -47,8 +48,8 @@ class UpdatesViewModel(
             is UpdatesIntent.ToggleRiskFilter ->
                 setState { copy(riskFilter = if (riskFilter == intent.risk) null else intent.risk) }
             is UpdatesIntent.SelectTab -> selectTab(intent.tab)
-            is UpdatesIntent.AcceptMetadataSuggestion -> accept(intent.documentId, intent.attribute)
             is UpdatesIntent.AssignMetadata -> assign(intent.documentId, intent.attribute, intent.value)
+            is UpdatesIntent.ApplyMetadataAssignments -> applyAssignments(intent.documentId, intent.assignments)
             is UpdatesIntent.SetManualRisk -> setManualRisk(intent.documentId, intent.risk)
             is UpdatesIntent.OpenUpdate -> sendEffect(UpdatesEffect.OpenAiUpdate(intent.documentId))
             is UpdatesIntent.OpenDocument -> sendEffect(UpdatesEffect.OpenDocument(intent.documentId))
@@ -58,9 +59,10 @@ class UpdatesViewModel(
     private fun visibleTo(area: Area?): Boolean =
         isAdmin || area == visibleArea
 
-    private fun List<PendingUpdate>.visiblePendingUpdates() = filter { visibleTo(it.area) }
+    private fun List<PendingUpdate>.visiblePendingUpdates() = filter { visibleTo(it.area) }.distinctBy { it.documentId }
 
-    private fun List<DocumentClassificationResult>.visibleMetadataIssues() = filter { visibleTo(it.area) }
+    private fun List<DocumentClassificationResult>.visibleMetadataIssues() =
+        filter { visibleTo(it.area) }.distinctBy { it.documentId }
 
     private suspend fun load() {
         setState { copy(isLoading = true, errorDialog = null) }
@@ -130,19 +132,6 @@ class UpdatesViewModel(
             }
     }
 
-    private suspend fun accept(documentId: String, attribute: MetadataAttribute) {
-        withContext(dispatchers.default) {
-            acceptMetadataSuggestion(documentId, attribute)
-        }
-            .onSuccess {
-                sendEffect(UpdatesEffect.MetadataUpdated(documentId))
-                loadMetadataIssues()
-            }
-            .onFailure { error ->
-                setState { copy(errorDialog = error.toErrorDialogState("accept metadata suggestion")) }
-            }
-    }
-
     private suspend fun assign(documentId: String, attribute: MetadataAttribute, value: String) {
         withContext(dispatchers.default) {
             assignMetadata(documentId, attribute, value)
@@ -150,9 +139,24 @@ class UpdatesViewModel(
             .onSuccess {
                 sendEffect(UpdatesEffect.MetadataUpdated(documentId))
                 loadMetadataIssues()
+                loadHealthyDocuments()
             }
             .onFailure { error ->
                 setState { copy(errorDialog = error.toErrorDialogState("assign metadata")) }
+            }
+    }
+
+    private suspend fun applyAssignments(documentId: String, assignments: List<MetadataAssignment>) {
+        withContext(dispatchers.default) {
+            applyMetadataAssignments(documentId, assignments)
+        }
+            .onSuccess {
+                sendEffect(UpdatesEffect.MetadataUpdated(documentId))
+                loadMetadataIssues()
+                loadHealthyDocuments()
+            }
+            .onFailure { error ->
+                setState { copy(errorDialog = error.toErrorDialogState("apply metadata changes")) }
             }
     }
 
