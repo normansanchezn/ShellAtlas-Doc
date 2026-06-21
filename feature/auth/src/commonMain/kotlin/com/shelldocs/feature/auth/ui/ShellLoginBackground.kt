@@ -8,12 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
@@ -105,7 +102,9 @@ private fun buildGlowOrbs(): List<GlowOrb> =
  *
  * 68 particles orbit their seed positions with independent sine/cosine cycles.
  * Nearby pairs are joined by faint lines (network-graph aesthetic).  Every 11th
- * node is tinted Shell yellow.  Full cycle = 22 s.
+ * node is tinted Shell yellow.  Full cycle = 22 s.  Dark and light theme share
+ * this exact particle system — only the background gradient, node tint and
+ * line/node opacity change, so both modes feel like the same product.
  *
  * On desktop and web, moving the mouse cursor near particles repels them.
  * The repulsion is filtered to [PointerType.Mouse] so touch devices never see
@@ -177,90 +176,59 @@ fun ShellLoginBackground(
                 }
             },
     ) {
+        val w = size.width
+        val h = size.height
+        val connectionThreshold = w * 0.14f
+        val repelRadius = w * 0.13f
+        val repelStrength = w * 0.05f
+        val accentColor = Color(0xFFFFD100)
+        val nodeColor = if (isDarkTheme) Color.White else Color(0xFF3A3530)
+
+        // Shared physics: every particle drifts on its own sine/cosine orbit and
+        // is repelled by the mouse — identical in both themes, only the palette differs.
+        val orbits = particles.map { p ->
+            Offset(
+                x = (p.x + sin(time * p.speedX + p.phaseX) * 0.06f) * w,
+                y = (p.y + cos(time * p.speedY + p.phaseY) * 0.05f) * h,
+            )
+        }
+
+        val ptr = lastPointerPos
+        val positions = if (ptr != null && influence > 0.001f) {
+            orbits.map { orbit ->
+                val dx = orbit.x - ptr.x
+                val dy = orbit.y - ptr.y
+                val dist = sqrt(dx * dx + dy * dy)
+                if (dist < repelRadius && dist > 0.5f) {
+                    val strength = influence * repelStrength * (1f - dist / repelRadius)
+                    Offset(orbit.x + dx / dist * strength, orbit.y + dy / dist * strength)
+                } else {
+                    orbit
+                }
+            }
+        } else {
+            orbits
+        }
+
         if (isDarkTheme) {
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(Color(0xFF0B0D10), Color(0xFF131720)),
                 ),
             )
-
-            val w = size.width
-            val h = size.height
-            val connectionThreshold = w * 0.14f
-            val repelRadius = w * 0.13f
-            val repelStrength = w * 0.05f
-            val accentColor = Color(0xFFFFD100)
-            val nodeColor = Color.White
-
-            val orbits = particles.map { p ->
-                Offset(
-                    x = (p.x + sin(time * p.speedX + p.phaseX) * 0.06f) * w,
-                    y = (p.y + cos(time * p.speedY + p.phaseY) * 0.05f) * h,
-                )
-            }
-
-            val ptr = lastPointerPos
-            val positions = if (ptr != null && influence > 0.001f) {
-                orbits.map { orbit ->
-                    val dx = orbit.x - ptr.x
-                    val dy = orbit.y - ptr.y
-                    val dist = sqrt(dx * dx + dy * dy)
-                    if (dist < repelRadius && dist > 0.5f) {
-                        val strength = influence * repelStrength * (1f - dist / repelRadius)
-                        Offset(orbit.x + dx / dist * strength, orbit.y + dy / dist * strength)
-                    } else {
-                        orbit
-                    }
-                }
-            } else {
-                orbits
-            }
-
-            for (i in particles.indices) {
-                for (j in i + 1 until particles.size) {
-                    val dx = positions[i].x - positions[j].x
-                    val dy = positions[i].y - positions[j].y
-                    val dist = sqrt(dx * dx + dy * dy)
-                    if (dist < connectionThreshold) {
-                        val alpha = (1f - dist / connectionThreshold) * 0.12f
-                        drawLine(
-                            color = nodeColor.copy(alpha = alpha),
-                            start = positions[i],
-                            end = positions[j],
-                            strokeWidth = 0.6f,
-                        )
-                    }
-                }
-            }
-
-            particles.forEachIndexed { i, p ->
-                val pulse = sin(time * p.pulseSpeed + p.pulsePha) * 0.12f
-                val alpha = (p.baseAlpha + pulse).coerceIn(0.05f, 0.80f)
-                drawCircle(
-                    color = if (p.isAccent) accentColor else nodeColor,
-                    radius = p.radius * density,
-                    center = positions[i],
-                    alpha = alpha,
-                )
-            }
         } else {
-            val w = size.width
-            val h = size.height
-
             drawRect(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF5F1E8),
-                        Color(0xFFF9F8F4),
-                        Color(0xFFEEF3F4),
-                    ),
+                    colors = listOf(Color(0xFFFAF8F3), Color(0xFFF3F0E9), Color(0xFFEDEEEB)),
                 ),
             )
 
+            // Soft brand-yellow wash anchored to the two corners closest to the
+            // sign-in card, drifting gently so the warmth never sits perfectly still.
             glowOrbs.forEach { orb ->
                 val center = Offset(
-                    x = (orb.x + sin(time * 0.12f + orb.phase) * orb.driftX) * w,
-                    y = (orb.y + cos(time * 0.1f + orb.phase) * orb.driftY) * h,
+                    x = (orb.x + sin(time * 0.1f + orb.phase) * orb.driftX) * w,
+                    y = (orb.y + cos(time * 0.08f + orb.phase) * orb.driftY) * h,
                 )
                 drawCircle(
                     brush = Brush.radialGradient(
@@ -272,70 +240,36 @@ fun ShellLoginBackground(
                     center = center,
                 )
             }
+        }
 
-            val contourColor = Color(0x1E7F8A93)
-            repeat(5) { index ->
-                val inset = index * (w * 0.072f)
-                val top = -h * (0.2f - index * 0.028f) + sin(time * 0.09f + index) * 10f
-                drawRoundRect(
-                    color = contourColor.copy(alpha = 0.10f - index * 0.013f),
-                    topLeft = Offset(-w * 0.04f + inset, top),
-                    size = androidx.compose.ui.geometry.Size(
-                        width = w * 0.84f,
-                        height = h * 0.56f,
-                    ),
-                    cornerRadius = CornerRadius(w * 0.2f, w * 0.2f),
-                    style = Stroke(width = 0.8f, cap = StrokeCap.Round),
-                )
-                drawRoundRect(
-                    color = contourColor.copy(alpha = 0.07f - index * 0.01f),
-                    topLeft = Offset(w * 0.56f - inset * 0.46f, h * 0.5f + index * 10f),
-                    size = androidx.compose.ui.geometry.Size(
-                        width = w * 0.48f,
-                        height = h * 0.26f,
-                    ),
-                    cornerRadius = CornerRadius(w * 0.16f, w * 0.16f),
-                    style = Stroke(width = 0.7f, cap = StrokeCap.Round),
-                )
+        val lineAlphaScale = if (isDarkTheme) 0.12f else 0.07f
+        for (i in particles.indices) {
+            for (j in i + 1 until particles.size) {
+                val dx = positions[i].x - positions[j].x
+                val dy = positions[i].y - positions[j].y
+                val dist = sqrt(dx * dx + dy * dy)
+                if (dist < connectionThreshold) {
+                    val alpha = (1f - dist / connectionThreshold) * lineAlphaScale
+                    drawLine(
+                        color = nodeColor.copy(alpha = alpha),
+                        start = positions[i],
+                        end = positions[j],
+                        strokeWidth = 0.6f,
+                    )
+                }
             }
+        }
 
-            val bandColor = Color(0x14888F99)
-            repeat(3) { index ->
-                val y = h * (0.24f + index * 0.2f) + sin(time * 0.06f + index) * 5f
-                drawLine(
-                    color = bandColor.copy(alpha = 0.13f - index * 0.018f),
-                    start = Offset(x = 0f, y = y),
-                    end = Offset(x = w, y = y + 10f),
-                    strokeWidth = 0.7f,
-                )
-            }
-
-            repeat(10) { index ->
-                val column = index % 5
-                val row = index / 5
-                val baseX = w * (0.16f + column * 0.17f)
-                val baseY = h * (0.3f + row * 0.28f)
-                val drift = sin(time * 0.12f + index) * 6f
-                drawCircle(
-                    color = Color(0x16838B95),
-                    radius = 1.6f,
-                    center = Offset(baseX + drift, baseY + drift * 0.24f),
-                )
-            }
-
-            repeat(3) { index ->
-                val x = w * (0.16f + index * 0.27f)
-                val y = h * (0.16f + index * 0.22f)
-                drawRoundRect(
-                    color = Color(0x12FFFFFF),
-                    topLeft = Offset(x, y),
-                    size = androidx.compose.ui.geometry.Size(
-                        width = w * 0.14f,
-                        height = h * 0.06f,
-                    ),
-                    cornerRadius = CornerRadius(24f, 24f),
-                )
-            }
+        val alphaRange = if (isDarkTheme) 0.05f..0.80f else 0.06f..0.45f
+        particles.forEachIndexed { i, p ->
+            val pulse = sin(time * p.pulseSpeed + p.pulsePha) * 0.12f
+            val alpha = (p.baseAlpha + pulse).coerceIn(alphaRange.start, alphaRange.endInclusive)
+            drawCircle(
+                color = if (p.isAccent) accentColor else nodeColor,
+                radius = p.radius * density,
+                center = positions[i],
+                alpha = alpha,
+            )
         }
     }
 }

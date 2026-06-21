@@ -14,8 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.awaitEachGesture
-import androidx.compose.ui.input.pointer.awaitPointerEvent
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -170,10 +168,12 @@ private fun TreeNode(
                 .then(
                     if (canDelete) {
                         Modifier.pointerInput(node.id) {
-                            awaitEachGesture {
-                                val event = awaitPointerEvent()
-                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
-                                    showContextMenu = true
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val event = awaitPointerEvent()
+                                    if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                        showContextMenu = true
+                                    }
                                 }
                             }
                         }
