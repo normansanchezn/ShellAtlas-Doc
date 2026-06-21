@@ -337,7 +337,7 @@ INSERT INTO "public"."roles" ("key", "display_name", "description")
 VALUES ('owner', 'Owner', 'Full control: content, members, integrations and analytics'),
        ('business', 'Business', 'Reads knowledge, asks the assistant and views analytics'),
        ('develop', 'Develop', 'Creates, edits and publishes technical documentation'),
-       ('viewer', 'Viewer', 'Read-only fallback for unassigned users');
+       ('viewer', 'Viewer', 'Read-only fallback for unassigned users') ON CONFLICT (key) DO NOTHING;
 
 
 --

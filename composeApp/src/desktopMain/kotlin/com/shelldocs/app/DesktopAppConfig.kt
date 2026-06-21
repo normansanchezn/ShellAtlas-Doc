@@ -23,17 +23,26 @@ fun loadDesktopAppConfig(): AppConfig {
     fun setting(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() } ?: fileEnv[name]
 
     val environment = resolveAppEnvironment(::setting)
+    // Falls back to values baked into the binary at build time (see
+    // generateDesktopBuildConfig in build.gradle.kts) so a packaged .dmg
+    // shared to another machine — with no env vars or .env file of its own —
+    // still launches configured, instead of silently degrading to demo mode.
     val supabaseUrl = resolveProfileSetting(::setting, environment, "SUPABASE_URL")
+        ?: DesktopBuildConfig.SUPABASE_URL.ifBlank { null }
     val supabaseAnonKey = normalizeSupabaseAnonKey(
-        resolveProfileSetting(::setting, environment, "SUPABASE_ANON_KEY"),
+        resolveProfileSetting(::setting, environment, "SUPABASE_ANON_KEY")
+            ?: DesktopBuildConfig.SUPABASE_ANON_KEY.ifBlank { null },
     )
     val apiBaseUrl = resolveProfileSetting(::setting, environment, "API_BASE_URL")
+        ?: DesktopBuildConfig.API_BASE_URL.ifBlank { null }
     val apiBearerToken = resolveProfileSetting(::setting, environment, "API_BEARER_TOKEN")
+        ?: DesktopBuildConfig.API_BEARER_TOKEN.ifBlank { null }
     val useOllama = resolveBooleanSetting(::setting, environment, "USE_OLLAMA")
+            || DesktopBuildConfig.USE_OLLAMA
     val ollamaBaseUrl = resolveProfileSetting(::setting, environment, "OLLAMA_BASE_URL")
-        ?: "http://127.0.0.1:11434"
+        ?: DesktopBuildConfig.OLLAMA_BASE_URL.ifBlank { "http://127.0.0.1:11434" }
     val ollamaModel = resolveProfileSetting(::setting, environment, "OLLAMA_MODEL")
-        ?: "llama3.2"
+        ?: DesktopBuildConfig.OLLAMA_MODEL.ifBlank { "llama3.2" }
 
     val config = AppConfig(
         environment = environment,
