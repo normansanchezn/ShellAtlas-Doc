@@ -3,9 +3,10 @@ package com.shelldocs.core.data.assistant
 import com.shelldocs.core.common.logging.AppLogger
 import com.shelldocs.core.common.logging.LogTags
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.serialization.json.Json
 
 /** Minimal Ollama HTTP client (`/api/generate`, `/api/tags`). */
 class OllamaClient(
@@ -19,7 +20,7 @@ class OllamaClient(
         val response = try {
             httpClient.post("${config.baseUrl.trimEnd('/')}/api/generate") {
                 contentType(ContentType.Application.Json)
-                setBody(OllamaGenerateRequestDto(model = config.model, prompt = prompt))
+                setBody(OllamaGenerateRequestDto(model = config.model, prompt = prompt, stream = false))
             }
         } catch (error: Exception) {
             logger.e("generate() failed to reach Ollama at ${config.baseUrl}: ${error.message}", error)
@@ -29,8 +30,19 @@ class OllamaClient(
             logger.e("generate() returned ${response.status.value}")
             check(response.status.isSuccess()) { "Ollama returned ${response.status.value}" }
         }
+        val rawBody = response.bodyAsText()
+        val parsed = try {
+            RESPONSE_JSON.decodeFromString<OllamaGenerateResponseDto>(rawBody)
+        } catch (error: Exception) {
+            logger.e(
+                "generate() got HTTP ${response.status.value} but failed to parse the body " +
+                        "(${error.message}). Raw body (first 500 chars): ${rawBody.take(500)}",
+                error,
+            )
+            throw error
+        }
         logger.i("generate() succeeded")
-        return response.body<OllamaGenerateResponseDto>().response
+        return parsed.response
     }
 
     /** Checks `/api/tags`; also used as a startup connectivity probe. */
@@ -50,4 +62,8 @@ class OllamaClient(
     }
 
     val modelName: String get() = config.model
+
+    private companion object {
+        val RESPONSE_JSON = Json { ignoreUnknownKeys = true; isLenient = true }
+    }
 }

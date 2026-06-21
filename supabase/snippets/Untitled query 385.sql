@@ -1,1 +1,2 @@
-select * from document_attributes
+SELECT *
+FROM auth.users
