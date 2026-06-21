@@ -35,6 +35,8 @@ interface ConfluenceSpace {
     id: string;
     key: string;
     name: string;
+    /** Confluence auto-parents any page created without an explicit parentId under this page — never null. */
+    homepageId: string;
 }
 
 interface ConfluencePage {
@@ -88,9 +90,11 @@ async function confluenceFetchAllPages<T>(config: ConfluenceConfig, firstPath: s
 }
 
 async function fetchAllSpaces(config: ConfluenceConfig): Promise<ConfluenceSpace[]> {
-    type RawSpace = { id: string; key: string; name: string; type: string };
+    type RawSpace = { id: string; key: string; name: string; type: string; homepageId: string };
     const raw = await confluenceFetchAllPages<RawSpace>(config, "/wiki/api/v2/spaces?limit=25");
-    return raw.filter((s) => s.type !== "personal").map((s) => ({id: s.id, key: s.key, name: s.name}));
+    return raw
+        .filter((s) => s.type !== "personal")
+        .map((s) => ({id: s.id, key: s.key, name: s.name, homepageId: s.homepageId}));
 }
 
 /** Resolves the ancestor chain (root → immediate parent) for every page in a space, using only data already fetched. */
@@ -113,6 +117,182 @@ function resolveAncestors(pages: Array<{ id: string; title: string; parentId: st
         result.set(page.id, chain);
     }
     return result;
+}
+
+async function confluenceMutate<T>(
+    config: ConfluenceConfig,
+    path: string,
+    method: "POST" | "PUT",
+    body: unknown,
+): Promise<T> {
+    const url = `${config.baseUrl}${path}`;
+    const response = await fetch(url, {
+        method,
+        headers: {
+            Authorization: config.authHeader,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(`Confluence API ${response.status}: ${text.slice(0, 300)}`);
+    }
+    return response.json() as Promise<T>;
+}
+
+interface RawPageSummary {
+    id: string;
+    title: string;
+    parentId: string | null;
+    version: { number: number };
+}
+
+/** Finds a direct child of `parentId` matching `title` exactly. */
+async function findChildPage(
+    config: ConfluenceConfig,
+    spaceId: string,
+    parentId: string,
+    title: string,
+): Promise<RawPageSummary | null> {
+    const params = new URLSearchParams({
+        "space-id": spaceId,
+        title,
+        status: "current",
+        limit: "10",
+    });
+    const list = await confluenceFetch<V2List<RawPageSummary>>(config, `/wiki/api/v2/pages?${params.toString()}`);
+    return list.results.find((p) => p.parentId === parentId) ?? null;
+}
+
+/** Finds an existing page with `title` directly under `parentId`, or creates it (empty body) if missing — used for the Area/Platform/Version container pages. */
+async function findOrCreateContainerPage(
+    config: ConfluenceConfig,
+    spaceId: string,
+    parentId: string,
+    title: string,
+): Promise<string> {
+    const existing = await findChildPage(config, spaceId, parentId, title);
+    if (existing) return existing.id;
+
+    const created = await confluenceMutate<{ id: string }>(config, "/wiki/api/v2/pages", "POST", {
+        spaceId,
+        status: "current",
+        title,
+        parentId,
+        body: {representation: "storage", value: `<p>${title}</p>`},
+    });
+    return created.id;
+}
+
+/** Creates the page if `existingPageId` is null, otherwise updates its content (bumping the version number Confluence requires). */
+async function createOrUpdatePage(
+    config: ConfluenceConfig,
+    spaceId: string,
+    parentId: string,
+    title: string,
+    storageHtml: string,
+    existingPageId: string | null,
+): Promise<string> {
+    if (!existingPageId) {
+        const created = await confluenceMutate<{ id: string }>(config, "/wiki/api/v2/pages", "POST", {
+            spaceId,
+            status: "current",
+            title,
+            parentId,
+            body: {representation: "storage", value: storageHtml},
+        });
+        return created.id;
+    }
+
+    const current = await confluenceFetch<RawPageSummary>(config, `/wiki/api/v2/pages/${existingPageId}`);
+    await confluenceMutate(config, `/wiki/api/v2/pages/${existingPageId}`, "PUT", {
+        id: existingPageId,
+        status: "current",
+        title,
+        spaceId,
+        body: {representation: "storage", value: storageHtml},
+        version: {number: current.version.number + 1},
+    });
+    return existingPageId;
+}
+
+/**
+ * Converts our markdown (the same content the platform shows in the editor)
+ * into Confluence storage format (XHTML). Mirrors [storageToMarkdown] in
+ * reverse — covers headings, lists, bold/italic, links and code fences,
+ * which is the same subset our own markdown editor produces.
+ */
+function markdownToStorage(markdown: string): string {
+    const escapeHtml = (text: string) =>
+        text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const inline = (text: string) =>
+        escapeHtml(text)
+            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.+?)\*/g, "<em>$1</em>")
+            .replace(/\[(.+?)]\((.+?)\)/g, '<a href="$2">$1</a>');
+
+    const lines = markdown.split("\n");
+    const html: string[] = [];
+    let inList: "ul" | "ol" | null = null;
+    let inCodeBlock = false;
+    let codeBuffer: string[] = [];
+
+    const closeList = () => {
+        if (inList) {
+            html.push(`</${inList}>`);
+            inList = null;
+        }
+    };
+
+    for (const rawLine of lines) {
+        const line = rawLine.trimEnd();
+
+        if (line.trim().startsWith("```")) {
+            if (inCodeBlock) {
+                html.push(
+                    `<ac:structured-macro ac:name="code"><ac:plain-text-body><![CDATA[${codeBuffer.join("\n")}]]></ac:plain-text-body></ac:structured-macro>`,
+                );
+                codeBuffer = [];
+                inCodeBlock = false;
+            } else {
+                closeList();
+                inCodeBlock = true;
+            }
+            continue;
+        }
+        if (inCodeBlock) {
+            codeBuffer.push(rawLine);
+            continue;
+        }
+
+        const heading = /^(#{1,6})\s+(.*)$/.exec(line);
+        if (heading) {
+            closeList();
+            html.push(`<h${heading[1].length}>${inline(heading[2])}</h${heading[1].length}>`);
+            continue;
+        }
+
+        const bullet = /^[-*]\s+(.*)$/.exec(line);
+        const ordered = /^\d+\.\s+(.*)$/.exec(line);
+        if (bullet || ordered) {
+            const tag = bullet ? "ul" : "ol";
+            if (inList !== tag) {
+                closeList();
+                html.push(`<${tag}>`);
+                inList = tag;
+            }
+            html.push(`<li>${inline((bullet ?? ordered)![1])}</li>`);
+            continue;
+        }
+
+        closeList();
+        if (line.trim()) html.push(`<p>${inline(line.trim())}</p>`);
+    }
+    closeList();
+    return html.join("\n");
 }
 
 async function fetchPagesInSpace(config: ConfluenceConfig, space: ConfluenceSpace): Promise<ConfluencePage[]> {
@@ -435,6 +615,85 @@ async function createNewVersion(
             [{document_id: documentId, key: "summary", value: parsed.plainText.slice(0, 300), source: "confluence"}],
             {onConflict: "document_id,key"},
         );
+}
+
+// ---------------------------------------------------------------------------
+// Push: Supabase document -> Confluence page (Area / Platform / Version tree)
+// ---------------------------------------------------------------------------
+
+export interface PushResult {
+    pageId: string;
+    webUrl: string | null;
+}
+
+/**
+ * Pushes one already-published document to Confluence, filing it under
+ * Area > Platform > Version container pages (creating any of the three that
+ * don't exist yet). Reuses the page tracked in `document_attributes.confluence_page_id`
+ * on subsequent pushes so re-publishing updates the same page instead of
+ * creating duplicates.
+ */
+export async function pushDocumentToConfluence(
+    config: ConfluenceConfig,
+    db: SupabaseClient,
+    documentId: string,
+): Promise<PushResult> {
+    const {data: doc, error: docErr} = await db
+        .from("documents")
+        .select("id, title, current_version_id")
+        .eq("id", documentId)
+        .single<{ id: string; title: string; current_version_id: string | null }>();
+    if (docErr || !doc) throw new Error(docErr?.message ?? "Document not found");
+    if (!doc.current_version_id) throw new Error("Document has no published version yet");
+
+    const [{data: version, error: verErr}, {data: attrRows}] = await Promise.all([
+        db
+            .from("document_versions")
+            .select("raw_markdown")
+            .eq("id", doc.current_version_id)
+            .single<{ raw_markdown: string }>(),
+        db
+            .from("document_attributes")
+            .select("key, value")
+            .eq("document_id", documentId)
+            .returns<Array<{ key: string; value: unknown }>>(),
+    ]);
+    if (verErr || !version) throw new Error(verErr?.message ?? "Version not found");
+
+    const attrs = new Map((attrRows ?? []).map((r) => [r.key, r.value]));
+    const area = String(attrs.get("area") ?? "").trim() || "Unsorted";
+    const platform = String(attrs.get("platform") ?? "").trim() || "Unsorted";
+    const version_ = String(attrs.get("application_version") ?? "").trim() || "Unversioned";
+    const existingPageId = (attrs.get("confluence_page_id") as string | null) ?? null;
+
+    const spaces = await fetchAllSpaces(config);
+    const space = spaces[0];
+    if (!space) throw new Error("No Confluence space available to push to");
+
+    const areaPageId = await findOrCreateContainerPage(config, space.id, space.homepageId, area);
+    const platformPageId = await findOrCreateContainerPage(config, space.id, areaPageId, platform);
+    const versionPageId = await findOrCreateContainerPage(config, space.id, platformPageId, version_);
+
+    const storageHtml = markdownToStorage(version.raw_markdown);
+    const pageId = await createOrUpdatePage(
+        config,
+        space.id,
+        versionPageId,
+        doc.title,
+        storageHtml,
+        existingPageId,
+    );
+
+    await db.from("document_attributes").upsert(
+        [{document_id: documentId, key: "confluence_page_id", value: pageId, source: "confluence"}],
+        {onConflict: "document_id,key"},
+    );
+
+    const siteBaseUrl = (process.env.CONFLUENCE_BASE_URL ?? "").replace(/\/+$/, "");
+    return {
+        pageId,
+        webUrl: siteBaseUrl ? `${siteBaseUrl}/spaces/${space.key}/pages/${pageId}` : null,
+    };
 }
 
 async function logSyncRun(db: SupabaseClient, result: SyncResult): Promise<void> {

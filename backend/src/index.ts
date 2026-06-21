@@ -3,7 +3,13 @@ import {Hono} from "hono";
 import {cors} from "hono/cors";
 import {createClient} from "@supabase/supabase-js";
 import {parseMarkdown} from "./markdown-parser.ts";
-import {type ConfluenceConfig, confluenceConfigFromEnv, fetchPageTree, syncConfluence} from "./confluence-sync.ts";
+import {
+    type ConfluenceConfig,
+    confluenceConfigFromEnv,
+    fetchPageTree,
+    pushDocumentToConfluence,
+    syncConfluence,
+} from "./confluence-sync.ts";
 import {
     buildAuthorizationUrl,
     completeOAuthLogin,
@@ -567,6 +573,20 @@ app.post("/v1/documents/:id/publish", async (c) => {
         };
         if (body.summary !== undefined) attrs.summary = body.summary;
         await upsertAttributes(id, attrs);
+    }
+
+    // Best-effort: publishing never fails because Confluence is unreachable —
+    // the source of truth is Supabase, Confluence is a mirror.
+    if (status === "published") {
+        const confluenceConfig = await resolveConfluenceConfig();
+        if (confluenceConfig) {
+            try {
+                const push = await pushDocumentToConfluence(confluenceConfig, db, id);
+                console.log(`[ShellDoc] Pushed document ${id} to Confluence page ${push.pageId}`);
+            } catch (err) {
+                console.error(`[ShellDoc] Confluence push failed for document ${id}:`, err);
+            }
+        }
     }
 
     const [result] = await fetchDocuments([id]);
