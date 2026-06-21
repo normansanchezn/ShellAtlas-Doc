@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -37,16 +36,6 @@ private data class Particle(
     val isAccent: Boolean,
 )
 
-private data class GlowOrb(
-    val x: Float,
-    val y: Float,
-    val radius: Float,
-    val driftX: Float,
-    val driftY: Float,
-    val phase: Float,
-    val color: Color,
-)
-
 private fun buildParticles(count: Int): List<Particle> {
     val rng = Random(seed = 0x5E11)
     return List(count) { i ->
@@ -66,45 +55,15 @@ private fun buildParticles(count: Int): List<Particle> {
     }
 }
 
-private fun buildGlowOrbs(): List<GlowOrb> =
-    listOf(
-        GlowOrb(
-            x = 0.18f,
-            y = 0.16f,
-            radius = 0.28f,
-            driftX = 0.024f,
-            driftY = 0.018f,
-            phase = 0.2f,
-            color = Color(0x40FFD100),
-        ),
-        GlowOrb(
-            x = 0.84f,
-            y = 0.24f,
-            radius = 0.22f,
-            driftX = 0.018f,
-            driftY = 0.024f,
-            phase = 1.7f,
-            color = Color(0x24FF8C6A),
-        ),
-        GlowOrb(
-            x = 0.72f,
-            y = 0.82f,
-            radius = 0.24f,
-            driftX = 0.02f,
-            driftY = 0.014f,
-            phase = 3.1f,
-            color = Color(0x2214B8A6),
-        ),
-    )
-
 /**
  * Full-bleed animated background for the sign-in screen.
  *
  * 68 particles orbit their seed positions with independent sine/cosine cycles.
  * Nearby pairs are joined by faint lines (network-graph aesthetic).  Every 11th
  * node is tinted Shell yellow.  Full cycle = 22 s.  Dark and light theme share
- * this exact particle system — only the background gradient, node tint and
- * line/node opacity change, so both modes feel like the same product.
+ * this exact particle system — only the flat background color, node tint and
+ * line/node opacity change, so both modes feel like the same product. The
+ * background is a flat fill (no gradient) so it never washes out the dots.
  *
  * On desktop and web, moving the mouse cursor near particles repels them.
  * The repulsion is filtered to [PointerType.Mouse] so touch devices never see
@@ -136,7 +95,6 @@ fun ShellLoginBackground(
     }
 
     val particles = remember { buildParticles(count = 68) }
-    val glowOrbs = remember { buildGlowOrbs() }
 
     // Mouse-repulsion state — only ever non-null when a real mouse pointer moves.
     var mouseActive by remember { mutableStateOf(false) }
@@ -210,39 +168,9 @@ fun ShellLoginBackground(
             orbits
         }
 
-        if (isDarkTheme) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0B0D10), Color(0xFF131720)),
-                ),
-            )
-        } else {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFAF8F3), Color(0xFFF3F0E9), Color(0xFFEDEEEB)),
-                ),
-            )
+        drawRect(color = if (isDarkTheme) Color(0xFF0E1116) else Color(0xFFF3F0E9))
 
-            // Soft brand-yellow wash anchored to the two corners closest to the
-            // sign-in card, drifting gently so the warmth never sits perfectly still.
-            glowOrbs.forEach { orb ->
-                val center = Offset(
-                    x = (orb.x + sin(time * 0.1f + orb.phase) * orb.driftX) * w,
-                    y = (orb.y + cos(time * 0.08f + orb.phase) * orb.driftY) * h,
-                )
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(orb.color, orb.color.copy(alpha = 0f)),
-                        center = center,
-                        radius = orb.radius * w,
-                    ),
-                    radius = orb.radius * w,
-                    center = center,
-                )
-            }
-        }
-
-        val lineAlphaScale = if (isDarkTheme) 0.12f else 0.07f
+        val lineAlphaScale = if (isDarkTheme) 0.22f else 0.20f
         for (i in particles.indices) {
             for (j in i + 1 until particles.size) {
                 val dx = positions[i].x - positions[j].x
@@ -254,13 +182,13 @@ fun ShellLoginBackground(
                         color = nodeColor.copy(alpha = alpha),
                         start = positions[i],
                         end = positions[j],
-                        strokeWidth = 0.6f,
+                        strokeWidth = 1.1f,
                     )
                 }
             }
         }
 
-        val alphaRange = if (isDarkTheme) 0.05f..0.80f else 0.06f..0.45f
+        val alphaRange = if (isDarkTheme) 0.30f..0.95f else 0.35f..0.95f
         particles.forEachIndexed { i, p ->
             val pulse = sin(time * p.pulseSpeed + p.pulsePha) * 0.12f
             val alpha = (p.baseAlpha + pulse).coerceIn(alphaRange.start, alphaRange.endInclusive)
@@ -268,7 +196,7 @@ fun ShellLoginBackground(
                 color = if (p.isAccent) accentColor else nodeColor,
                 radius = p.radius * density,
                 center = positions[i],
-                alpha = alpha,
+                alpha = if (p.isAccent) 1f else alpha,
             )
         }
     }
