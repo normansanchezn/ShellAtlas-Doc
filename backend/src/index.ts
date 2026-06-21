@@ -278,6 +278,15 @@ const app = new Hono();
 
 app.use("*", cors());
 
+// Request log — every call, so behavior is visible while developing locally
+// instead of only finding out something broke when the UI shows an error.
+app.use("*", async (c, next) => {
+    const start = Date.now();
+    await next();
+    const ms = Date.now() - start;
+    console.log(`[ShellDoc] ${c.req.method} ${c.req.path} -> ${c.res.status} (${ms}ms)`);
+});
+
 // Global error handler
 app.onError((err, c) => {
     console.error("[ShellDoc]", err);
@@ -291,6 +300,7 @@ app.onError((err, c) => {
 
 app.get("/v1/documents", async (c) => {
     const documents = await fetchDocuments();
+    console.log(`[ShellDoc] GET /v1/documents -> ${documents.length} document(s)`);
     return c.json({documents});
 });
 
@@ -907,6 +917,37 @@ app.get("/v1/sources/confluence/tree", async (c) => {
     }
     const tree = await fetchPageTree(confluenceConfig);
     return c.json({pages: tree, total: tree.length});
+});
+
+// ---------------------------------------------------------------------------
+// GET /v1/connections/status — real status for the "Connections" screen.
+// Jira/Azure DevOps report "disabled" honestly — we haven't built those
+// integrations yet, no point faking a green checkmark for them.
+// ---------------------------------------------------------------------------
+
+app.get("/v1/connections/status", async (c) => {
+    const confluenceAuthorized = hasStoredOAuthSession() || confluenceConfigFromEnv() !== null;
+    let confluenceHost: string | null = null;
+    try {
+        confluenceHost = new URL(process.env.CONFLUENCE_BASE_URL ?? "").hostname || null;
+    } catch {
+        confluenceHost = null;
+    }
+
+    const {error: dbError} = await db.from("documents").select("id", {count: "exact", head: true}).limit(1);
+
+    return c.json({
+        confluence: {
+            status: confluenceAuthorized ? "connected" : "disconnected",
+            host: confluenceHost,
+        },
+        jira: {status: "disabled", host: null},
+        azureDevops: {status: "disabled", host: null},
+        database: {
+            status: dbError ? "error" : "connected",
+            detail: dbError?.message ?? null,
+        },
+    });
 });
 
 // ---------------------------------------------------------------------------

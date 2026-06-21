@@ -65,6 +65,11 @@ class ShellDocsApi(
         return post("v1/documents/$id/attributes", request).body()
     }
 
+    suspend fun connectionsStatus(): ConnectionsStatusDto {
+        logger.d("READ v1/connections/status")
+        return get("v1/connections/status").body()
+    }
+
     suspend fun delete(id: String) {
         logger.i("DELETE v1/documents/$id")
         val response = httpClient.delete(url("v1/documents/$id")) { defaultHeaders() }

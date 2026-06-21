@@ -39,9 +39,6 @@ import com.shelldocs.core.domain.usecase.document.*
 import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
-import com.shelldocs.core.domain.usecase.source.GetSourcesUseCase
-import com.shelldocs.core.domain.usecase.source.GetSyncLogUseCase
-import com.shelldocs.core.domain.usecase.source.SyncSourceUseCase
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
@@ -150,12 +147,17 @@ class AppContainer(
 
     // --- Assistant --------------------------------------------------------
 
+    private val ollamaClient: OllamaClient? by lazy {
+        if (config.useOllama) OllamaClient(httpClient, config.ollama) else null
+    }
+
     private val evaluateHealth by lazy { EvaluateDocumentHealthUseCase(timeProvider) }
     private val assistantEngine by lazy {
         val grounded = GroundedAssistantEngine(ShouldImproveDocumentUseCase(evaluateHealth))
-        if (config.useOllama) {
+        val ollama = ollamaClient
+        if (ollama != null) {
             CompositeAssistantEngine(
-                primary = OllamaAssistantEngine(OllamaClient(httpClient, config.ollama)),
+                primary = OllamaAssistantEngine(ollama),
                 fallback = grounded,
             )
         } else {
@@ -180,6 +182,13 @@ class AppContainer(
     }
     private val sourcesRepository by lazy { DemoSourcesRepository(timeProvider) }
     private val documentSyncRepository by lazy { DemoDocumentSyncRepository() }
+    private val connectionsRepository by lazy {
+        RealConnectionsRepository(
+            ollamaClient = ollamaClient,
+            api = config.api?.let { ShellDocsApi(httpClient, it) },
+            postgrest = config.supabase?.let { postgrest(it) },
+        )
+    }
 
     // --- Startup diagnostics ------------------------------------------------
 
@@ -209,11 +218,12 @@ class AppContainer(
 
     private suspend fun checkOllamaConnection() {
         val ollamaLogger = AppLogger.tag(LogTags.OLLAMA)
-        if (!config.useOllama) {
+        val client = ollamaClient
+        if (client == null) {
             ollamaLogger.i("Skipped: Ollama disabled (useOllama=false)")
             return
         }
-        OllamaClient(httpClient, config.ollama).isReachable()
+        client.isReachable()
     }
 
     private suspend fun checkIntegrations() {
@@ -299,11 +309,7 @@ class AppContainer(
     )
 
     fun sourcesViewModel() = SourcesViewModel(
-        getSources = GetSourcesUseCase(sourcesRepository),
-        getSyncLog = GetSyncLogUseCase(sourcesRepository),
-        syncSource = SyncSourceUseCase(sourcesRepository),
-        sourcesRepository = sourcesRepository,
-        roleProvider = ::currentRole,
+        connectionsRepository = connectionsRepository,
         dispatchers = dispatchers,
     )
 
