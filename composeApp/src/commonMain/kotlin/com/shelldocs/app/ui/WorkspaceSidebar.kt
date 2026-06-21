@@ -15,11 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
-import com.shelldocs.app.strings.StringRes.APP_BRAND_NAME
 import com.shelldocs.app.strings.StringRes.CONFLUENCE_TXT
 import com.shelldocs.app.strings.StringRes.DARK_MODE_TXT
 import com.shelldocs.app.strings.StringRes.LIGHT_MODE_TXT
@@ -28,7 +28,6 @@ import com.shelldocs.app.strings.StringRes.SEARCH_TXT
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
-import com.shelldocs.core.designsystem.atoms.ShellBrandBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellKbdHint
@@ -132,16 +131,21 @@ fun WorkspaceSidebar(
 
 @Composable
 private fun SidebarHeader() {
-    val colors = ShellTheme.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = ShellSpacing.md, bottom = ShellSpacing.sm),
+            .padding(top = ShellSpacing.md, bottom = ShellSpacing.xs)
+            .padding(horizontal = ShellSpacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
     ) {
-        ShellBrandBadge(size = 44.dp, iconSize = 26.dp)
-        Text(APP_BRAND_NAME, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
+        Icon(
+            imageVector = IconShellAtlasLogo,
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+        )
     }
 }
 

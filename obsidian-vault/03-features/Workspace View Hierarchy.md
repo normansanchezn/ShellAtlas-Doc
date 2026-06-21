@@ -19,7 +19,7 @@ tags:
 ## Summary
 
 Shared workspace screens now use one consistent top toolbar height and title hierarchy for desktop and web layouts, and
-the sidebar brand block now centers the ShellAtlas mark without extra subtitle noise.
+the sidebar brand block now uses the full ShellAtlas logo without extra subtitle or duplicated brand text.
 
 ## Purpose
 
@@ -108,8 +108,8 @@ while the screen content keeps its local panel structure below it.
   titles remain at lower hierarchy levels.
 - Assistant no longer uses a custom header height that diverges from the rest of the workspace.
 - Button sizing was normalized at the atom level to reduce inconsistent confirm/cancel rendering.
-- Sidebar branding now removes the `Knowledge Platform` subtitle and centers the mark so it does not compete with
-  the actual page hierarchy.
+- Sidebar branding now removes the `Knowledge Platform` subtitle and the duplicated `ShellAtlas` text label so the
+  full logo lockup can stand on its own without competing with the page hierarchy.
 
 ## Open Questions
 

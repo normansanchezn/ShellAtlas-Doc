@@ -20,6 +20,8 @@ tags:
 - Added shared SVG logo assets and wired the macOS desktop package icon to a generated `.icns`.
 - Replaced the remaining prominent in-app legacy brand surfaces with a shared `ShellBrandBadge` backed by a shared
   `IconShellAtlasBrand` vector, including auth and assistant entry points.
+- The sidebar now renders the full ShellAtlas logo wordmark directly and no longer prints a second `ShellAtlas`
+  text label under it.
 
 ## Files created
 
@@ -37,6 +39,7 @@ tags:
 - `composeApp/src/commonMain/kotlin/com/shelldocs/app/ui/WorkspaceSidebar.kt`
 - `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/atoms/ShellBrandBadge.kt`
 - `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/icons/IconShellAtlasBrand.kt`
+- `core/designsystem/src/commonMain/kotlin/com/shelldocs/core/designsystem/icons/IconShellAtlasLogo.kt`
 - `feature/assistant/src/commonMain/kotlin/com/shelldocs/feature/assistant/ui/AssistantRichContent.kt`
 - `feature/auth/src/commonMain/kotlin/com/shelldocs/feature/auth/ui/SignInScreen.kt`
 - `docs/project-tree.md`
@@ -44,7 +47,7 @@ tags:
 
 ## Decisions made
 
-- The sidebar keeps the brand concise: mark plus product name only.
+- The wide sidebar should use the full logo lockup, while the compact rail keeps the icon-only badge.
 - Packaged desktop branding uses a dedicated app icon file instead of relying on runtime window title only.
 
 ## Issues found

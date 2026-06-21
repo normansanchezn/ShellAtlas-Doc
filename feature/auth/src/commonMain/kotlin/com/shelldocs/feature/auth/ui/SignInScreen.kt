@@ -32,7 +32,13 @@ import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.feature.auth.presentation.AuthEffect
 import com.shelldocs.feature.auth.presentation.AuthIntent
+import com.shelldocs.feature.auth.presentation.AuthState
 import com.shelldocs.feature.auth.presentation.AuthViewModel
+import com.shelldocs.feature.auth.presentation.strings.StringRes.EMAIL_PLACEHOLDER
+import com.shelldocs.feature.auth.presentation.strings.StringRes.LOGIN_TEXT_SUBTITLE
+import com.shelldocs.feature.auth.presentation.strings.StringRes.PASSWORD_PLACEHOLDER
+import com.shelldocs.feature.auth.presentation.strings.StringRes.SIGN_IN_LOADING_TXT
+import com.shelldocs.feature.auth.presentation.strings.StringRes.SIGN_IN_TXT
 
 @Composable
 fun SignInScreen(
@@ -93,7 +99,7 @@ fun SignInScreen(
 
 @Composable
 private fun MobileSignInContent(
-    state: com.shelldocs.feature.auth.presentation.AuthState,
+    state: AuthState,
     viewModel: AuthViewModel,
     isDemoMode: Boolean,
 ) {
@@ -120,7 +126,7 @@ private fun MobileSignInContent(
         if (isDemoMode) {
             Spacer(Modifier.height(ShellSpacing.sm))
             Text(
-                "Demo mode: any corporate email and an 8+ character password will sign in.",
+                LOGIN_TEXT_SUBTITLE,
                 style = typography.caption,
                 color = supportingColor,
             )
@@ -136,7 +142,7 @@ private fun MobileSignInContent(
                 value = state.email,
                 onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
                 modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInEmail),
-                placeholder = "Work email",
+                placeholder = EMAIL_PLACEHOLDER,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next,
@@ -146,7 +152,7 @@ private fun MobileSignInContent(
                 value = state.password,
                 onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
                 modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInPassword),
-                placeholder = "Password",
+                placeholder = PASSWORD_PLACEHOLDER,
                 isPassword = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(
@@ -159,7 +165,7 @@ private fun MobileSignInContent(
         Spacer(Modifier.height(ShellSpacing.xl))
 
         ShellPrimaryButton(
-            text = if (state.isLoading) "Signing in..." else "Sign in",
+            text = if (state.isLoading) SIGN_IN_LOADING_TXT else SIGN_IN_TXT,
             onClick = { viewModel.onIntent(AuthIntent.Submit) },
             enabled = state.canSubmit,
             modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.SignInSubmit),
@@ -171,7 +177,7 @@ private fun MobileSignInContent(
 
 @Composable
 private fun DesktopSignInContent(
-    state: com.shelldocs.feature.auth.presentation.AuthState,
+    state: AuthState,
     viewModel: AuthViewModel,
     isDemoMode: Boolean,
 ) {
@@ -210,7 +216,7 @@ private fun DesktopSignInContent(
                     if (isDemoMode) {
                         Spacer(Modifier.height(ShellSpacing.sm))
                         Text(
-                            "Demo mode: any corporate email and an 8+ character password will sign in.",
+                            LOGIN_TEXT_SUBTITLE,
                             style = ShellTheme.typography.caption,
                             color = colors.textMuted,
                         )
