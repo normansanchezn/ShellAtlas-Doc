@@ -2,7 +2,6 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.io.File
 
 fun loadDotEnv(rootDir: File): Map<String, String> {
     val envFile = rootDir.resolve(".env")
@@ -216,6 +215,9 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ShellAtlas"
             packageVersion = "1.0.0"
+            macOS {
+                iconFile.set(project.file("src/desktopMain/resources/icons/ShellAtlas.icns"))
+            }
         }
     }
 }

@@ -18,7 +18,8 @@ tags:
 
 ## Summary
 
-Shared workspace screens now use one consistent top toolbar height and title hierarchy for desktop and web layouts.
+Shared workspace screens now use one consistent top toolbar height and title hierarchy for desktop and web layouts, and
+the sidebar brand block now centers the ShellAtlas mark without extra subtitle noise.
 
 ## Purpose
 
@@ -35,6 +36,7 @@ Sources, Settings and Updates.
 
 - Desktop and web screens render the same toolbar height.
 - The page title stays centered in the top bar.
+- The sidebar and rail top brand mark stay visually aligned with the packaged desktop app icon.
 - No more than two controls should be placed on the left or right toolbar areas.
 - Secondary panel labels stay inside the content area and no longer compete with the page-level title.
 - Decision buttons keep the same base height and minimum width.
@@ -53,6 +55,13 @@ Sources, Settings and Updates.
 - `feature/sources/src/commonMain/kotlin/com/shelldocs/feature/sources/ui/SourcesScreen.kt`
 - `feature/updates/src/commonMain/kotlin/com/shelldocs/feature/updates/ui/UpdatesScreen.kt`
 - `feature/updates/src/commonMain/kotlin/com/shelldocs/feature/updates/ui/AiUpdateScreen.kt`
+- `composeApp/src/commonMain/kotlin/com/shelldocs/app/ui/WorkspaceSidebar.kt`
+- `composeApp/src/commonMain/kotlin/com/shelldocs/app/ui/WorkspaceRail.kt`
+- `composeApp/src/commonMain/kotlin/com/shelldocs/app/strings/StringRes.kt`
+- `composeApp/src/commonMain/resources/drawable/shell_atlas_icon.svg`
+- `composeApp/src/commonMain/resources/drawable/shell_atlas_logo.svg`
+- `composeApp/src/desktopMain/resources/icons/ShellAtlas.icns`
+- `composeApp/build.gradle.kts`
 
 ## Domain Models
 
@@ -78,6 +87,7 @@ Sources, Settings and Updates.
 
 - Molecule: `ShellScreenToolbar`
 - Atoms: `ShellPrimaryButton`, `ShellGhostButton`
+- App shell branding: `WorkspaceSidebar`, `WorkspaceRail`
 
 ## Mock Data Used
 
@@ -98,6 +108,8 @@ while the screen content keeps its local panel structure below it.
   titles remain at lower hierarchy levels.
 - Assistant no longer uses a custom header height that diverges from the rest of the workspace.
 - Button sizing was normalized at the atom level to reduce inconsistent confirm/cancel rendering.
+- Sidebar branding now removes the `Knowledge Platform` subtitle and centers the mark so it does not compete with
+  the actual page hierarchy.
 
 ## Open Questions
 

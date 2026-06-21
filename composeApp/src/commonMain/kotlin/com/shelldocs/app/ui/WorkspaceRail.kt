@@ -5,13 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -24,17 +18,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.app.strings.StringRes.APP_BRAND_CONTENT_DESCRIPTION
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellBadge
-import com.shelldocs.core.designsystem.icons.IconAlertTriangle
-import com.shelldocs.core.designsystem.icons.IconFileText
-import com.shelldocs.core.designsystem.icons.IconLayers
-import com.shelldocs.core.designsystem.icons.IconLayoutGrid
-import com.shelldocs.core.designsystem.icons.IconMessageSquare
-import com.shelldocs.core.designsystem.icons.IconMoon
-import com.shelldocs.core.designsystem.icons.IconSettings
-import com.shelldocs.core.designsystem.icons.IconShellPecten
-import com.shelldocs.core.designsystem.icons.IconSun
+import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
@@ -65,16 +52,16 @@ fun WorkspaceRail(
     ) {
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(40.dp)
                 .clip(RoundedCornerShape(ShellRadius.sm))
                 .background(colors.brand),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = IconShellPecten,
-                contentDescription = "ShellAtlas",
+                contentDescription = APP_BRAND_CONTENT_DESCRIPTION,
                 tint = colors.onBrand,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(22.dp),
             )
         }
         Column(

@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.app.strings.StringRes.APP_BRAND_CONTENT_DESCRIPTION
+import com.shelldocs.app.strings.StringRes.APP_BRAND_NAME
 import com.shelldocs.app.strings.StringRes.CONFLUENCE_TXT
 import com.shelldocs.app.strings.StringRes.DARK_MODE_TXT
 import com.shelldocs.app.strings.StringRes.LIGHT_MODE_TXT
@@ -131,32 +133,28 @@ fun WorkspaceSidebar(
 @Composable
 private fun SidebarHeader() {
     val colors = ShellTheme.colors
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(42.dp)
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+            .padding(top = ShellSpacing.md, bottom = ShellSpacing.sm),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs),
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(40.dp)
                 .clip(RoundedCornerShape(ShellRadius.sm))
                 .background(colors.brand),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = IconShellPecten,
-                contentDescription = "ShellAtlas",
+                contentDescription = APP_BRAND_CONTENT_DESCRIPTION,
                 tint = colors.onBrand,
-                modifier = Modifier.size(15.dp),
+                modifier = Modifier.size(22.dp),
             )
         }
-        Column {
-            Text("ShellAtlas", style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
-            Text("Knowledge Platform", style = ShellTheme.typography.caption, color = colors.textMuted)
-        }
+        Text(APP_BRAND_NAME, style = ShellTheme.typography.bodyStrong, color = colors.textPrimary)
     }
 }
 

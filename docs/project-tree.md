@@ -27,7 +27,7 @@ ShelEnterpriseDoc/
 │   ├── src/androidMain/             ← Android entrypoints + BuildConfig profile loader
 │   ├── src/androidInstrumentedTest/ ← Instrumented Compose demo walkthroughs for recording product videos
 │   ├── src/commonMain/              ← Shared app container, navigation + runtime config contract
-│   ├── src/desktopMain/             ← Desktop host + .env/profile loader
+│   ├── src/desktopMain/             ← Desktop host + .env/profile loader + packaged app icons
 │   ├── src/iosMain/                 ← iOS bridge + process-env loader
 │   └── src/wasmJsMain/              ← Web/Wasm host + query-param loader
 ├── core/
