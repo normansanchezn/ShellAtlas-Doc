@@ -39,7 +39,7 @@ fun MetadataReviewDialog(
     var module by remember(attributes) { mutableStateOf(attributes.module) }
 
     ShellDialog(
-        title = "Review Metadata",
+        title = "Review Attributes",
         onDismiss = onCancel,
         actions = {
             ShellGhostButton(text = "Cancel", onClick = onCancel)

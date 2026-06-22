@@ -154,6 +154,7 @@ class UpdatesViewModel(
                 sendEffect(UpdatesEffect.MetadataUpdated(documentId))
                 loadMetadataIssues()
                 loadHealthyDocuments()
+                sendEffect(UpdatesEffect.OpenAiUpdate(documentId))
             }
             .onFailure { error ->
                 setState { copy(errorDialog = error.toErrorDialogState("apply metadata changes")) }
