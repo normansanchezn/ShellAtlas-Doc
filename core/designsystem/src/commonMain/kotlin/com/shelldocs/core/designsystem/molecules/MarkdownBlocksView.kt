@@ -1,12 +1,14 @@
 package com.shelldocs.core.designsystem.molecules
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -53,16 +55,22 @@ fun MarkdownBlocksView(
                         }
                     }
                 }
-                is CodeBlock -> Text(
-                    text = block.code,
-                    style = ShellTheme.typography.code,
-                    color = colors.textPrimary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(ShellRadius.md))
-                        .background(colors.surfaceSubtle)
-                        .padding(ShellSpacing.md),
-                )
+                is CodeBlock -> if (block.language.equals("mermaid", ignoreCase = true)) {
+                    MermaidDiagramCard(diagram = MermaidParser.parse(block.code))
+                } else {
+                    Text(
+                        text = block.code,
+                        style = ShellTheme.typography.code,
+                        color = colors.textPrimary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(ShellRadius.md))
+                            .background(colors.surfaceSubtle)
+                            .padding(ShellSpacing.md),
+                    )
+                }
+
+                is TableBlock -> MarkdownTable(block)
                 is QuoteBlock -> Row {
                     Box(
                         modifier = Modifier
@@ -74,6 +82,40 @@ fun MarkdownBlocksView(
                         text = block.text,
                         style = ShellTheme.typography.body,
                         color = colors.textMuted,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MarkdownTable(block: TableBlock) {
+    val colors = ShellTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(ShellRadius.md))
+            .border(1.dp, colors.border, RoundedCornerShape(ShellRadius.md)),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().background(colors.surfaceSubtle)) {
+            block.headers.forEach { header ->
+                Text(
+                    text = header,
+                    style = ShellTheme.typography.bodyStrong,
+                    color = colors.textPrimary,
+                    modifier = Modifier.weight(1f).padding(ShellSpacing.sm),
+                )
+            }
+        }
+        block.rows.forEach { row ->
+            Row(modifier = Modifier.fillMaxWidth().border(width = 1.dp, color = colors.border)) {
+                row.forEach { cell ->
+                    Text(
+                        text = cell,
+                        style = ShellTheme.typography.body,
+                        color = colors.textSecondary,
+                        modifier = Modifier.weight(1f).padding(ShellSpacing.sm),
                     )
                 }
             }

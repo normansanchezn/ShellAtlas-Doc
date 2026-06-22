@@ -12,4 +12,6 @@ data class ContentBlockDto(
     val items: List<String>? = null,
     val language: String? = null,
     val code: String? = null,
+    val headers: List<String>? = null,
+    val rows: List<List<String>>? = null,
 )

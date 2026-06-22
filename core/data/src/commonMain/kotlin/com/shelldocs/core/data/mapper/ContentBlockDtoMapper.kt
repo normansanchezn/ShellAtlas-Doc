@@ -1,13 +1,7 @@
 package com.shelldocs.core.data.mapper
 
 import com.shelldocs.core.data.network.dto.ContentBlockDto
-import com.shelldocs.core.domain.entity.document.CodeBlock
-import com.shelldocs.core.domain.entity.document.ContentBlock
-import com.shelldocs.core.domain.entity.document.HeadingBlock
-import com.shelldocs.core.domain.entity.document.ListBlock
-import com.shelldocs.core.domain.entity.document.ListStyle
-import com.shelldocs.core.domain.entity.document.ParagraphBlock
-import com.shelldocs.core.domain.entity.document.QuoteBlock
+import com.shelldocs.core.domain.entity.document.*
 
 /** Maps wire blocks to domain blocks; unknown types degrade to paragraphs. */
 object ContentBlockDtoMapper {
@@ -20,6 +14,7 @@ object ContentBlockDtoMapper {
         )
         "code" -> CodeBlock(language = dto.language.orEmpty(), code = dto.code.orEmpty())
         "blockquote" -> QuoteBlock(text = dto.text.orEmpty())
+        "table" -> TableBlock(headers = dto.headers.orEmpty(), rows = dto.rows.orEmpty())
         else -> ParagraphBlock(text = dto.text.orEmpty())
     }
 
@@ -33,5 +28,6 @@ object ContentBlockDtoMapper {
         )
         is CodeBlock -> ContentBlockDto(type = "code", language = block.language, code = block.code)
         is QuoteBlock -> ContentBlockDto(type = "blockquote", text = block.text)
+        is TableBlock -> ContentBlockDto(type = "table", headers = block.headers, rows = block.rows)
     }
 }

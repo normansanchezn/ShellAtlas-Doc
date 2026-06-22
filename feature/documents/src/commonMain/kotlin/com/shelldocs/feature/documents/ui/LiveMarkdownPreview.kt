@@ -19,6 +19,13 @@ fun LiveMarkdownPreview(markdown: String, modifier: Modifier = Modifier) {
 private val HEADING = Regex("^(#{1,6})\\s+(.*)$")
 private val BULLET = Regex("^[-*+]\\s+(.*)$")
 private val ORDERED = Regex("^\\d+[.)]\\s+(.*)$")
+private val TABLE_SEPARATOR = Regex("^\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?$")
+
+private fun isTableRow(trimmed: String): Boolean =
+    trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 1
+
+private fun splitTableRow(trimmed: String): List<String> =
+    trimmed.removePrefix("|").removeSuffix("|").split("|").map { it.trim() }
 
 /** Minimal block parser for preview (full parser lives in core:data). */
 internal fun parsePreviewBlocks(markdown: String): List<ContentBlock> {
@@ -29,6 +36,16 @@ internal fun parsePreviewBlocks(markdown: String): List<ContentBlock> {
         val trimmed = lines[index].trim()
         when {
             trimmed.isEmpty() -> index++
+            isTableRow(trimmed) && index + 1 < lines.size && TABLE_SEPARATOR.matches(lines[index + 1].trim()) -> {
+                val headers = splitTableRow(trimmed)
+                index += 2
+                val rows = mutableListOf<List<String>>()
+                while (index < lines.size && isTableRow(lines[index].trim())) {
+                    rows += splitTableRow(lines[index].trim())
+                    index++
+                }
+                blocks += TableBlock(headers = headers, rows = rows)
+            }
             trimmed.startsWith("```") -> {
                 val language = trimmed.removePrefix("```").trim()
                 val code = mutableListOf<String>()

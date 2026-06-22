@@ -5,7 +5,18 @@ export type DocumentBlock =
     | { type: "paragraph"; text: string }
     | { type: "list"; style: "unordered" | "ordered"; items: string[] }
     | { type: "code"; language?: string; code: string }
-    | { type: "blockquote"; text: string };
+    | { type: "blockquote"; text: string }
+    | { type: "table"; headers: string[]; rows: string[][] };
+
+const TABLE_SEPARATOR = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/;
+
+function isTableRow(trimmed: string): boolean {
+    return trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 1;
+}
+
+function splitTableRow(trimmed: string): string[] {
+    return trimmed.replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+}
 
 export type ParsedDocument = {
     title?: string;
@@ -33,6 +44,19 @@ export function parseMarkdown(markdown: string): ParsedDocument {
 
         if (!trimmed) {
             index += 1;
+            continue;
+        }
+
+        if (isTableRow(trimmed) && index + 1 < lines.length && TABLE_SEPARATOR.test(lines[index + 1].trim())) {
+            const headers = splitTableRow(trimmed);
+            index += 2; // header + separator
+            const rows: string[][] = [];
+            while (index < lines.length && isTableRow(lines[index].trim())) {
+                rows.push(splitTableRow(lines[index].trim()));
+                index += 1;
+            }
+            blocks.push({type: "table", headers, rows});
+            plainTextParts.push(...rows.map((row) => row.join(" ")));
             continue;
         }
 
@@ -101,7 +125,8 @@ export function parseMarkdown(markdown: string): ParsedDocument {
             !/^[-*+]\s+/.test(lines[index].trim()) &&
             !/^\d+\.\s+/.test(lines[index].trim()) &&
             !/^>\s?/.test(lines[index].trim()) &&
-            !lines[index].trim().startsWith("```")
+            !lines[index].trim().startsWith("```") &&
+            !isTableRow(lines[index].trim())
             ) {
             paragraphLines.push(lines[index].trim());
             index += 1;

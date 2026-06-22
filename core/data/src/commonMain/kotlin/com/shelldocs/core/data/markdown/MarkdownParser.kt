@@ -1,13 +1,6 @@
 package com.shelldocs.core.data.markdown
 
-import com.shelldocs.core.domain.entity.document.CodeBlock
-import com.shelldocs.core.domain.entity.document.ContentBlock
-import com.shelldocs.core.domain.entity.document.DocumentContent
-import com.shelldocs.core.domain.entity.document.HeadingBlock
-import com.shelldocs.core.domain.entity.document.ListBlock
-import com.shelldocs.core.domain.entity.document.ListStyle
-import com.shelldocs.core.domain.entity.document.ParagraphBlock
-import com.shelldocs.core.domain.entity.document.QuoteBlock
+import com.shelldocs.core.domain.entity.document.*
 
 /**
  * Kotlin port of the original backend `markdown-parser.ts`: converts raw
@@ -36,6 +29,17 @@ class MarkdownParser {
             val trimmed = line.trim()
             when {
                 trimmed.isEmpty() -> index++
+
+                isTableRow(trimmed) && index + 1 < lines.size && TABLE_SEPARATOR.matches(lines[index + 1].trim()) -> {
+                    val headers = splitTableRow(trimmed)
+                    index += 2 // header + separator
+                    val rows = mutableListOf<List<String>>()
+                    while (index < lines.size && isTableRow(lines[index].trim())) {
+                        rows += splitTableRow(lines[index].trim())
+                        index++
+                    }
+                    blocks += TableBlock(headers = headers, rows = rows)
+                }
 
                 trimmed.startsWith("```") -> {
                     val language = trimmed.removePrefix("```").trim()
@@ -101,8 +105,14 @@ class MarkdownParser {
     }
 
     private fun isBlockStart(trimmed: String): Boolean =
-        trimmed.startsWith("```") || trimmed.startsWith(">") ||
+        trimmed.startsWith("```") || trimmed.startsWith(">") || isTableRow(trimmed) ||
             HEADING.matches(trimmed) || BULLET_ITEM.matches(trimmed) || ORDERED_ITEM.matches(trimmed)
+
+    private fun isTableRow(trimmed: String): Boolean =
+        trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.length > 1
+
+    private fun splitTableRow(trimmed: String): List<String> =
+        trimmed.removePrefix("|").removeSuffix("|").split("|").map { it.trim() }
 
     private fun blockText(block: ContentBlock): String = when (block) {
         is HeadingBlock -> block.text
@@ -110,6 +120,7 @@ class MarkdownParser {
         is ListBlock -> block.items.joinToString("\n") { stripInline(it) }
         is CodeBlock -> block.code
         is QuoteBlock -> stripInline(block.text)
+        is TableBlock -> (listOf(block.headers) + block.rows).joinToString("\n") { it.joinToString(" ") }
     }
 
     private fun stripInline(text: String): String =
@@ -120,6 +131,7 @@ class MarkdownParser {
         val HEADING = Regex("^(#{1,6})\\s+(.*)$")
         val BULLET_ITEM = Regex("^[-*+]\\s+(.*)$")
         val ORDERED_ITEM = Regex("^\\d+[.)]\\s+(.*)$")
+        val TABLE_SEPARATOR = Regex("^\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?$")
         val INLINE_MARKERS = Regex("[*_`]")
     }
 }
