@@ -66,6 +66,9 @@ fun App(
 
         ShellDocsTheme(darkTheme = isDarkTheme, typography = baseTypography, textScale = textScale) {
             val session by container.authRepository.session.collectAsState()
+            LaunchedEffect(session?.user?.id) {
+                if (session != null) container.syncDocumentsFromApi()
+            }
             val strings = stringsFor(session?.user?.language ?: AppLanguage.ENGLISH)
             CompositionLocalProvider(LocalAppStrings provides strings) {
             // BoxWithConstraints intentionally has NO windowInsetsPadding here.

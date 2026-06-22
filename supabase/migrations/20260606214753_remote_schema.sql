@@ -1,7 +1,5 @@
 drop extension if exists "pg_net";
-
 set check_function_bodies = off;
-
 CREATE OR REPLACE FUNCTION public.rls_auto_enable()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -30,7 +28,4 @@ BEGIN
      END IF;
   END LOOP;
 END;
-$function$
-;
-
-
+$function$;

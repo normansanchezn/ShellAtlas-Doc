@@ -19,11 +19,7 @@ import com.shelldocs.core.domain.entity.document.DraftReceipt
 import com.shelldocs.core.domain.repository.DocumentRepository
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -259,6 +255,123 @@ class SupabaseDocumentRepository(
         fetchDocuments(ids = listOf(id)).first()
     }
 
+    /**
+     * Pulls documents from an external source (e.g. the ShellDocs `/v1` API,
+     * itself backed by Confluence) and writes to Supabase only what changed:
+     * matches existing rows by (source_type, source_external_id), skips
+     * documents whose content hash is unchanged, creates missing ones, and
+     * publishes a new version for ones whose content differs.
+     */
+    suspend fun syncFromExternal(
+        sourceType: String,
+        externalDocuments: List<ExternalDocumentInput>,
+    ): DomainResult<DocumentSyncSummary> = guard {
+        var created = 0
+        var updated = 0
+        var skipped = 0
+        for (doc in externalDocuments) {
+            val parsed = markdownParser.parse(doc.rawMarkdown)
+            val existing = postgrest.select<List<SyncLookupRow>>(
+                table = "documents",
+                query = "select=id,current_version_id&source_type=eq.$sourceType" +
+                        "&source_external_id=eq.${doc.externalId}&deleted_at=is.null",
+            ).firstOrNull()
+
+            if (existing == null) {
+                insertExternalDocument(sourceType, doc, parsed)
+                created++
+                continue
+            }
+
+            val currentHash = existing.currentVersionId?.let { versionId ->
+                postgrest.select<List<SupabaseVersionHashRow>>(
+                    table = "document_versions",
+                    query = "select=content_hash&id=eq.$versionId",
+                ).firstOrNull()?.contentHash
+            }
+
+            if (currentHash == parsed.contentHash) {
+                skipped++
+                continue
+            }
+
+            publishExternalVersion(existing.id, doc, parsed)
+            updated++
+        }
+        DocumentSyncSummary(created = created, updated = updated, skipped = skipped)
+    }
+
+    private suspend fun insertExternalDocument(
+        sourceType: String,
+        doc: ExternalDocumentInput,
+        parsed: com.shelldocs.core.data.markdown.ParsedMarkdown,
+    ) {
+        val now = nowIso()
+        val documentRow = postgrest.insert<List<SupabaseDocumentRow>, CreateDocumentRow>(
+            table = "documents",
+            body = CreateDocumentRow(
+                title = doc.title,
+                slug = slugify(doc.title),
+                status = "published",
+                classification = "internal",
+                sourceType = sourceType,
+                sourceExternalId = doc.externalId,
+                updatedAt = now,
+            ),
+        ).first()
+        val versionRow = postgrest.insert<List<SupabaseVersionRow>, CreateVersionRow>(
+            table = "document_versions",
+            body = CreateVersionRow(
+                documentId = documentRow.id,
+                versionNumber = 1,
+                title = doc.title,
+                rawMarkdown = doc.rawMarkdown,
+                contentJson = ContentJsonDto(
+                    schemaVersion = parsed.content.schemaVersion,
+                    blocks = parsed.content.blocks.map(ContentBlockDtoMapper::toDto),
+                ),
+                contentPlaintext = parsed.plainText,
+                contentHash = parsed.contentHash,
+                changeSummary = "Imported from $sourceType",
+            ),
+        ).first()
+        postgrest.update<List<SupabaseDocumentRow>, UpdateDocumentRow>(
+            table = "documents",
+            query = "id=eq.${documentRow.id}",
+            body = UpdateDocumentRow(currentVersionId = versionRow.id, updatedAt = now),
+        )
+    }
+
+    private suspend fun publishExternalVersion(
+        documentId: String,
+        doc: ExternalDocumentInput,
+        parsed: com.shelldocs.core.data.markdown.ParsedMarkdown,
+    ) {
+        val now = nowIso()
+        val nextVersion = nextVersionNumber(documentId)
+        val versionRow = postgrest.insert<List<SupabaseVersionRow>, CreateVersionRow>(
+            table = "document_versions",
+            body = CreateVersionRow(
+                documentId = documentId,
+                versionNumber = nextVersion,
+                title = doc.title,
+                rawMarkdown = doc.rawMarkdown,
+                contentJson = ContentJsonDto(
+                    schemaVersion = parsed.content.schemaVersion,
+                    blocks = parsed.content.blocks.map(ContentBlockDtoMapper::toDto),
+                ),
+                contentPlaintext = parsed.plainText,
+                contentHash = parsed.contentHash,
+                changeSummary = "Updated from source",
+            ),
+        ).first()
+        postgrest.update<List<SupabaseDocumentRow>, UpdateDocumentRow>(
+            table = "documents",
+            query = "id=eq.$documentId",
+            body = UpdateDocumentRow(title = doc.title, currentVersionId = versionRow.id, updatedAt = now),
+        )
+    }
+
     override suspend fun delete(id: String): DomainResult<Unit> = guard {
         postgrest.update<List<SupabaseDocumentRow>, UpdateDocumentRow>(
             table = "documents",
@@ -452,9 +565,36 @@ private data class CreateDocumentRow(
     val slug: String,
     val status: String,
     val classification: String,
+    @SerialName("source_type") val sourceType: String = "manual",
+    @SerialName("source_external_id") val sourceExternalId: String? = null,
     @SerialName("created_by") val createdBy: String? = null,
     @SerialName("updated_by") val updatedBy: String? = null,
     @SerialName("updated_at") val updatedAt: String,
+)
+
+@Serializable
+private data class SyncLookupRow(
+    val id: String,
+    @SerialName("current_version_id") val currentVersionId: String? = null,
+)
+
+@Serializable
+private data class SupabaseVersionHashRow(
+    @SerialName("content_hash") val contentHash: String,
+)
+
+/** One document fetched from an external source (e.g. the ShellDocs API/Confluence), pending sync. */
+data class ExternalDocumentInput(
+    val externalId: String,
+    val title: String,
+    val rawMarkdown: String,
+)
+
+/** Outcome of [SupabaseDocumentRepository.syncFromExternal], for logging/UI. */
+data class DocumentSyncSummary(
+    val created: Int,
+    val updated: Int,
+    val skipped: Int,
 )
 
 @Serializable

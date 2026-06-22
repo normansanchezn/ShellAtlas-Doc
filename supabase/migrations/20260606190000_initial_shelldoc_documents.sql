@@ -1,5 +1,4 @@
 create extension if not exists pgcrypto;
-
 create table if not exists documents (
   id uuid primary key default gen_random_uuid(),
   source_type text not null default 'manual',
@@ -22,14 +21,11 @@ create table if not exists documents (
     classification in ('public', 'internal', 'confidential', 'restricted')
   )
 );
-
 create unique index if not exists documents_slug_active_idx
   on documents(slug)
   where deleted_at is null;
-
 create index if not exists documents_status_idx on documents(status) where deleted_at is null;
 create index if not exists documents_source_idx on documents(source_type, source_external_id) where deleted_at is null;
-
 create table if not exists document_versions (
   id uuid primary key default gen_random_uuid(),
   document_id uuid not null references documents(id) on delete cascade,
@@ -45,19 +41,15 @@ create table if not exists document_versions (
   created_at timestamptz not null default now(),
   unique(document_id, version_number)
 );
-
 create unique index if not exists document_versions_hash_idx
   on document_versions(document_id, content_hash);
-
 create index if not exists document_versions_document_idx
   on document_versions(document_id, version_number desc);
-
 alter table documents
   add constraint documents_current_version_fk
   foreign key (current_version_id)
   references document_versions(id)
   deferrable initially deferred;
-
 create table if not exists document_drafts (
   id uuid primary key default gen_random_uuid(),
   document_id uuid not null references documents(id) on delete cascade,
@@ -70,10 +62,8 @@ create table if not exists document_drafts (
   updated_at timestamptz not null default now(),
   unique(document_id, user_id)
 );
-
 create index if not exists document_drafts_updated_idx
   on document_drafts(updated_at);
-
 create table if not exists document_attributes (
   id uuid primary key default gen_random_uuid(),
   document_id uuid not null references documents(id) on delete cascade,
@@ -84,10 +74,8 @@ create table if not exists document_attributes (
   updated_at timestamptz not null default now(),
   unique(document_id, key)
 );
-
 create index if not exists document_attributes_key_idx
   on document_attributes(key);
-
 create table if not exists document_links (
   id uuid primary key default gen_random_uuid(),
   document_id uuid not null references documents(id) on delete cascade,
@@ -98,10 +86,8 @@ create table if not exists document_links (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
-
 create index if not exists document_links_document_idx on document_links(document_id);
 create index if not exists document_links_target_idx on document_links(target_type, target_id);
-
 create table if not exists sync_runs (
   id uuid primary key default gen_random_uuid(),
   source_type text not null,
@@ -114,10 +100,8 @@ create table if not exists sync_runs (
   failed_count integer not null default 0,
   metadata jsonb not null default '{}'::jsonb
 );
-
 create index if not exists sync_runs_source_started_idx
   on sync_runs(source_type, started_at desc);
-
 create table if not exists audit_logs (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid,
@@ -127,13 +111,10 @@ create table if not exists audit_logs (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
-
 create index if not exists audit_logs_entity_idx
   on audit_logs(entity_type, entity_id, created_at desc);
-
 create index if not exists audit_logs_actor_idx
   on audit_logs(actor_id, created_at desc);
-
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
@@ -143,17 +124,14 @@ begin
   return new;
 end;
 $$;
-
 drop trigger if exists documents_set_updated_at on documents;
 create trigger documents_set_updated_at
 before update on documents
 for each row execute function set_updated_at();
-
 drop trigger if exists document_attributes_set_updated_at on document_attributes;
 create trigger document_attributes_set_updated_at
 before update on document_attributes
 for each row execute function set_updated_at();
-
 alter table documents enable row level security;
 alter table document_versions enable row level security;
 alter table document_drafts enable row level security;
@@ -161,7 +139,6 @@ alter table document_attributes enable row level security;
 alter table document_links enable row level security;
 alter table sync_runs enable row level security;
 alter table audit_logs enable row level security;
-
 comment on table documents is 'Document identity and current published version pointer. Backend is the only writer for MVP.';
 comment on table document_versions is 'Published immutable document versions. One row per publish, not per keystroke.';
 comment on table document_drafts is 'Per-user autosave drafts. Drafts do not create published versions.';

@@ -10,6 +10,8 @@ import com.shelldocs.core.common.id.RandomIdGenerator
 import com.shelldocs.core.common.logging.AppLogger
 import com.shelldocs.core.common.logging.LogTags
 import com.shelldocs.core.common.result.getOrDefault
+import com.shelldocs.core.common.result.onFailure
+import com.shelldocs.core.common.result.onSuccess
 import com.shelldocs.core.common.time.SystemTimeProvider
 import com.shelldocs.core.data.assistant.CompositeAssistantEngine
 import com.shelldocs.core.data.assistant.GroundedAssistantEngine
@@ -26,6 +28,7 @@ import com.shelldocs.core.domain.entity.auth.RolePermissions
 import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.Area
 import com.shelldocs.core.domain.repository.AuthRepository
+import com.shelldocs.core.domain.repository.DocumentRepository
 import com.shelldocs.core.domain.repository.RoleRepository
 import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.auth.*
@@ -136,23 +139,30 @@ class AppContainer(
 
     // --- Documents --------------------------------------------------------
 
-    private val documentRepository by lazy {
-        val api = config.api
-        val supabase = config.supabase
-        if (api != null) {
-            CachingDocumentRepository(ApiDocumentRepository(ShellDocsApi(httpClient, api)))
-        } else if (supabase != null) {
-            CachingDocumentRepository(
-                SupabaseDocumentRepository(
-                    postgrest = postgrest(supabase),
-                    timeProvider = timeProvider,
-                    currentUserIdProvider = { authRepository.session.value?.user?.id },
-                ),
+    // Read path: API direct when configured (it's the live Confluence-backed
+    // backend), Supabase only as fallback. Supabase is also kept as a mirror
+    // by [syncDocumentsFromApi] in the background, independent of reads.
+    private val supabaseDocumentRepository: SupabaseDocumentRepository? by lazy {
+        config.supabase?.let { supabase ->
+            SupabaseDocumentRepository(
+                postgrest = postgrest(supabase),
+                timeProvider = timeProvider,
+                currentUserIdProvider = { authRepository.session.value?.user?.id },
             )
-        } else {
-            DemoDocumentRepository(timeProvider)
         }
     }
+
+    private val documentRepository: DocumentRepository by lazy {
+        val api = config.api
+        val supabaseRepo = supabaseDocumentRepository
+        when {
+            api != null -> CachingDocumentRepository(ApiDocumentRepository(ShellDocsApi(httpClient, api)))
+            supabaseRepo != null -> CachingDocumentRepository(supabaseRepo)
+            else -> DemoDocumentRepository(timeProvider)
+        }
+    }
+    private val cachingDocumentRepository: CachingDocumentRepository?
+        get() = documentRepository as? CachingDocumentRepository
     private val treeRepository by lazy { DerivedDocumentTreeRepository(documentRepository) }
 
     // --- Assistant --------------------------------------------------------
@@ -214,6 +224,50 @@ class AppContainer(
         checkDatabaseConnection()
         checkOllamaConnection()
         checkIntegrations()
+    }
+
+    /**
+     * Mirrors the API document list into Supabase, writing only what
+     * actually changed (content hash mismatch or missing row). Must run
+     * *after* sign-in: row writes are RLS-gated on `auth.uid()` + owner/develop
+     * role, so calling this before a session exists fails every write. Does
+     * not gate what the Documents screen shows (that reads the API directly);
+     * this is a best-effort background mirror only.
+     */
+    suspend fun syncDocumentsFromApi() {
+        val syncLogger = AppLogger.tag(LogTags.INTEGRATION)
+        val api = config.api
+        val supabaseRepo = supabaseDocumentRepository
+        if (api == null || supabaseRepo == null) {
+            syncLogger.i("Skipped documents sync: requires both api and supabase config")
+            return
+        }
+        if (authRepository.session.value?.accessToken == null) {
+            syncLogger.i("Skipped documents sync: no authenticated session yet")
+            return
+        }
+        val client = ShellDocsApi(httpClient, api)
+        val externalDocuments = try {
+            client.documents()
+        } catch (error: Exception) {
+            syncLogger.e("Document sync failed to fetch from API: ${error.message}", error)
+            return
+        }
+        val result = supabaseRepo.syncFromExternal(
+            sourceType = "shelldocs_api",
+            externalDocuments = externalDocuments.map {
+                ExternalDocumentInput(externalId = it.id, title = it.title, rawMarkdown = it.rawMarkdown)
+            },
+        )
+        result
+            .onSuccess { summary ->
+                syncLogger.i(
+                    "Document sync complete: created=${summary.created} " +
+                            "updated=${summary.updated} skipped=${summary.skipped}",
+                )
+                if (summary.created > 0 || summary.updated > 0) cachingDocumentRepository?.invalidate()
+            }
+            .onFailure { error -> syncLogger.e("Document sync failed: $error") }
     }
 
     private suspend fun checkDatabaseConnection() {

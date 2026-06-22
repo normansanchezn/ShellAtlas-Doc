@@ -19,10 +19,8 @@ create table if not exists public.documents (
     updated_at timestamptz not null default now(),
     deleted_at timestamptz
 );
-
 create unique index if not exists documents_active_slug_idx
     on public.documents (slug) where deleted_at is null;
-
 create table if not exists public.document_versions (
     id uuid primary key default gen_random_uuid(),
     document_id uuid not null references public.documents (id) on delete cascade,
@@ -38,9 +36,7 @@ create table if not exists public.document_versions (
     created_at timestamptz not null default now(),
     unique (document_id, version_number)
 );
-
 create index if not exists document_versions_hash_idx on public.document_versions (content_hash);
-
 create table if not exists public.document_drafts (
     id uuid primary key default gen_random_uuid(),
     document_id uuid not null references public.documents (id) on delete cascade,
@@ -53,7 +49,6 @@ create table if not exists public.document_drafts (
     updated_at timestamptz not null default now(),
     unique (document_id, user_id)
 );
-
 create table if not exists public.document_attributes (
     id uuid primary key default gen_random_uuid(),
     document_id uuid not null references public.documents (id) on delete cascade,
@@ -64,7 +59,6 @@ create table if not exists public.document_attributes (
     updated_at timestamptz not null default now(),
     unique (document_id, key)
 );
-
 create table if not exists public.document_links (
     id uuid primary key default gen_random_uuid(),
     document_id uuid not null references public.documents (id) on delete cascade,
@@ -75,7 +69,6 @@ create table if not exists public.document_links (
     metadata jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now()
 );
-
 create table if not exists public.sync_runs (
     id uuid primary key default gen_random_uuid(),
     source_type text not null,
@@ -88,7 +81,6 @@ create table if not exists public.sync_runs (
     failed_count integer not null default 0,
     metadata jsonb not null default '{}'::jsonb
 );
-
 create table if not exists public.audit_logs (
     id uuid primary key default gen_random_uuid(),
     actor_id uuid references auth.users (id),
@@ -98,7 +90,6 @@ create table if not exists public.audit_logs (
     metadata jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now()
 );
-
 alter table public.documents enable row level security;
 alter table public.document_versions enable row level security;
 alter table public.document_drafts enable row level security;
@@ -106,7 +97,6 @@ alter table public.document_attributes enable row level security;
 alter table public.document_links enable row level security;
 alter table public.sync_runs enable row level security;
 alter table public.audit_logs enable row level security;
-
 -- Reads: any authenticated member.
 create policy "documents readable" on public.documents
     for select to authenticated using (deleted_at is null);
@@ -120,7 +110,6 @@ create policy "sync runs readable" on public.sync_runs
     for select to authenticated using (true);
 create policy "audit readable" on public.audit_logs
     for select to authenticated using (true);
-
 -- Writes: owner and develop roles only (business/viewer are read-only).
 create policy "editors insert documents" on public.documents
     for insert to authenticated
@@ -132,21 +121,17 @@ create policy "editors update documents" on public.documents
 create policy "owners delete documents" on public.documents
     for delete to authenticated
     using (public.role_of(auth.uid()) = 'owner');
-
 create policy "editors insert versions" on public.document_versions
     for insert to authenticated
     with check (public.role_of(auth.uid()) in ('owner','develop'));
-
 create policy "users manage their own drafts" on public.document_drafts
     for all to authenticated
     using (user_id = auth.uid())
     with check (user_id = auth.uid());
-
 create policy "editors write attributes" on public.document_attributes
     for all to authenticated
     using (public.role_of(auth.uid()) in ('owner','develop'))
     with check (public.role_of(auth.uid()) in ('owner','develop'));
-
 create policy "editors write links" on public.document_links
     for all to authenticated
     using (public.role_of(auth.uid()) in ('owner','develop'))

@@ -16,11 +16,8 @@ CREATE TABLE IF NOT EXISTS assistant_intelligence (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ai_intel_hash
     ON assistant_intelligence(question_hash);
-
 CREATE INDEX IF NOT EXISTS idx_ai_intel_keywords
     ON assistant_intelligence USING GIN(keywords);
-
 ALTER TABLE assistant_intelligence ENABLE ROW LEVEL SECURITY;
