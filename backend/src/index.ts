@@ -293,13 +293,25 @@ const app = new Hono();
 
 app.use("*", cors());
 
-// Request log — every call, so behavior is visible while developing locally
-// instead of only finding out something broke when the UI shows an error.
+// Request log — every call, body included, so behavior (and the exact error
+// payload) is visible while developing locally instead of only finding out
+// something broke when the UI shows a bare status code.
+const MAX_LOGGED_BODY_CHARS = 2000;
+
 app.use("*", async (c, next) => {
     const start = Date.now();
     await next();
     const ms = Date.now() - start;
-    console.log(`[ShellDoc] ${c.req.method} ${c.req.path} -> ${c.res.status} (${ms}ms)`);
+    let bodyText: string;
+    try {
+        bodyText = await c.res.clone().text();
+    } catch {
+        bodyText = "<unreadable body>";
+    }
+    if (bodyText.length > MAX_LOGGED_BODY_CHARS) {
+        bodyText = `${bodyText.slice(0, MAX_LOGGED_BODY_CHARS)}...<truncated>`;
+    }
+    console.log(`[ShellDoc] ${c.req.method} ${c.req.path} -> ${c.res.status} (${ms}ms) ${bodyText}`);
 });
 
 // Global error handler
@@ -527,6 +539,22 @@ app.post("/v1/documents/:id/publish", async (c) => {
 
     if (rawMarkdown) {
         const parsed = parseMarkdown(rawMarkdown);
+
+        // (document_id, content_hash) is unique — identical content already
+        // has a version row, so re-publishing the same markdown must not try
+        // to insert a duplicate. Just keep the existing version and move on
+        // to the status/attributes update below.
+        const {data: existingVersion} = await db
+            .from("document_versions")
+            .select("id")
+            .eq("document_id", id)
+            .eq("content_hash", parsed.contentHash)
+            .limit(1)
+            .maybeSingle<{ id: string }>();
+
+        if (existingVersion) {
+            version = {id: existingVersion.id} as VersionRow;
+        } else {
         const versionNumber = await getNextVersionNumber(id);
         const contentJson = parsedToContentJson(parsed);
 
@@ -550,6 +578,7 @@ app.post("/v1/documents/:id/publish", async (c) => {
             return c.json({error: verErr?.message ?? "Failed to create version"}, 500);
         }
         version = ver;
+        }
     }
 
     const updatePayload: Partial<DocumentRow & { updated_at: string }> = {
@@ -620,6 +649,7 @@ app.post("/v1/documents/:id/draft", async (c) => {
     const parsed = parseMarkdown(body.raw_markdown);
     const contentJson = parsedToContentJson(parsed);
 
+    const updatedAt = new Date().toISOString();
     const {error: upsertErr} = await db
         .from("document_drafts")
         .upsert(
@@ -631,7 +661,7 @@ app.post("/v1/documents/:id/draft", async (c) => {
                 content_json: contentJson,
                 content_plaintext: parsed.plainText,
                 content_hash: parsed.contentHash,
-                updated_at: new Date().toISOString(),
+                updated_at: updatedAt,
             },
             {onConflict: "document_id,user_id"}
         );
@@ -640,7 +670,7 @@ app.post("/v1/documents/:id/draft", async (c) => {
         return c.json({error: upsertErr.message}, 500);
     }
 
-    return c.json({document_id: id, draft_saved: true});
+    return c.json({document_id: id, content_hash: parsed.contentHash, updated_at: updatedAt});
 });
 
 // ---------------------------------------------------------------------------
