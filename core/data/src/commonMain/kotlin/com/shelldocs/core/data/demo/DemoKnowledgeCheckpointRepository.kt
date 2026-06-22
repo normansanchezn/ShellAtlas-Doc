@@ -18,36 +18,36 @@ class DemoKnowledgeCheckpointRepository(private val timeProvider: TimeProvider) 
         KnowledgeCheckpoint(
             id = "checkpoint-welcome",
             order = 1,
-            title = "Llega a Shell",
-            instruction = "Revisa el documento \"Llega a Shell\" en Documentos > Onboarding para conocer el equipo, dónde vive la documentación y cómo funciona este asistente. Cuando termines, dime \"listo\".",
+            title = "Welcome to Shell",
+            instruction = "Review the \"Welcome to Shell\" document in Documents > Onboarding to meet the team, learn where documentation lives, and how this assistant works. When you're done, tell me \"done\".",
             documentId = "doc-onboarding-welcome",
         ),
         KnowledgeCheckpoint(
             id = "checkpoint-android-setup",
             order = 2,
-            title = "Configura tu entorno Android",
-            instruction = "Revisa \"Android Developer Setup\" en Documentos > Onboarding para clonar el repositorio y preparar tu máquina (valores son MOCK). Cuando termines, dime \"listo\".",
+            title = "Set up your Android environment",
+            instruction = "Review \"Android Developer Setup\" in Documents > Onboarding to clone the repository and prepare your machine (values are MOCK). When you're done, tell me \"done\".",
             documentId = "doc-onboarding-android-setup",
         ),
         KnowledgeCheckpoint(
             id = "checkpoint-authentication",
             order = 3,
-            title = "Autenticación iOS",
-            instruction = "Revisa el documento \"Authentication\" para entender el refresco silencioso de tokens y la recuperación de sesión. Cuando termines, dime \"listo\".",
+            title = "iOS Authentication",
+            instruction = "Review the \"Authentication\" document to understand silent token refresh and session recovery. When you're done, tell me \"done\".",
             documentId = "doc-authentication",
         ),
         KnowledgeCheckpoint(
             id = "checkpoint-loyalty",
             order = 4,
-            title = "Programa de Lealtad",
-            instruction = "Revisa \"Loyalty Rewards Flow\" para entender la acumulación de puntos, redención y niveles. Cuando termines, dime \"listo\".",
+            title = "Loyalty Program",
+            instruction = "Review \"Loyalty Rewards Flow\" to understand point accumulation, redemption and tiers. When you're done, tell me \"done\".",
             documentId = "doc-loyalty",
         ),
         KnowledgeCheckpoint(
             id = "checkpoint-release-process",
             order = 5,
-            title = "Proceso de Release",
-            instruction = "Revisa \"Release Process\" para entender cómo se valida y publica cada release. Cuando termines, dime \"listo\".",
+            title = "Release Process",
+            instruction = "Review \"Release Process\" to understand how each release is validated and published. When you're done, tell me \"done\".",
             documentId = "doc-release-process",
         ),
     )
@@ -56,23 +56,23 @@ class DemoKnowledgeCheckpointRepository(private val timeProvider: TimeProvider) 
         "checkpoint-welcome" to listOf(
             QuizQuestion(
                 id = "q-welcome-1", checkpointId = "checkpoint-welcome",
-                prompt = "¿Dónde vive la documentación de Shell?",
+                prompt = "Where does Shell's documentation live?",
                 options = listOf(
-                    "En Documentos > Onboarding",
-                    "En un Google Doc externo",
-                    "No existe documentación",
-                    "Solo en Confluence"
+                    "In Documents > Onboarding",
+                    "In an external Google Doc",
+                    "Documentation doesn't exist",
+                    "Only in Confluence"
                 ),
                 correctOptionIndex = 0,
             ),
             QuizQuestion(
                 id = "q-welcome-2", checkpointId = "checkpoint-welcome",
-                prompt = "¿Qué puedes pedirle al asistente?",
+                prompt = "What can you ask the assistant?",
                 options = listOf(
-                    "Solo crear documentos",
-                    "Responder preguntas usando la documentación indexada",
-                    "Nada, es solo un chat",
-                    "Eliminar documentos"
+                    "Only create documents",
+                    "Answer questions using indexed documentation",
+                    "Nothing, it's just a chat",
+                    "Delete documents"
                 ),
                 correctOptionIndex = 1,
             ),
@@ -80,42 +80,42 @@ class DemoKnowledgeCheckpointRepository(private val timeProvider: TimeProvider) 
         "checkpoint-android-setup" to listOf(
             QuizQuestion(
                 id = "q-android-1", checkpointId = "checkpoint-android-setup",
-                prompt = "¿Qué necesitas preparar según la guía de Android Developer Setup?",
+                prompt = "What do you need to prepare per the Android Developer Setup guide?",
                 options = listOf(
-                    "Tu máquina y el repo clonado",
-                    "Solo un emulador iOS",
-                    "Nada, ya está todo listo",
-                    "Una cuenta de Confluence"
+                    "Your machine and the cloned repo",
+                    "Only an iOS emulator",
+                    "Nothing, it's already set up",
+                    "A Confluence account"
                 ),
                 correctOptionIndex = 0,
             ),
             QuizQuestion(
                 id = "q-android-2", checkpointId = "checkpoint-android-setup",
-                prompt = "¿Los valores de configuración del documento son...?",
-                options = listOf("Reales y de producción", "MOCK", "Aleatorios sin sentido", "Solo para QA"),
+                prompt = "Are the configuration values in the document...?",
+                options = listOf("Real production values", "MOCK", "Random and meaningless", "QA-only"),
                 correctOptionIndex = 1,
             ),
         ),
         "checkpoint-authentication" to listOf(
             QuizQuestion(
                 id = "q-auth-1", checkpointId = "checkpoint-authentication",
-                prompt = "¿Qué resuelve el refresco silencioso de tokens?",
+                prompt = "What does silent token refresh solve?",
                 options = listOf(
-                    "Evita pedir login de nuevo constantemente",
-                    "Borra la sesión cada hora",
-                    "Aumenta la seguridad eliminando tokens",
-                    "No tiene relación con sesión"
+                    "Avoids asking the user to log in again constantly",
+                    "Clears the session every hour",
+                    "Increases security by deleting tokens",
+                    "It's unrelated to sessions"
                 ),
                 correctOptionIndex = 0,
             ),
             QuizQuestion(
                 id = "q-auth-2", checkpointId = "checkpoint-authentication",
-                prompt = "¿Qué cubre la recuperación de sesión?",
+                prompt = "What does session recovery cover?",
                 options = listOf(
-                    "Qué pasa cuando el token expira o falla",
-                    "Solo el diseño visual del login",
-                    "Nada relevante para auth",
-                    "La facturación del usuario"
+                    "What happens when the token expires or fails",
+                    "Only the login screen's visual design",
+                    "Nothing relevant to auth",
+                    "User billing"
                 ),
                 correctOptionIndex = 0,
             ),
@@ -123,23 +123,23 @@ class DemoKnowledgeCheckpointRepository(private val timeProvider: TimeProvider) 
         "checkpoint-loyalty" to listOf(
             QuizQuestion(
                 id = "q-loyalty-1", checkpointId = "checkpoint-loyalty",
-                prompt = "¿Qué describe \"Loyalty Rewards Flow\"?",
+                prompt = "What does \"Loyalty Rewards Flow\" describe?",
                 options = listOf(
-                    "Acumulación de puntos, redención y niveles",
-                    "Solo el logo del programa",
-                    "Cómo se hacen los releases",
-                    "La arquitectura del backend"
+                    "Point accumulation, redemption and tiers",
+                    "Just the program's logo",
+                    "How releases are done",
+                    "The backend architecture"
                 ),
                 correctOptionIndex = 0,
             ),
             QuizQuestion(
                 id = "q-loyalty-2", checkpointId = "checkpoint-loyalty",
-                prompt = "¿Qué necesitas entender de los niveles?",
+                prompt = "What do you need to understand about tiers?",
                 options = listOf(
-                    "Cómo afectan beneficios y redención",
-                    "Son decorativos, sin efecto",
-                    "Solo aplican a empleados",
-                    "No existen niveles"
+                    "How they affect benefits and redemption",
+                    "They're decorative, no effect",
+                    "They only apply to employees",
+                    "Tiers don't exist"
                 ),
                 correctOptionIndex = 0,
             ),
@@ -147,23 +147,23 @@ class DemoKnowledgeCheckpointRepository(private val timeProvider: TimeProvider) 
         "checkpoint-release-process" to listOf(
             QuizQuestion(
                 id = "q-release-1", checkpointId = "checkpoint-release-process",
-                prompt = "¿Qué valida el Proceso de Release?",
+                prompt = "What does the Release Process validate?",
                 options = listOf(
-                    "Cómo se valida y publica cada release",
-                    "Solo el diseño de la app",
-                    "La facturación de clientes",
-                    "Nada relacionado a releases"
+                    "How each release is validated and published",
+                    "Only the app's design",
+                    "Customer billing",
+                    "Nothing related to releases"
                 ),
                 correctOptionIndex = 0,
             ),
             QuizQuestion(
                 id = "q-release-2", checkpointId = "checkpoint-release-process",
-                prompt = "¿Por qué es importante seguir este proceso?",
+                prompt = "Why is it important to follow this process?",
                 options = listOf(
-                    "Asegura calidad y publicación consistente",
-                    "Es opcional y no importa",
-                    "Solo aplica a iOS",
-                    "Reemplaza al QA"
+                    "It ensures quality and consistent publishing",
+                    "It's optional and doesn't matter",
+                    "It only applies to iOS",
+                    "It replaces QA"
                 ),
                 correctOptionIndex = 0,
             ),

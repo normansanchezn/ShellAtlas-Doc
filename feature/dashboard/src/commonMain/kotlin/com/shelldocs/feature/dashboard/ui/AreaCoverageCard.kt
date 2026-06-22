@@ -11,7 +11,7 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 
-/** Coverage por área: one labelled meter per [com.shelldocs.core.domain.entity.document.Area]. */
+/** Coverage by area: one labelled meter per [com.shelldocs.core.domain.entity.document.Area]. */
 @Composable
 fun AreaCoverageCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
@@ -20,7 +20,7 @@ fun AreaCoverageCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth().padding(ShellSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
         ) {
-            Text("Coverage por Área", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
+            Text("Coverage by Area", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
             metrics.areaCoverage.forEach { coverage ->
                 Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
                     Row(

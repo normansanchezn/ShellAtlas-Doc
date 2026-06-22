@@ -110,7 +110,8 @@ class AssistantViewModel(
     private suspend fun startKnowledgeTransfer() {
         val checkpoints = currentState.checkpoints
         val progress = currentState.knowledgeProgress ?: KnowledgeProgress(0, checkpoints.size)
-        val language = currentState.conversationLanguage
+        // KT flow always speaks English for now, regardless of detected conversation language.
+        val language = AssistantLanguage.ENGLISH
         val next = checkpoints.getOrNull(progress.completed)
         val markdown = if (next != null) {
             buildKnowledgeTransferMessage.step(next, progress, language)
@@ -130,7 +131,8 @@ class AssistantViewModel(
 
     @OptIn(ExperimentalTime::class)
     private suspend fun startQuizForCheckpoint(checkpointId: String) {
-        val language = currentState.conversationLanguage
+        // KT flow always speaks English for now, regardless of detected conversation language.
+        val language = AssistantLanguage.ENGLISH
         val questions = withContext(dispatchers.io) { getCheckpointQuiz(checkpointId) }.getOrDefault(emptyList())
         if (questions.isEmpty()) {
             // No quiz defined for this checkpoint — fall back to advancing directly.
@@ -149,7 +151,8 @@ class AssistantViewModel(
 
     @OptIn(ExperimentalTime::class)
     private suspend fun submitQuizAnswers(checkpointId: String, answers: Map<String, Int>) {
-        val language = currentState.conversationLanguage
+        // KT flow always speaks English for now, regardless of detected conversation language.
+        val language = AssistantLanguage.ENGLISH
         val attempt = withContext(dispatchers.io) { submitCheckpointQuiz(checkpointId, answers) }
             .getOrDefault(
                 QuizAttempt(
@@ -177,7 +180,8 @@ class AssistantViewModel(
 
     @OptIn(ExperimentalTime::class)
     private suspend fun advanceKnowledgeTransfer(completedCheckpointId: String) {
-        val language = currentState.conversationLanguage
+        // KT flow always speaks English for now, regardless of detected conversation language.
+        val language = AssistantLanguage.ENGLISH
         val progress = withContext(dispatchers.io) { completeKnowledgeCheckpoint(completedCheckpointId) }
             .getOrDefault(currentState.knowledgeProgress ?: KnowledgeProgress(0, 0))
         val checkpoints = currentState.checkpoints

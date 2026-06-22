@@ -32,7 +32,7 @@ fun KnowledgeTransferCard(metrics: DashboardMetrics, modifier: Modifier = Modifi
                 modifier = Modifier.padding(top = ShellSpacing.md),
             )
             Text(
-                text = "${metrics.knowledgeTransferCompleted}/${metrics.knowledgeTransferTotal} checkpoints completados",
+                text = "${metrics.knowledgeTransferCompleted}/${metrics.knowledgeTransferTotal} checkpoints completed",
                 style = ShellTheme.typography.caption,
                 color = colors.textMuted,
             )

@@ -18,14 +18,14 @@ import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 import com.shelldocs.core.domain.entity.document.DocumentStatus
 
-/** Status de la documentación actual: donut + legend, built from whatever statuses exist right now. */
+/** Current documentation status: donut + legend, built from whatever statuses exist right now. */
 @Composable
 fun StatusBreakdownCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
     val legend = metrics.statusBreakdown.map { it.status.displayName to it.percent to statusColor(it.status, colors) }
     ShellCard(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth().padding(ShellSpacing.xl)) {
-            Text("Status de la Documentación", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
+            Text("Documentation Status", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
             Box(
                 modifier = Modifier.fillMaxWidth().padding(vertical = ShellSpacing.lg),
                 contentAlignment = Alignment.Center,

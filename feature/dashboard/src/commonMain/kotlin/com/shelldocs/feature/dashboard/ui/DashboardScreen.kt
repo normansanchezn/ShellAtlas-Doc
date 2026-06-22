@@ -104,20 +104,20 @@ private fun MetricCards(
         { m ->
             ShellMetricCard(
                 icon = IconCheckCircle, iconTint = colors.success,
-                value = "${metrics.healthyDocuments}", caption = "Documentos sanos", modifier = m,
+                value = "${metrics.healthyDocuments}", caption = "Healthy Documents", modifier = m,
             )
         },
         { m ->
             ShellMetricCard(
                 icon = IconAlertTriangle, iconTint = colors.warning,
-                value = "${metrics.attentionDocuments}", caption = "Requieren atención",
+                value = "${metrics.attentionDocuments}", caption = "Needs Attention",
                 deltaColor = colors.danger, modifier = m,
             )
         },
         { m ->
             ShellMetricCard(
                 icon = IconMessageSquare, iconTint = colors.brand,
-                value = "${metrics.aiUsageCount}", caption = "Uso del Asistente AI", modifier = m,
+                value = "${metrics.aiUsageCount}", caption = "AI Assistant Usage", modifier = m,
             )
         },
     )
