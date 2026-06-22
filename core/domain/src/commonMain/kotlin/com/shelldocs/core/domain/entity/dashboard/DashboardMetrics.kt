@@ -1,26 +1,14 @@
 package com.shelldocs.core.domain.entity.dashboard
 
-/** Aggregated knowledge-operations overview. */
+/** Aggregated knowledge-operations overview, computed entirely from existing document/checkpoint data. */
 data class DashboardMetrics(
-    val totalDocuments: Int,
-    val totalDocumentsDelta: Int,
-    val outdatedDocuments: Int,
-    val outdatedDocumentsDelta: Int,
-    val coverageScorePercent: Int,
-    val aiQueriesThisWeek: Int,
-    val aiQueriesDeltaPercent: Int,
-    val knowledgeHealthScore: Int,
-    val docsReviewedPercent: Int,
-    val sourcesSynced: Int,
-    val sourcesTotal: Int,
-    val aiAccuracyPercent: Int,
-    val staleRatePercent: Int,
-    val moduleCoverage: List<ModuleCoverage>,
-    val statusBreakdown: StatusBreakdown,
-    val usage: List<UsagePoint>,
-    val recentActivity: List<ActivityEvent>,
-    val attentionItems: List<AttentionItem>,
-    val knowledgeCheckpointsCompleted: Int,
-    val knowledgeCheckpointsTotal: Int,
-    val projectKnowledgeScorePercent: Int,
+    val knowledgeTransferCompleted: Int,
+    val knowledgeTransferTotal: Int,
+    val knowledgeTransferPercent: Int,
+    val healthyDocuments: Int,
+    val attentionDocuments: Int,
+    val areaCoverage: List<AreaCoverage>,
+    val statusBreakdown: List<StatusCount>,
+    val aiUsageCount: Int,
+    val topOwners: List<OwnerStat>,
 )

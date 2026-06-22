@@ -1,10 +1,6 @@
 package com.shelldocs.feature.dashboard.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,17 +11,17 @@ import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 
-/** Module Coverage: one labelled meter per app module. */
+/** Coverage por área: one labelled meter per [com.shelldocs.core.domain.entity.document.Area]. */
 @Composable
-fun ModuleCoverageCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
+fun AreaCoverageCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
     ShellCard(modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(ShellSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.md),
         ) {
-            Text("Module Coverage", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
-            metrics.moduleCoverage.forEach { coverage ->
+            Text("Coverage por Área", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
+            metrics.areaCoverage.forEach { coverage ->
                 Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -33,25 +29,25 @@ fun ModuleCoverageCard(metrics: DashboardMetrics, modifier: Modifier = Modifier)
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = coverage.module,
+                            text = "${coverage.area} (${coverage.documentCount})",
                             style = ShellTheme.typography.label,
                             color = colors.textSecondary,
                         )
                         Text(
-                            text = "${coverage.coveragePercent}%",
+                            text = "${coverage.healthyPercent}%",
                             style = ShellTheme.typography.label,
                             color = when {
-                                coverage.coveragePercent >= 80 -> colors.accentTeal
-                                coverage.coveragePercent >= 60 -> colors.brand
+                                coverage.healthyPercent >= 80 -> colors.accentTeal
+                                coverage.healthyPercent >= 60 -> colors.brand
                                 else -> colors.warning
                             },
                         )
                     }
                     ShellProgressBar(
-                        progress = coverage.coveragePercent / 100f,
+                        progress = coverage.healthyPercent / 100f,
                         color = when {
-                            coverage.coveragePercent >= 80 -> colors.accentTeal
-                            coverage.coveragePercent >= 60 -> colors.brand
+                            coverage.healthyPercent >= 80 -> colors.accentTeal
+                            coverage.healthyPercent >= 60 -> colors.brand
                             else -> colors.warning
                         },
                         modifier = Modifier.fillMaxWidth(),

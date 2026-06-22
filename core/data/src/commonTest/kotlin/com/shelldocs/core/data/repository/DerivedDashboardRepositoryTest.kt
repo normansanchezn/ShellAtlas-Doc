@@ -20,40 +20,41 @@ class DerivedDashboardRepositoryTest {
     private val repository = DerivedDashboardRepository(
         documentRepository = DemoDocumentRepository(timeProvider),
         evaluateHealth = EvaluateDocumentHealthUseCase(timeProvider),
-        knowledgeCheckpointRepository = DemoKnowledgeCheckpointRepository(),
+        knowledgeCheckpointRepository = DemoKnowledgeCheckpointRepository(timeProvider),
+        conversationRepository = InMemoryConversationRepository(),
     )
 
     @Test
-    fun countsComeFromTheCorpus() = runTest {
+    fun healthyAndAttentionCountsCoverTheWholeCorpus() = runTest {
         val metrics = repository.metrics().getOrNull()
 
         assertNotNull(metrics)
-        assertEquals(DemoSeed.documents.size, metrics.totalDocuments)
-        assertEquals(1, metrics.outdatedDocuments)
+        assertEquals(DemoSeed.documents.size, metrics.healthyDocuments + metrics.attentionDocuments)
     }
 
     @Test
     fun statusBreakdownPercentagesAreConsistent() = runTest {
         val metrics = repository.metrics().getOrNull()!!
-        val breakdown = metrics.statusBreakdown
 
-        val sum = breakdown.publishedPercent + breakdown.outdatedPercent +
-            breakdown.draftPercent + breakdown.pendingPercent
+        val sum = metrics.statusBreakdown.sumOf { it.percent }
         assertTrue(sum in 90..100, "rounded percentages should be close to 100, got $sum")
     }
 
     @Test
-    fun moduleCoverageCoversEveryModule() = runTest {
+    fun areaCoverageCoversEveryAssignedArea() = runTest {
         val metrics = repository.metrics().getOrNull()!!
-        val modules = DemoSeed.documents.map { it.attributes.module }.toSet()
+        val areas = DemoSeed.documents.mapNotNull { it.attributes.area }.toSet()
 
-        assertEquals(modules.size, metrics.moduleCoverage.size)
-        metrics.moduleCoverage.forEach { assertTrue(it.coveragePercent in 0..100) }
+        assertEquals(
+            areas.size + if (DemoSeed.documents.any { it.attributes.area == null }) 1 else 0,
+            metrics.areaCoverage.size
+        )
+        metrics.areaCoverage.forEach { assertTrue(it.healthyPercent in 0..100) }
     }
 
     @Test
-    fun knowledgeHealthIsWithinBounds() = runTest {
+    fun knowledgeTransferPercentIsWithinBounds() = runTest {
         val metrics = repository.metrics().getOrNull()!!
-        assertTrue(metrics.knowledgeHealthScore in 0..100)
+        assertTrue(metrics.knowledgeTransferPercent in 0..100)
     }
 }

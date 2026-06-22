@@ -4,17 +4,12 @@ import com.shelldocs.core.common.coroutines.DispatcherProvider
 import com.shelldocs.core.common.error.AppError
 import com.shelldocs.core.common.result.DomainResult
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
-import com.shelldocs.core.domain.entity.dashboard.StatusBreakdown
 import com.shelldocs.core.domain.repository.DashboardRepository
 import com.shelldocs.core.domain.usecase.dashboard.GetDashboardMetricsUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProvider {
     override val main = dispatcher
@@ -22,25 +17,16 @@ private class SingleDispatcher(dispatcher: CoroutineDispatcher) : DispatcherProv
     override val io = dispatcher
 }
 
-private fun metrics(total: Int) = DashboardMetrics(
-    totalDocuments = total,
-    totalDocumentsDelta = 8,
-    outdatedDocuments = 18,
-    outdatedDocumentsDelta = 3,
-    coverageScorePercent = 68,
-    aiQueriesThisWeek = 371,
-    aiQueriesDeltaPercent = 24,
-    knowledgeHealthScore = 74,
-    docsReviewedPercent = 89,
-    sourcesSynced = 3,
-    sourcesTotal = 3,
-    aiAccuracyPercent = 94,
-    staleRatePercent = 12,
-    moduleCoverage = emptyList(),
-    statusBreakdown = StatusBreakdown(68, 18, 9, 5),
-    usage = emptyList(),
-    recentActivity = emptyList(),
-    attentionItems = emptyList(),
+private fun metrics(healthy: Int) = DashboardMetrics(
+    knowledgeTransferCompleted = 3,
+    knowledgeTransferTotal = 5,
+    knowledgeTransferPercent = 60,
+    healthyDocuments = healthy,
+    attentionDocuments = 18,
+    areaCoverage = emptyList(),
+    statusBreakdown = emptyList(),
+    aiUsageCount = 42,
+    topOwners = emptyList(),
 )
 
 private class FakeDashboardRepository : DashboardRepository {
@@ -63,7 +49,7 @@ class DashboardViewModelTest {
         viewModel.onIntent(DashboardIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
-        assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
+        assertEquals(147, viewModel.currentState.metrics?.healthyDocuments)
         assertFalse(viewModel.currentState.isLoading)
         assertNull(viewModel.currentState.errorDialog)
         viewModel.clear()
@@ -79,7 +65,7 @@ class DashboardViewModelTest {
         viewModel.onIntent(DashboardIntent.Refresh)
         testScheduler.advanceUntilIdle()
 
-        assertEquals(150, viewModel.currentState.metrics?.totalDocuments)
+        assertEquals(150, viewModel.currentState.metrics?.healthyDocuments)
         viewModel.clear()
     }
 
@@ -111,23 +97,18 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun refreshKeepsPreviousMetricsUntilComplete() = runTest {
+    fun refreshReplacesMetricsOnceComplete() = runTest {
         val viewModel = viewModel(testScheduler)
         viewModel.onIntent(DashboardIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
-        assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
+        assertEquals(147, viewModel.currentState.metrics?.healthyDocuments)
 
         repository.nextResult = DomainResult.success(metrics(200))
         viewModel.onIntent(DashboardIntent.Refresh)
-        testScheduler.runCurrent()
-
-        assertEquals(147, viewModel.currentState.metrics?.totalDocuments)
-        assertTrue(viewModel.currentState.isLoading)
-
         testScheduler.advanceUntilIdle()
 
-        assertEquals(200, viewModel.currentState.metrics?.totalDocuments)
+        assertEquals(200, viewModel.currentState.metrics?.healthyDocuments)
         assertFalse(viewModel.currentState.isLoading)
         viewModel.clear()
     }

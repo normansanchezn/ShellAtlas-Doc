@@ -1,13 +1,7 @@
 package com.shelldocs.feature.dashboard.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,35 +16,44 @@ import com.shelldocs.core.designsystem.molecules.ShellDonutChart
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
+import com.shelldocs.core.domain.entity.document.DocumentStatus
 
-/** Document Status donut with legend. */
+/** Status de la documentación actual: donut + legend, built from whatever statuses exist right now. */
 @Composable
-fun StatusDonutCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
+fun StatusBreakdownCard(metrics: DashboardMetrics, modifier: Modifier = Modifier) {
     val colors = ShellTheme.colors
-    val breakdown = metrics.statusBreakdown
-    val legend = listOf(
-        Triple("Published", breakdown.publishedPercent, colors.accentTeal),
-        Triple("Outdated", breakdown.outdatedPercent, colors.warning),
-        Triple("Draft", breakdown.draftPercent, colors.textMuted),
-        Triple("Pending", breakdown.pendingPercent, colors.brand),
-    )
+    val legend = metrics.statusBreakdown.map { it.status.displayName to it.percent to statusColor(it.status, colors) }
     ShellCard(modifier = modifier) {
         Column(modifier = Modifier.fillMaxWidth().padding(ShellSpacing.xl)) {
-            Text("Document Status", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
+            Text("Status de la Documentación", style = ShellTheme.typography.sectionTitle, color = colors.textPrimary)
             Box(
                 modifier = Modifier.fillMaxWidth().padding(vertical = ShellSpacing.lg),
                 contentAlignment = Alignment.Center,
             ) {
                 ShellDonutChart(
-                    slices = legend.map { (_, percent, color) -> DonutSlice(percent / 100f, color) },
+                    slices = legend.map { (labelPercent, color) -> DonutSlice(labelPercent.second / 100f, color) },
                     modifier = Modifier.size(110.dp),
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(ShellSpacing.xs)) {
-                legend.forEach { (label, percent, color) -> LegendRow(label, percent, color) }
+                legend.forEach { (labelPercent, color) -> LegendRow(labelPercent.first, labelPercent.second, color) }
             }
         }
     }
+}
+
+private fun statusColor(
+    status: DocumentStatus,
+    colors: com.shelldocs.core.designsystem.tokens.ShellColorScheme
+): Color = when (status) {
+    DocumentStatus.PUBLISHED -> colors.accentTeal
+    DocumentStatus.OUTDATED -> colors.warning
+    DocumentStatus.DRAFT -> colors.textMuted
+    DocumentStatus.UPDATES_PENDING -> colors.brand
+    DocumentStatus.CONFLICTED -> colors.danger
+    DocumentStatus.ARCHIVED -> colors.textMuted
+    DocumentStatus.LOCKED -> colors.info
+    DocumentStatus.DELETED_SOURCE -> colors.danger
 }
 
 @Composable

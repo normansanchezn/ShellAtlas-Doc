@@ -189,7 +189,12 @@ class AppContainer(
     }
     private val knowledgeCheckpointRepository by lazy { DemoKnowledgeCheckpointRepository(timeProvider) }
     private val dashboardRepository by lazy {
-        DerivedDashboardRepository(documentRepository, evaluateHealth, knowledgeCheckpointRepository)
+        DerivedDashboardRepository(
+            documentRepository,
+            evaluateHealth,
+            knowledgeCheckpointRepository,
+            conversationRepository
+        )
     }
     private val sourcesRepository by lazy { DemoSourcesRepository(timeProvider) }
     private val documentSyncRepository by lazy { DemoDocumentSyncRepository() }
