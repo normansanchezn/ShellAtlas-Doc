@@ -14,6 +14,7 @@ import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.assistant.MessageRole
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
+import com.shelldocs.core.domain.entity.onboarding.QuizAttempt
 import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
 import com.shelldocs.core.domain.usecase.onboarding.*
@@ -31,6 +32,9 @@ class AssistantViewModel(
     private val getKnowledgeCheckpoints: GetKnowledgeCheckpointsUseCase,
     private val getKnowledgeProgress: GetKnowledgeProgressUseCase,
     private val completeKnowledgeCheckpoint: CompleteKnowledgeCheckpointUseCase,
+    private val getCheckpointQuiz: GetCheckpointQuizUseCase,
+    private val submitCheckpointQuiz: SubmitCheckpointQuizUseCase,
+    private val getQuizAttempts: GetQuizAttemptsUseCase,
     private val timeProvider: TimeProvider,
     private val idGenerator: IdGenerator,
     private val sessionPrefs: SessionPreferences,
@@ -39,6 +43,8 @@ class AssistantViewModel(
     private val detectLanguage: DetectAssistantLanguageUseCase = DetectAssistantLanguageUseCase(),
     private val buildKnowledgeTransferMessage: BuildKnowledgeTransferMessageUseCase = BuildKnowledgeTransferMessageUseCase(),
     private val detectCheckpointCompletion: DetectCheckpointCompletionUseCase = DetectCheckpointCompletionUseCase(),
+    private val buildQuizMessage: BuildQuizMessageUseCase = BuildQuizMessageUseCase(),
+    private val parseQuizAnswers: ParseQuizAnswersUseCase = ParseQuizAnswersUseCase(),
 ) : MviViewModel<AssistantIntent, AssistantState, AssistantEffect>(AssistantState(), dispatchers) {
 
     override suspend fun handleIntent(intent: AssistantIntent) {
@@ -109,7 +115,8 @@ class AssistantViewModel(
         val markdown = if (next != null) {
             buildKnowledgeTransferMessage.step(next, progress, language)
         } else {
-            buildKnowledgeTransferMessage.completion(progress, language)
+            val attempts = withContext(dispatchers.io) { getQuizAttempts() }.getOrDefault(emptyList())
+            buildKnowledgeTransferMessage.completion(progress, attempts, language)
         }
         val assistantMessage = AssistantMessage(
             id = idGenerator.newId(),
@@ -122,6 +129,53 @@ class AssistantViewModel(
     }
 
     @OptIn(ExperimentalTime::class)
+    private suspend fun startQuizForCheckpoint(checkpointId: String) {
+        val language = currentState.conversationLanguage
+        val questions = withContext(dispatchers.io) { getCheckpointQuiz(checkpointId) }.getOrDefault(emptyList())
+        if (questions.isEmpty()) {
+            // No quiz defined for this checkpoint — fall back to advancing directly.
+            advanceKnowledgeTransfer(checkpointId)
+            return
+        }
+        val assistantMessage = AssistantMessage(
+            id = idGenerator.newId(),
+            role = MessageRole.ASSISTANT,
+            markdown = buildQuizMessage.prompt(questions, language),
+            createdAt = timeProvider.now(),
+        )
+        setState { copy(messages = messages + assistantMessage, activeQuiz = questions, isAnswering = false) }
+        sendEffect(AssistantEffect.ScrollToLatestMessage)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun submitQuizAnswers(checkpointId: String, answers: Map<String, Int>) {
+        val language = currentState.conversationLanguage
+        val attempt = withContext(dispatchers.io) { submitCheckpointQuiz(checkpointId, answers) }
+            .getOrDefault(
+                QuizAttempt(
+                    checkpointId = checkpointId,
+                    correct = 0,
+                    total = answers.size,
+                    submittedAt = timeProvider.now(),
+                ),
+            )
+        val feedbackMessage = AssistantMessage(
+            id = idGenerator.newId(),
+            role = MessageRole.ASSISTANT,
+            markdown = buildQuizMessage.feedback(attempt, language),
+            createdAt = timeProvider.now(),
+        )
+        setState { copy(messages = messages + feedbackMessage) }
+        if (attempt.passed) {
+            setState { copy(activeQuiz = emptyList()) }
+            advanceKnowledgeTransfer(checkpointId)
+        } else {
+            setState { copy(isAnswering = false) }
+            sendEffect(AssistantEffect.ScrollToLatestMessage)
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
     private suspend fun advanceKnowledgeTransfer(completedCheckpointId: String) {
         val language = currentState.conversationLanguage
         val progress = withContext(dispatchers.io) { completeKnowledgeCheckpoint(completedCheckpointId) }
@@ -131,7 +185,8 @@ class AssistantViewModel(
         val markdown = if (next != null) {
             buildKnowledgeTransferMessage.step(next, progress, language)
         } else {
-            buildKnowledgeTransferMessage.completion(progress, language)
+            val attempts = withContext(dispatchers.io) { getQuizAttempts() }.getOrDefault(emptyList())
+            buildKnowledgeTransferMessage.completion(progress, attempts, language)
         }
         val assistantMessage = AssistantMessage(
             id = idGenerator.newId(),
@@ -144,6 +199,7 @@ class AssistantViewModel(
                 messages = messages + assistantMessage,
                 knowledgeProgress = progress,
                 activeCheckpointId = next?.id,
+                activeQuiz = emptyList(),
                 isAnswering = false,
             )
         }
@@ -205,8 +261,16 @@ class AssistantViewModel(
         }
         sendEffect(AssistantEffect.ScrollToLatestMessage)
 
-        if (activeCheckpointId != null && detectCheckpointCompletion(question)) {
-            advanceKnowledgeTransfer(activeCheckpointId)
+        val activeQuiz = currentState.activeQuiz
+        if (activeQuiz.isNotEmpty() && activeCheckpointId != null) {
+            val answers = parseQuizAnswers(question, activeQuiz)
+            if (answers != null) {
+                submitQuizAnswers(activeCheckpointId, answers)
+                return
+            }
+            // Not a quiz answer (e.g. a real question) — answer normally below, quiz stays active.
+        } else if (activeCheckpointId != null && detectCheckpointCompletion(question)) {
+            startQuizForCheckpoint(activeCheckpointId)
             return
         }
 

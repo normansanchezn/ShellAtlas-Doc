@@ -13,13 +13,13 @@ import com.shelldocs.core.domain.entity.auth.UserRole
 import com.shelldocs.core.domain.entity.document.*
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
+import com.shelldocs.core.domain.entity.onboarding.QuizAttempt
+import com.shelldocs.core.domain.entity.onboarding.QuizQuestion
 import com.shelldocs.core.domain.repository.*
 import com.shelldocs.core.domain.usecase.assistant.*
 import com.shelldocs.core.domain.usecase.document.CreateDocumentUseCase
 import com.shelldocs.core.domain.usecase.document.GetDocumentsUseCase
-import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
+import com.shelldocs.core.domain.usecase.onboarding.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -121,6 +121,21 @@ private class FakeKnowledgeCheckpointRepository : KnowledgeCheckpointRepository 
         DomainResult.success(KnowledgeProgress(completed = 0, total = 0))
     override suspend fun complete(checkpointId: String): DomainResult<KnowledgeProgress> =
         DomainResult.success(KnowledgeProgress(completed = 1, total = 1))
+    override suspend fun quiz(checkpointId: String): DomainResult<List<QuizQuestion>> =
+        DomainResult.success(emptyList())
+
+    override suspend fun submitQuiz(checkpointId: String, answers: Map<String, Int>): DomainResult<QuizAttempt> =
+        DomainResult.success(
+            QuizAttempt(
+                checkpointId,
+                correct = 0,
+                total = 0,
+                submittedAt = Instant.parse("2026-06-11T10:00:00Z")
+            )
+        )
+
+    override suspend fun quizAttempts(): DomainResult<List<QuizAttempt>> =
+        DomainResult.success(emptyList())
 }
 
 private class FakeSessionPreferences : SessionPreferences {
@@ -164,6 +179,9 @@ class AssistantViewModelTest {
             getKnowledgeCheckpoints = GetKnowledgeCheckpointsUseCase(checkpoints),
             getKnowledgeProgress = GetKnowledgeProgressUseCase(checkpoints),
             completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(checkpoints),
+            getCheckpointQuiz = GetCheckpointQuizUseCase(checkpoints),
+            submitCheckpointQuiz = SubmitCheckpointQuizUseCase(checkpoints),
+            getQuizAttempts = GetQuizAttemptsUseCase(checkpoints),
             timeProvider = TimeProvider { Instant.parse("2026-06-11T10:00:00Z") },
             idGenerator = IdGenerator { "id-${++idCounter}" },
             sessionPrefs = sessionPreferences,

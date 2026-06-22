@@ -35,9 +35,7 @@ import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.dashboard.GetDashboardMetricsUseCase
 import com.shelldocs.core.domain.usecase.document.*
-import com.shelldocs.core.domain.usecase.onboarding.CompleteKnowledgeCheckpointUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeCheckpointsUseCase
-import com.shelldocs.core.domain.usecase.onboarding.GetKnowledgeProgressUseCase
+import com.shelldocs.core.domain.usecase.onboarding.*
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
 import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
@@ -189,7 +187,7 @@ class AppContainer(
     private val documentClassificationRepository by lazy {
         DerivedDocumentClassificationRepository(documentRepository, timeProvider)
     }
-    private val knowledgeCheckpointRepository by lazy { DemoKnowledgeCheckpointRepository() }
+    private val knowledgeCheckpointRepository by lazy { DemoKnowledgeCheckpointRepository(timeProvider) }
     private val dashboardRepository by lazy {
         DerivedDashboardRepository(documentRepository, evaluateHealth, knowledgeCheckpointRepository)
     }
@@ -282,6 +280,9 @@ class AppContainer(
         getKnowledgeCheckpoints = GetKnowledgeCheckpointsUseCase(knowledgeCheckpointRepository),
         getKnowledgeProgress = GetKnowledgeProgressUseCase(knowledgeCheckpointRepository),
         completeKnowledgeCheckpoint = CompleteKnowledgeCheckpointUseCase(knowledgeCheckpointRepository),
+        getCheckpointQuiz = GetCheckpointQuizUseCase(knowledgeCheckpointRepository),
+        submitCheckpointQuiz = SubmitCheckpointQuizUseCase(knowledgeCheckpointRepository),
+        getQuizAttempts = GetQuizAttemptsUseCase(knowledgeCheckpointRepository),
         timeProvider = timeProvider,
         idGenerator = idGenerator,
         sessionPrefs = sessionPrefs,

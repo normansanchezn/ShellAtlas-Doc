@@ -8,6 +8,7 @@ import com.shelldocs.core.domain.entity.assistant.AssistantMessage
 import com.shelldocs.core.domain.entity.assistant.Conversation
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeCheckpoint
 import com.shelldocs.core.domain.entity.onboarding.KnowledgeProgress
+import com.shelldocs.core.domain.entity.onboarding.QuizQuestion
 
 /** Snapshot of the AI Assistant screen. */
 data class AssistantState(
@@ -24,6 +25,7 @@ data class AssistantState(
     val checkpoints: List<KnowledgeCheckpoint> = emptyList(),
     val activeCheckpointId: String? = null,
     val knowledgeProgress: KnowledgeProgress? = null,
+    val activeQuiz: List<QuizQuestion> = emptyList(),
 ) : MviState {
     val canSend: Boolean = input.isNotBlank() && !isAnswering
 }
