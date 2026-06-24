@@ -9,7 +9,6 @@ import com.shelldocs.core.domain.entity.updates.RiskLevel
 
 /** Snapshot of the Documentation Health screen (Health table + Metadata Issues). */
 data class UpdatesState(
-    val isLoading: Boolean = false,
     val isScanning: Boolean = false,
     val updates: List<PendingUpdate> = emptyList(),
     val riskFilter: RiskLevel? = null,

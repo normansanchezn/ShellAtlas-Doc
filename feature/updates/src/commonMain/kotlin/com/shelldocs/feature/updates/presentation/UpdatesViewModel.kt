@@ -16,13 +16,11 @@ import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignments
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
-import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
 import kotlinx.coroutines.withContext
 
 class UpdatesViewModel(
-    private val getPendingUpdates: GetPendingUpdatesUseCase,
     private val scanForUpdates: ScanForUpdatesUseCase,
     private val getMetadataIssues: GetMetadataIssuesUseCase,
     private val getHealthyDocuments: GetHealthyDocumentsUseCase,
@@ -42,8 +40,7 @@ class UpdatesViewModel(
 
     override suspend fun handleIntent(intent: UpdatesIntent) {
         when (intent) {
-            UpdatesIntent.Initialize -> load()
-            UpdatesIntent.ScanNow -> scan()
+            UpdatesIntent.Initialize -> scan()
             UpdatesIntent.DismissError -> setState { copy(errorDialog = null) }
             is UpdatesIntent.ToggleRiskFilter ->
                 setState { copy(riskFilter = if (riskFilter == intent.risk) null else intent.risk) }
@@ -63,19 +60,6 @@ class UpdatesViewModel(
 
     private fun List<DocumentClassificationResult>.visibleMetadataIssues() =
         filter { visibleTo(it.area) }.distinctBy { it.documentId }
-
-    private suspend fun load() {
-        setState { copy(isLoading = true, errorDialog = null) }
-        withContext(dispatchers.default) {
-            getPendingUpdates()
-        }
-            .onSuccess { updates -> setState { copy(isLoading = false, updates = updates.visiblePendingUpdates()) } }
-            .onFailure { error ->
-                setState { copy(isLoading = false, errorDialog = error.toErrorDialogState("load pending updates")) }
-            }
-        loadMetadataIssues()
-        loadHealthyDocuments()
-    }
 
     private suspend fun scan() {
         setState { copy(isScanning = true, errorDialog = null) }

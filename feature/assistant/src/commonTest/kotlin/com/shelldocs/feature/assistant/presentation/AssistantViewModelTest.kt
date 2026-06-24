@@ -148,6 +148,9 @@ private class FakeSessionPreferences : SessionPreferences {
     override fun saveAssistantConversationId(conversationId: String?) {
         assistantConversationId = conversationId
     }
+
+    override fun loadAuthSessionToken(): String? = null
+    override fun saveAuthSessionToken(token: String?) = Unit
 }
 
 class AssistantViewModelTest {

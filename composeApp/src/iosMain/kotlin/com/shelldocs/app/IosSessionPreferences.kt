@@ -4,6 +4,7 @@ import platform.Foundation.NSUserDefaults
 
 private const val KEY = "shell_atlas_session_active"
 private const val ASSISTANT_CONVERSATION_KEY = "shell_atlas_assistant_active_conversation_id"
+private const val AUTH_SESSION_TOKEN_KEY = "shell_atlas_auth_session_token"
 
 class IosSessionPreferences : SessionPreferences {
     private val defaults = NSUserDefaults.standardUserDefaults
@@ -22,6 +23,17 @@ class IosSessionPreferences : SessionPreferences {
             defaults.removeObjectForKey(ASSISTANT_CONVERSATION_KEY)
         } else {
             defaults.setObject(conversationId, ASSISTANT_CONVERSATION_KEY)
+        }
+    }
+
+    override fun loadAuthSessionToken(): String? =
+        defaults.stringForKey(AUTH_SESSION_TOKEN_KEY)
+
+    override fun saveAuthSessionToken(token: String?) {
+        if (token == null) {
+            defaults.removeObjectForKey(AUTH_SESSION_TOKEN_KEY)
+        } else {
+            defaults.setObject(token, AUTH_SESSION_TOKEN_KEY)
         }
     }
 }

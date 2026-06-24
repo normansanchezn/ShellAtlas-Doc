@@ -46,6 +46,10 @@ class DemoAuthRepository(
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
 
+    override fun adoptSession(session: AuthSession) {
+        mutableSession.value = session
+    }
+
     override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> {
         val current = mutableSession.value ?: return DomainResult.failure(
             com.shelldocs.core.common.error.AppError.Unauthorized(),

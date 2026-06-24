@@ -131,20 +131,25 @@ fun WorkspaceSidebar(
 
 @Composable
 private fun SidebarHeader() {
-    Column(
+    val colors = ShellTheme.colors
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = ShellSpacing.md, bottom = ShellSpacing.xs)
             .padding(horizontal = ShellSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
     ) {
         Icon(
-            imageVector = IconShellAtlasLogo,
+            imageVector = IconShellIcon,
             contentDescription = null,
             tint = Color.Unspecified,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
+            modifier = Modifier.size(32.dp),
+        )
+        Text(
+            text = "Shell Atlas",
+            style = ShellTheme.typography.pageTitle,
+            color = colors.textPrimary,
         )
     }
 }

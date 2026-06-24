@@ -5,8 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,6 +20,8 @@ import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellIconButton
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
 import com.shelldocs.core.designsystem.icons.*
+import com.shelldocs.core.designsystem.molecules.ShellContextMenu
+import com.shelldocs.core.designsystem.molecules.ShellContextMenuItem
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellMotion
@@ -208,12 +208,11 @@ private fun TreeNode(
         }
 
         if (canDelete) {
-            DropdownMenu(expanded = showContextMenu, onDismissRequest = { showContextMenu = false }) {
-                DropdownMenuItem(
-                    text = { Text("Delete", color = ShellTheme.colors.danger) },
-                    leadingIcon = {
-                        Icon(imageVector = IconTrash, contentDescription = null, tint = ShellTheme.colors.danger)
-                    },
+            ShellContextMenu(expanded = showContextMenu, onDismissRequest = { showContextMenu = false }) {
+                ShellContextMenuItem(
+                    text = "Delete",
+                    icon = IconTrash,
+                    tint = ShellTheme.colors.danger,
                     onClick = {
                         showContextMenu = false
                         node.documentId?.let {

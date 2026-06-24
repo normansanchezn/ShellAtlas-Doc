@@ -1,14 +1,11 @@
 package com.shelldocs.feature.updates
 
 object UpdatesStringRes {
-    const val PAGE_TITLE = "Documentation Health"
+    const val PAGE_TITLE = "Alerts"
     const val PAGE_SUBTITLE_SUFFIX = "documents need attention · Maintenance triage"
-    const val SCAN_NOW = "Scan now"
-    const val SCANNING = "SCANNING"
     const val TAB_HEALTH = "Documentation Health"
     const val TAB_METADATA_ISSUES = "Attributes to Review"
     const val TAB_HEALTHY = "Documentation Healthy"
-    const val LOADING_PENDING_UPDATES = "LOADING"
     const val LOADING_DOCUMENTATION_HEALTH = "Scanning documentation health..."
     const val LOADING_CLASSIFYING_DOCUMENTS = "Classifying documents..."
     const val LOADING_HEALTHY_DOCUMENTS = "Loading healthy documents..."

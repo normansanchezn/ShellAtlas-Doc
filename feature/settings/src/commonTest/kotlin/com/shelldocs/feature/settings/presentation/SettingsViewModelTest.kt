@@ -60,6 +60,9 @@ private class StubAuthRepository : AuthRepository {
         return DomainResult.success(Unit)
     }
     override suspend fun restoreSession(): DomainResult<AuthSession?> = DomainResult.success(null)
+    override fun adoptSession(session: AuthSession) {
+        mutableSession.value = session
+    }
     override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> =
         DomainResult.failure(com.shelldocs.core.common.error.AppError.Unauthorized())
 }

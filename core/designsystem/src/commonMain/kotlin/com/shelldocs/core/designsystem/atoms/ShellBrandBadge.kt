@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.shelldocs.core.designsystem.icons.IconShellAtlasBrand
+import com.shelldocs.core.designsystem.icons.IconShellIcon
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 
@@ -39,7 +39,7 @@ fun ShellBrandBadge(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = IconShellAtlasBrand,
+            imageVector = IconShellIcon,
             contentDescription = null,
             tint = Color.Unspecified,
             modifier = Modifier.size(iconSize * 1.18f),

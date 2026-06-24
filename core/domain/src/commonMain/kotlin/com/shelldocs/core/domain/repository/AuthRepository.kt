@@ -21,6 +21,9 @@ interface AuthRepository {
 
     suspend fun restoreSession(): DomainResult<AuthSession?>
 
+    /** Hydrates in-memory state from a session persisted by the caller (e.g. on app relaunch). */
+    fun adoptSession(session: AuthSession)
+
     /** Persists the user's display-language preference (`profiles.language`). */
     suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile>
 }

@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellCard
@@ -55,6 +56,9 @@ private fun HeaderCell(text: String, modifier: Modifier) {
         text = text,
         style = ShellTheme.typography.sectionLabel,
         color = ShellTheme.colors.textMuted,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
         modifier = modifier,
     )
 }

@@ -6,10 +6,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.tokens.ShellElevation
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
 private val ToolbarHeight = 72.dp
@@ -33,6 +35,7 @@ fun ShellScreenToolbar(
         modifier = modifier
             .fillMaxWidth()
             .height(ToolbarHeight)
+            .shadow(elevation = ShellElevation.raised)
             .background(colors.background)
             .padding(horizontal = ShellSpacing.lg),
     ) {

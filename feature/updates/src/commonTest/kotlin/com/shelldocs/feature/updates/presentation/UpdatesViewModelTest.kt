@@ -17,7 +17,6 @@ import com.shelldocs.core.domain.usecase.classification.ApplyMetadataAssignments
 import com.shelldocs.core.domain.usecase.classification.AssignMetadataUseCase
 import com.shelldocs.core.domain.usecase.classification.GetMetadataIssuesUseCase
 import com.shelldocs.core.domain.usecase.updates.GetHealthyDocumentsUseCase
-import com.shelldocs.core.domain.usecase.updates.GetPendingUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.ScanForUpdatesUseCase
 import com.shelldocs.core.domain.usecase.updates.SetManualRiskLevelUseCase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -88,7 +87,6 @@ class UpdatesViewModelTest {
     private val classificationRepository = FakeDocumentClassificationRepository()
 
     private fun viewModel(scheduler: kotlinx.coroutines.test.TestCoroutineScheduler) = UpdatesViewModel(
-        getPendingUpdates = GetPendingUpdatesUseCase(repository),
         scanForUpdates = ScanForUpdatesUseCase(repository),
         getMetadataIssues = GetMetadataIssuesUseCase(classificationRepository),
         getHealthyDocuments = GetHealthyDocumentsUseCase(repository),
@@ -130,9 +128,9 @@ class UpdatesViewModelTest {
     }
 
     @Test
-    fun scanNowHitsTheRepository() = runTest {
+    fun initializeHitsTheRepository() = runTest {
         val viewModel = viewModel(testScheduler)
-        viewModel.onIntent(UpdatesIntent.ScanNow)
+        viewModel.onIntent(UpdatesIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
         assertEquals(1, repository.scans)
@@ -143,7 +141,7 @@ class UpdatesViewModelTest {
     fun scanSetsLoadingFlagThenClears() = runTest {
         val viewModel = viewModel(testScheduler)
 
-        viewModel.onIntent(UpdatesIntent.ScanNow)
+        viewModel.onIntent(UpdatesIntent.Initialize)
         testScheduler.runCurrent()
 
         assertTrue(viewModel.currentState.isScanning)
@@ -159,7 +157,7 @@ class UpdatesViewModelTest {
         repository.failScan = true
         val viewModel = viewModel(testScheduler)
 
-        viewModel.onIntent(UpdatesIntent.ScanNow)
+        viewModel.onIntent(UpdatesIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
         assertNotNull(viewModel.currentState.errorDialog)
@@ -172,7 +170,7 @@ class UpdatesViewModelTest {
         repository.failScan = true
         val viewModel = viewModel(testScheduler)
 
-        viewModel.onIntent(UpdatesIntent.ScanNow)
+        viewModel.onIntent(UpdatesIntent.Initialize)
         testScheduler.advanceUntilIdle()
 
         assertNotNull(viewModel.currentState.errorDialog)

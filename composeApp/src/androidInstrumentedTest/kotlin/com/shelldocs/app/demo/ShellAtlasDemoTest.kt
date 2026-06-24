@@ -125,13 +125,11 @@ class ShellAtlasDemoTest {
     fun demo_updatesScanAndFilterWalkthrough() {
         signIn()
 
-        navigateTo("Notifications")
+        navigateTo("Alerts")
         waitForTag(DemoTestTags.UpdatesScreen)
         waitForText("Maintenance triage")
-        pauseForRecording()
-
-        composeRule.onNodeWithTag(DemoTestTags.UpdatesScan).performClick()
         pauseForRecording(2_000L)
+
         composeRule.onNodeWithTag(DemoTestTags.updatesRisk("Critical")).performClick()
         pauseForRecording()
     }
@@ -234,12 +232,9 @@ class ShellAtlasDemoTest {
     fun flow_updatesPendingComplete() {
         signIn()
 
-        navigateTo("Notifications")
+        navigateTo("Alerts")
         waitForTag(DemoTestTags.UpdatesScreen)
         waitForText("Maintenance triage")
-        pauseForRecording()
-
-        composeRule.onNodeWithTag(DemoTestTags.UpdatesScan).performClick()
         pauseForRecording(2_000L)
 
         composeRule.onNodeWithTag(DemoTestTags.updatesRisk("Critical")).performClick()

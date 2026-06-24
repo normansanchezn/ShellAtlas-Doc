@@ -105,7 +105,7 @@ class AppContainer(
                 timeProvider = timeProvider,
             )
         }
-        AppAuthRepository(delegate, sessionPrefs)
+        AppAuthRepository(delegate, sessionPrefs, timeProvider)
     }
 
     val roleRepository: RoleRepository by lazy {
@@ -217,6 +217,7 @@ class AppContainer(
     suspend fun runStartupDiagnostics() {
         val startupLogger = AppLogger.tag(LogTags.STARTUP)
         startupLogger.i("Running startup diagnostics (env=${config.environment}, demoMode=${config.isDemoMode})")
+        authRepository.restoreSession()
         checkDatabaseConnection()
         checkOllamaConnection()
         checkIntegrations()
@@ -311,7 +312,6 @@ class AppContainer(
     )
 
     fun updatesViewModel() = UpdatesViewModel(
-        getPendingUpdates = GetPendingUpdatesUseCase(pendingUpdatesRepository),
         scanForUpdates = ScanForUpdatesUseCase(pendingUpdatesRepository),
         getMetadataIssues = GetMetadataIssuesUseCase(documentClassificationRepository),
         getHealthyDocuments = GetHealthyDocumentsUseCase(pendingUpdatesRepository),

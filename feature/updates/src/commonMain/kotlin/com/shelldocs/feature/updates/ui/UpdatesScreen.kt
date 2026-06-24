@@ -6,10 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import com.shelldocs.core.common.testing.DemoTestTags
-import com.shelldocs.core.designsystem.atoms.ShellGhostButton
-import com.shelldocs.core.designsystem.icons.IconRefresh
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
@@ -61,15 +57,6 @@ fun UpdatesScreen(
             ShellScreenToolbar(
                 title = UpdatesStringRes.PAGE_TITLE,
                 subtitle = "${state.updates.size} ${UpdatesStringRes.PAGE_SUBTITLE_SUFFIX}",
-                trailingContent = {
-                    ShellGhostButton(
-                        text = if (state.isScanning) UpdatesStringRes.SCANNING else UpdatesStringRes.SCAN_NOW,
-                        icon = IconRefresh,
-                        onClick = { viewModel.onIntent(UpdatesIntent.ScanNow) },
-                        enabled = !state.isScanning && !state.isLoading,
-                        modifier = Modifier.testTag(DemoTestTags.UpdatesScan),
-                    )
-                },
             )
 
             DocumentationHealthTabRow(
@@ -107,7 +94,6 @@ fun UpdatesScreen(
         }
 
         when {
-            state.isLoading -> ShellLoadingOverlay(message = UpdatesStringRes.LOADING_PENDING_UPDATES)
             state.isScanning -> ShellLoadingOverlay(message = UpdatesStringRes.LOADING_DOCUMENTATION_HEALTH)
             state.isLoadingMetadataIssues && state.selectedTab == DocumentationHealthTab.METADATA_ISSUES ->
                 ShellLoadingOverlay(message = UpdatesStringRes.LOADING_CLASSIFYING_DOCUMENTS)

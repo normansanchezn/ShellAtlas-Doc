@@ -110,6 +110,10 @@ class SupabaseAuthRepository(
     override suspend fun restoreSession(): DomainResult<AuthSession?> =
         DomainResult.success(mutableSession.value)
 
+    override fun adoptSession(session: AuthSession) {
+        mutableSession.value = session
+    }
+
     @OptIn(ExperimentalTime::class)
     override suspend fun updateLanguage(language: AppLanguage): DomainResult<UserProfile> {
         val current = mutableSession.value ?: return DomainResult.failure(AppError.Unauthorized())

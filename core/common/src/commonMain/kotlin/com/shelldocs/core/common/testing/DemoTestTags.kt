@@ -29,7 +29,6 @@ object DemoTestTags {
     const val DashboardRefresh = "demo_dashboard_refresh"
 
     const val UpdatesScreen = "demo_updates_screen"
-    const val UpdatesScan = "demo_updates_scan"
 
     const val SourcesScreen = "demo_sources_screen"
     const val SettingsScreen = "demo_settings_screen"
