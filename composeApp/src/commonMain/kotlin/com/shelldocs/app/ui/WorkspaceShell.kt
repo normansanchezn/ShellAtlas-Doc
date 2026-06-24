@@ -10,6 +10,7 @@ import com.shelldocs.app.di.AppContainer
 import com.shelldocs.app.navigation.AppRoute
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.theme.ShellWindowSize
 import com.shelldocs.feature.assistant.ui.AssistantScreen
 import com.shelldocs.feature.dashboard.ui.DashboardScreen
 import com.shelldocs.feature.documents.ui.DocumentsScreen
@@ -214,10 +215,10 @@ private fun RouteContent(
     }
 }
 
-const val WIDE_LAYOUT_MIN_WIDTH_DP = 840
+const val WIDE_LAYOUT_MIN_WIDTH_DP = ShellWindowSize.WIDE_MIN_WIDTH_DP
 
 /** Below this, phones get the bottom bar; at/above it, tablets get the icon rail. */
-const val RAIL_LAYOUT_MIN_WIDTH_DP = 600
+const val RAIL_LAYOUT_MIN_WIDTH_DP = ShellWindowSize.RAIL_MIN_WIDTH_DP
 
 /** Minimum content width (next to the rail) for screens to use multi-column layouts. */
 private const val CONTENT_WIDE_MIN_WIDTH_DP = 700

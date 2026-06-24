@@ -21,6 +21,7 @@ import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
+import com.shelldocs.core.designsystem.theme.shellMaxContentWidth
 import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
@@ -81,7 +82,8 @@ fun SettingsScreen(
                         .weight(1f)
                         .fillMaxHeight()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = ShellSpacing.xl, vertical = ShellSpacing.sm),
+                        .padding(horizontal = ShellSpacing.xl, vertical = ShellSpacing.sm)
+                        .shellMaxContentWidth(),
                     verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
                 ) {
                     if (!isWide) {
