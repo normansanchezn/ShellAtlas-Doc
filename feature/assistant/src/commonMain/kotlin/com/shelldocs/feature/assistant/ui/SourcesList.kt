@@ -98,7 +98,7 @@ private fun SourceRow(rank: Int, source: AnswerSource, onClick: () -> Unit) {
                 .background(colors.surfaceSelected),
             contentAlignment = Alignment.Center,
         ) {
-            Text("$rank", style = ShellTheme.typography.caption, color = colors.brand)
+            Text("$rank", style = ShellTheme.typography.caption, color = colors.accentText)
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(source.title, style = ShellTheme.typography.label, color = colors.textPrimary)

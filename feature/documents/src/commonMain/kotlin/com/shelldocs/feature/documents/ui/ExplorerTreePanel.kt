@@ -11,9 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.isSecondaryPressed
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.common.testing.DemoTestTags
@@ -164,22 +161,6 @@ private fun TreeNode(
                         }
                     },
                     onLongClick = { if (canDelete) showContextMenu = true },
-                )
-                .then(
-                    if (canDelete) {
-                        Modifier.pointerInput(node.id) {
-                            awaitPointerEventScope {
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
-                                        showContextMenu = true
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Modifier
-                    },
                 )
                 .padding(start = (depth * 14).dp + 6.dp, top = 5.dp, bottom = 5.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,

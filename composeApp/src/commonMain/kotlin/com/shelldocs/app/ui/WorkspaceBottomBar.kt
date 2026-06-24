@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,9 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
+import com.shelldocs.app.navigation.label
 import com.shelldocs.core.common.testing.DemoTestTags
+import com.shelldocs.core.designsystem.i18n.LocalAppStrings
 import com.shelldocs.core.designsystem.icons.IconAlertTriangle
 import com.shelldocs.core.designsystem.icons.IconFileText
 import com.shelldocs.core.designsystem.icons.IconLayoutGrid
@@ -44,6 +46,7 @@ fun WorkspaceBottomBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
+    val strings = LocalAppStrings.current
     val items: List<Pair<AppRoute, ImageVector>> = listOf(
         AppRoute.ASSISTANT to IconMessageSquare,
         AppRoute.DOCUMENTS to IconFileText,
@@ -60,6 +63,7 @@ fun WorkspaceBottomBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         items.forEach { (route, icon) ->
+            val label = route.label(strings)
             val isActive = route == activeRoute
             val indicatorColor by animateColorAsState(
                 targetValue = if (isActive) colors.surfaceSelected else colors.surface.copy(alpha = 0f),
@@ -67,13 +71,13 @@ fun WorkspaceBottomBar(
                 label = "bottomBarIndicator",
             )
             val contentColor by animateColorAsState(
-                targetValue = if (isActive) colors.brand else colors.textMuted,
+                targetValue = if (isActive) colors.accentText else colors.textMuted,
                 animationSpec = tween(ShellMotion.durationMedium),
                 label = "bottomBarContent",
             )
             Column(
                 modifier = Modifier
-                    .width(64.dp)
+                    .weight(1f)
                     .height(48.dp)
                     .testTag(DemoTestTags.navRoute(route.title))
                     .clickable(
@@ -94,15 +98,19 @@ fun WorkspaceBottomBar(
                 ) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = route.title,
+                        contentDescription = label,
                         tint = contentColor,
                         modifier = Modifier.size(18.dp),
                     )
                 }
                 Text(
-                    text = route.title.substringBefore(' '),
+                    text = label,
                     style = ShellTheme.typography.caption,
                     color = contentColor,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 2.dp),
                 )
             }
         }

@@ -105,7 +105,7 @@ private fun AssistantBubble(message: AssistantMessage, onSourceClick: (AnswerSou
             Icon(
                 imageVector = IconSparkles,
                 contentDescription = null,
-                tint = colors.brand,
+                tint = colors.accentText,
                 modifier = Modifier.size(13.dp),
             )
             Text("ShellAtlas AI", style = ShellTheme.typography.label, color = colors.textSecondary)

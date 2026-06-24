@@ -52,7 +52,7 @@ fun AssistantHeader(
                 Icon(
                     imageVector = IconSparkles,
                     contentDescription = null,
-                    tint = colors.brand,
+                    tint = colors.accentText,
                     modifier = Modifier.size(16.dp),
                 )
             },
@@ -137,7 +137,7 @@ private fun KnowledgeTransferButton(
     val isComplete = progress.completed >= progress.total
     val tint = when {
         isComplete -> colors.success
-        activeCheckpointId != null -> colors.brand
+        activeCheckpointId != null -> colors.accentText
         else -> colors.textMuted
     }
     Box {

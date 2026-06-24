@@ -1,14 +1,12 @@
 package com.shelldocs.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.*
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import com.shelldocs.app.di.AppConfig
@@ -18,6 +16,7 @@ import com.shelldocs.app.ui.WorkspaceShell
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.i18n.LocalAppStrings
 import com.shelldocs.core.designsystem.i18n.stringsFor
+import com.shelldocs.core.designsystem.modifier.clearFocusOnOutsideTap
 import com.shelldocs.core.designsystem.molecules.ShellLottieLoader
 import com.shelldocs.core.designsystem.theme.ShellDocsTheme
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -75,9 +74,7 @@ fun App(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag(DemoTestTags.WorkspaceRoot)
-                    .pointerInput(focusManager) {
-                        detectTapGestures(onTap = { focusManager.clearFocus() })
-                    }
+                    .clearFocusOnOutsideTap(focusManager)
                     .onPreviewKeyEvent { event ->
                         if (isMobile || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         val mod = event.isMetaPressed || event.isCtrlPressed

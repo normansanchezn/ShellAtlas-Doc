@@ -6,10 +6,11 @@ import androidx.compose.ui.graphics.Color
 val ShellLightColors = ShellColorScheme(
     brand = Color(0xFFFFD100),
     onBrand = Color(0xFF0D0F12),
+    accentText = Color(0xFF92400E),
     background = Color(0xFFFFFFFF),
     surface = Color(0xFFFFFFFF),
     surfaceSubtle = Color(0xFFF0F2F5),
-    surfaceSelected = Color(0x14FFD100),
+    surfaceSelected = Color(0x33FFD100),
     border = Color(0xFFE2E5EB),
     borderStrong = Color(0xFFCBD0D8),
     textPrimary = Color(0xFF0D0F12),

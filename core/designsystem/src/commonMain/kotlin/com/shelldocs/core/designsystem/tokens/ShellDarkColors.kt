@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 val ShellDarkColors = ShellColorScheme(
     brand = Color(0xFFFFD100),
     onBrand = Color(0xFF0D0F12),
+    accentText = Color(0xFFFFD100),
     background = Color(0xFF0B0C0E),
     surface = Color(0xFF141518),
     surfaceSubtle = Color(0xFF1C1E22),

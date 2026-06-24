@@ -1,7 +1,6 @@
 package com.shelldocs.feature.assistant.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -13,11 +12,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.icons.IconSparkles
+import com.shelldocs.core.designsystem.modifier.clearFocusOnOutsideTap
 import com.shelldocs.core.designsystem.molecules.ShellErrorDialog
 import com.shelldocs.core.designsystem.molecules.ShellLoadingOverlay
 import com.shelldocs.core.designsystem.theme.ShellTheme
@@ -81,12 +80,7 @@ fun AssistantScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                            keyboardController?.hide()
-                        })
-                    },
+                    .clearFocusOnOutsideTap(focusManager) { keyboardController?.hide() },
             ) {
                 if (state.messages.isEmpty()) {
                     AssistantEmptyThread(modifier = Modifier.align(Alignment.Center))
@@ -146,7 +140,7 @@ private fun AssistantEmptyThread(modifier: Modifier = Modifier) {
         Icon(
             imageVector = IconSparkles,
             contentDescription = null,
-            tint = colors.brand,
+            tint = colors.accentText,
             modifier = Modifier.size(28.dp),
         )
         Text(

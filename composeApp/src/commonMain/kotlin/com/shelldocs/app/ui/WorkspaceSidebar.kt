@@ -20,15 +20,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.shelldocs.app.navigation.AppRoute
-import com.shelldocs.app.strings.StringRes.CONFLUENCE_TXT
-import com.shelldocs.app.strings.StringRes.DARK_MODE_TXT
-import com.shelldocs.app.strings.StringRes.LIGHT_MODE_TXT
-import com.shelldocs.app.strings.StringRes.SEARCH_SHORTCUT
-import com.shelldocs.app.strings.StringRes.SEARCH_TXT
+import com.shelldocs.app.navigation.label
 import com.shelldocs.core.common.testing.DemoTestTags
 import com.shelldocs.core.designsystem.atoms.ShellAvatar
 import com.shelldocs.core.designsystem.atoms.ShellBadge
 import com.shelldocs.core.designsystem.atoms.ShellSectionLabel
+import com.shelldocs.core.designsystem.i18n.LocalAppStrings
 import com.shelldocs.core.designsystem.icons.*
 import com.shelldocs.core.designsystem.molecules.ShellKbdHint
 import com.shelldocs.core.designsystem.molecules.ShellSearchField
@@ -37,6 +34,8 @@ import com.shelldocs.core.designsystem.tokens.ShellMotion
 import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 import com.shelldocs.core.domain.entity.auth.UserProfile
+
+private const val SEARCH_SHORTCUT = "⌘ K"
 
 /**
  * 240dp sidebar from the Figma AppShell: brand header, search, KNOWLEDGE /
@@ -55,6 +54,7 @@ fun WorkspaceSidebar(
     modifier: Modifier = Modifier,
 ) {
     val colors = ShellTheme.colors
+    val strings = LocalAppStrings.current
     Column(
         modifier = modifier
             .width(300.dp)
@@ -66,7 +66,7 @@ fun WorkspaceSidebar(
             ShellSearchField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = SEARCH_TXT,
+                placeholder = strings.sidebarSearchPlaceholder,
                 trailing = { ShellKbdHint(text = SEARCH_SHORTCUT) },
             )
         }
@@ -75,7 +75,7 @@ fun WorkspaceSidebar(
             verticalArrangement = Arrangement.spacedBy(ShellSpacing.xxs),
         ) {
             ShellSectionLabel(
-                text = "Knowledge",
+                text = strings.sidebarSectionKnowledge,
                 modifier = Modifier.padding(start = ShellSpacing.sm, top = ShellSpacing.sm, bottom = ShellSpacing.xs),
             )
             SidebarItem(IconMessageSquare, AppRoute.ASSISTANT, activeRoute, onNavigate)
@@ -89,21 +89,21 @@ fun WorkspaceSidebar(
             )
 
             ShellSectionLabel(
-                text = "Analytics",
+                text = strings.sidebarSectionAnalytics,
                 modifier = Modifier.padding(start = ShellSpacing.sm, top = ShellSpacing.lg, bottom = ShellSpacing.xs),
             )
             SidebarItem(IconLayoutGrid, AppRoute.DASHBOARD, activeRoute, onNavigate)
 
             ShellSectionLabel(
-                text = "Sources",
+                text = strings.sidebarSectionSources,
                 modifier = Modifier.padding(start = ShellSpacing.sm, top = ShellSpacing.lg, bottom = ShellSpacing.xs),
             )
-            SidebarSourceItem(IconLayers, CONFLUENCE_TXT, activeRoute, onNavigate)
+            SidebarSourceItem(IconLayers, strings.sidebarConnections, activeRoute, onNavigate)
         }
         Column(modifier = Modifier.padding(ShellSpacing.sm)) {
             SidebarActionRow(
                 icon = if (isDarkTheme) IconSun else IconMoon,
-                label = if (isDarkTheme) LIGHT_MODE_TXT else DARK_MODE_TXT,
+                label = if (isDarkTheme) strings.sidebarLightMode else strings.sidebarDarkMode,
                 onClick = onToggleTheme,
             )
             SidebarItem(IconSettings, AppRoute.SETTINGS, activeRoute, onNavigate)
@@ -163,6 +163,7 @@ private fun SidebarItem(
     badgeCount: Int = 0,
 ) {
     val colors = ShellTheme.colors
+    val strings = LocalAppStrings.current
     val isActive = route == activeRoute
     val background by animateColorAsState(
         targetValue = if (isActive) colors.surfaceSelected else colors.surface,
@@ -170,7 +171,7 @@ private fun SidebarItem(
         label = "sidebarItemBackground",
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isActive) colors.brand else colors.textSecondary,
+        targetValue = if (isActive) colors.accentText else colors.textSecondary,
         animationSpec = tween(ShellMotion.durationMedium),
         label = "sidebarItemContent",
     )
@@ -196,7 +197,9 @@ private fun SidebarItem(
             modifier = Modifier.size(15.dp),
         )
         Text(
-            text = route.title,
+            text = route.label(strings),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             style = if (isActive) ShellTheme.typography.bodyStrong else ShellTheme.typography.body,
             color = contentColor,
             modifier = Modifier.weight(1f),
@@ -237,7 +240,7 @@ private fun SidebarSourceItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isActive) colors.brand else colors.textMuted,
+            tint = if (isActive) colors.accentText else colors.textMuted,
             modifier = Modifier.size(15.dp),
         )
         Text(text = label, style = ShellTheme.typography.body, color = colors.textSecondary)

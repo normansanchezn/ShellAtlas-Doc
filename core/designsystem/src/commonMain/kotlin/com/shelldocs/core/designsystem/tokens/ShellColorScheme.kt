@@ -11,6 +11,12 @@ import androidx.compose.ui.graphics.Color
 data class ShellColorScheme(
     val brand: Color,
     val onBrand: Color,
+    /**
+     * Brand-colored text/icon on a flat [surface]/[background] (selected nav state, chip text,
+     * sparkles glyph). [brand] itself (`#FFD100`) fails contrast on white — only safe as a solid
+     * fill paired with [onBrand], never as foreground content. Use this instead.
+     */
+    val accentText: Color,
     val background: Color,
     val surface: Color,
     val surfaceSubtle: Color,

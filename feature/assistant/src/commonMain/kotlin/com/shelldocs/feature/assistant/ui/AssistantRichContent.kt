@@ -156,7 +156,7 @@ private fun RotatingCapabilityChip(options: List<String>, modifier: Modifier = M
             Text(
                 text = options[current],
                 style = ShellTheme.typography.bodyStrong.copy(textAlign = TextAlign.Center),
-                color = colors.brand,
+                color = colors.accentText,
             )
         }
     }
