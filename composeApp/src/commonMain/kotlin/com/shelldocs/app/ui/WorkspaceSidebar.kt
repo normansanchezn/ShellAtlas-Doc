@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -166,7 +167,7 @@ private fun SidebarItem(
     val strings = LocalAppStrings.current
     val isActive = route == activeRoute
     val background by animateColorAsState(
-        targetValue = if (isActive) colors.surfaceSelected else colors.surface,
+        targetValue = if (isActive) colors.surfaceSubtle else colors.surface,
         animationSpec = tween(ShellMotion.durationMedium),
         label = "sidebarItemBackground",
     )
@@ -184,7 +185,7 @@ private fun SidebarItem(
             .testTag(DemoTestTags.navRoute(route.title))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = ripple(),
             ) { onNavigate(route) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -231,7 +232,7 @@ private fun SidebarSourceItem(
             .testTag(DemoTestTags.navRoute(AppRoute.SOURCES.title))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = ripple(),
             ) { onNavigate(AppRoute.SOURCES) }
             .padding(horizontal = ShellSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -261,7 +262,7 @@ private fun SidebarActionRow(
             .clip(RoundedCornerShape(ShellRadius.sm))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = ripple(),
                 onClick = onClick,
             )
             .padding(horizontal = ShellSpacing.sm),

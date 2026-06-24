@@ -7,20 +7,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellElevation
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
-private val ToolbarHeight = 72.dp
-private val ToolbarSideMinWidth = 132.dp
-private val ToolbarSideMaxWidth = 240.dp
+private val ToolbarHeight = 64.dp
 
 /**
- * Shared workspace toolbar for desktop/web screens.
- * Keep at most two actions per side so page hierarchy stays stable.
+ * Shared workspace toolbar for desktop/web screens. Material 3 top-app-bar layout: title/subtitle
+ * start-aligned (never centered — a centered title with a long subtitle has nowhere to grow and
+ * clips), leading content fixed-width only when present, trailing actions end-aligned.
+ *
+ * Every screen (Documents, Settings, Updates/Alerts, Dashboard, AI Assistant) must use this same
+ * component for its top bar — do not hand-roll a per-screen header.
  */
 @Composable
 fun ShellScreenToolbar(
@@ -31,40 +32,24 @@ fun ShellScreenToolbar(
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     val colors = ShellTheme.colors
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .height(ToolbarHeight)
             .shadow(elevation = ShellElevation.raised)
             .background(colors.background)
             .padding(horizontal = ShellSpacing.lg),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .widthIn(min = ToolbarSideMinWidth, max = ToolbarSideMaxWidth),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            if (leadingContent != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
-                ) {
-                    leadingContent()
-                }
-            }
+        if (leadingContent != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) { leadingContent() }
         }
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = ToolbarSideMinWidth),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = ShellTheme.typography.pageTitle,
                 color = colors.textPrimary,
-                textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -73,25 +58,17 @@ fun ShellScreenToolbar(
                     text = subtitle,
                     style = ShellTheme.typography.caption,
                     color = colors.textMuted,
-                    textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .widthIn(min = ToolbarSideMinWidth, max = ToolbarSideMaxWidth),
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            if (trailingContent != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
-                ) {
-                    trailingContent()
-                }
+        if (trailingContent != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(ShellSpacing.sm),
+            ) {
+                trailingContent()
             }
         }
     }

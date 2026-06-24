@@ -112,13 +112,13 @@ private fun BookmarksSection(
                 Icon(
                     imageVector = IconBookmark,
                     contentDescription = null,
-                    tint = if (isSelected) colors.brand else colors.textMuted,
+                    tint = if (isSelected) colors.accentText else colors.textMuted,
                     modifier = Modifier.size(12.dp),
                 )
                 Text(
                     text = doc.title,
                     style = ShellTheme.typography.label,
-                    color = if (isSelected) colors.brand else colors.textSecondary,
+                    color = if (isSelected) colors.accentText else colors.textSecondary,
                     maxLines = 1,
                 )
             }
@@ -173,14 +173,14 @@ private fun TreeNode(
                     else -> IconChevronRight
                 },
                 contentDescription = null,
-                tint = if (isSelected) colors.brand else colors.textMuted,
+                tint = if (isSelected) colors.accentText else colors.textMuted,
                 modifier = Modifier.size(12.dp),
             )
             Text(
                 text = node.title,
                 style = ShellTheme.typography.label,
                 color = when {
-                    isSelected -> colors.brand
+                    isSelected -> colors.accentText
                     node.type == DocumentNodeType.FOLDER -> colors.textPrimary
                     else -> colors.textSecondary
                 },

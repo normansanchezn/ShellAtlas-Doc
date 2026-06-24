@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,7 +58,7 @@ fun ShellPrimaryButton(
             .background(colors.brand)
             .clickable(
                 interactionSource = interactionSource,
-                indication = null,
+                indication = ripple(color = colors.onBrand),
                 enabled = enabled,
                 onClick = onClick,
             )

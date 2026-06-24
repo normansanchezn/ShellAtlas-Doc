@@ -134,7 +134,7 @@ fun ChatInputBar(
                 Icon(
                     imageVector = IconSend,
                     contentDescription = "Send",
-                    tint = if (canSend) colors.brand else colors.textMuted,
+                    tint = if (canSend) colors.accentText else colors.textMuted,
                     modifier = Modifier.size(16.dp),
                 )
             }

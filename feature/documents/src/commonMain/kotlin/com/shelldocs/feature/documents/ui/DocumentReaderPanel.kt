@@ -239,7 +239,7 @@ private fun DocumentBreadcrumb(
             Text(
                 text = segment.label,
                 style = ShellTheme.typography.caption,
-                color = if (isLast) colors.textPrimary else colors.brand,
+                color = if (isLast) colors.textPrimary else colors.accentText,
                 maxLines = 1,
                 modifier = if (!isLast) {
                     Modifier

@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -79,12 +80,12 @@ private fun RailItem(
     val colors = ShellTheme.colors
     val isActive = route == activeRoute
     val background by animateColorAsState(
-        targetValue = if (isActive) colors.surfaceSelected else colors.surface,
+        targetValue = if (isActive) colors.surfaceSubtle else colors.surface,
         animationSpec = tween(ShellMotion.durationMedium),
         label = "railItemBackground",
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isActive) colors.brand else colors.textMuted,
+        targetValue = if (isActive) colors.accentText else colors.textMuted,
         animationSpec = tween(ShellMotion.durationMedium),
         label = "railItemContent",
     )
@@ -96,7 +97,7 @@ private fun RailItem(
             .testTag(DemoTestTags.navRoute(route.title))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = ripple(),
             ) { onNavigate(route) },
         contentAlignment = Alignment.Center,
     ) {
@@ -126,7 +127,7 @@ private fun RailActionItem(icon: ImageVector, onClick: () -> Unit) {
             .clip(RoundedCornerShape(ShellRadius.lg))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = ripple(),
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center,
