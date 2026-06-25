@@ -34,13 +34,7 @@ fun SourcesScreen(
     LaunchedEffect(viewModel) { viewModel.onIntent(SourcesIntent.Initialize) }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             ShellScreenToolbar(
                 title = SourcesStringRes.TITLE,
                 subtitle = SourcesStringRes.SUBTITLE,
@@ -53,16 +47,23 @@ fun SourcesScreen(
                     )
                 },
             )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                state.connections.forEach { connection ->
+                    ConnectionRow(connection = connection)
+                }
 
-            state.connections.forEach { connection ->
-                ConnectionRow(connection = connection)
+                ShellPrimaryButton(
+                    text = SourcesStringRes.CONTACT_SUPPORT,
+                    onClick = { viewModel.onIntent(SourcesIntent.ContactSupport) },
+                    enabled = !state.isBusy,
+                )
             }
-
-            ShellPrimaryButton(
-                text = SourcesStringRes.CONTACT_SUPPORT,
-                onClick = { viewModel.onIntent(SourcesIntent.ContactSupport) },
-                enabled = !state.isBusy,
-            )
         }
 
         if (state.isLoading) {

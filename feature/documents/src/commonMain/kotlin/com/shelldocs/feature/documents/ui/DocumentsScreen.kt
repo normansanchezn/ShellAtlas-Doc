@@ -88,7 +88,6 @@ fun DocumentsScreen(
                 ShellScreenToolbar(
                     title = DocumentsStringRes.TITLE,
                     subtitle = DocumentsStringRes.SUBTITLE,
-                    modifier = Modifier.padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
                 )
                 if (isWide) {
                     Row(modifier = Modifier.fillMaxSize()) {

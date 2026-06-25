@@ -47,48 +47,49 @@ fun UpdatesScreen(
     }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             ShellScreenToolbar(
                 title = UpdatesStringRes.PAGE_TITLE,
                 subtitle = "${state.updates.size} ${UpdatesStringRes.PAGE_SUBTITLE_SUFFIX}",
             )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                DocumentationHealthTabRow(
+                    selectedTab = state.selectedTab,
+                    metadataIssueCount = state.metadataIssuesRequiringAttention,
+                    onSelect = { tab -> viewModel.onIntent(UpdatesIntent.SelectTab(tab)) },
+                )
 
-            DocumentationHealthTabRow(
-                selectedTab = state.selectedTab,
-                metadataIssueCount = state.metadataIssuesRequiringAttention,
-                onSelect = { tab -> viewModel.onIntent(UpdatesIntent.SelectTab(tab)) },
-            )
-
-            when (state.selectedTab) {
-                DocumentationHealthTab.HEALTH -> {
-                    RiskSummaryRow(state = state, onIntent = viewModel::onIntent, isWide = isWide)
-                    UpdatesTable(
-                        state = state,
-                        isWide = isWide,
-                        onSetRisk = { documentId, risk -> viewModel.onIntent(UpdatesIntent.SetManualRisk(documentId, risk)) },
-                        onOpenUpdate = { documentId -> viewModel.onIntent(UpdatesIntent.OpenUpdate(documentId)) },
-                    )
-                }
-                DocumentationHealthTab.METADATA_ISSUES -> {
-                    MetadataIssuesTable(
-                        issues = state.metadataIssues,
-                        isAdmin = state.isAdmin,
-                        isWide = isWide,
-                        onEditMetadata = { issue -> editTarget = issue },
-                    )
-                }
-                DocumentationHealthTab.HEALTHY -> {
-                    HealthyDocumentsTable(
-                        documents = state.healthyDocuments,
-                        isWide = isWide,
-                        onOpenDocument = { documentId -> viewModel.onIntent(UpdatesIntent.OpenDocument(documentId)) },
-                    )
+                when (state.selectedTab) {
+                    DocumentationHealthTab.HEALTH -> {
+                        RiskSummaryRow(state = state, onIntent = viewModel::onIntent, isWide = isWide)
+                        UpdatesTable(
+                            state = state,
+                            isWide = isWide,
+                            onSetRisk = { documentId, risk -> viewModel.onIntent(UpdatesIntent.SetManualRisk(documentId, risk)) },
+                            onOpenUpdate = { documentId -> viewModel.onIntent(UpdatesIntent.OpenUpdate(documentId)) },
+                        )
+                    }
+                    DocumentationHealthTab.METADATA_ISSUES -> {
+                        MetadataIssuesTable(
+                            issues = state.metadataIssues,
+                            isAdmin = state.isAdmin,
+                            isWide = isWide,
+                            onEditMetadata = { issue -> editTarget = issue },
+                        )
+                    }
+                    DocumentationHealthTab.HEALTHY -> {
+                        HealthyDocumentsTable(
+                            documents = state.healthyDocuments,
+                            isWide = isWide,
+                            onOpenDocument = { documentId -> viewModel.onIntent(UpdatesIntent.OpenDocument(documentId)) },
+                        )
+                    }
                 }
             }
         }

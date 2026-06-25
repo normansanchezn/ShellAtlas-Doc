@@ -66,7 +66,6 @@ fun SettingsScreen(
             ShellScreenToolbar(
                 title = strings.settingsTitle,
                 subtitle = strings.settingsSubtitle,
-                modifier = Modifier.padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
             )
             Row(modifier = Modifier.weight(1f)) {
                 if (isWide) {

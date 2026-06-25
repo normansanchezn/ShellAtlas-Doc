@@ -40,13 +40,7 @@ fun DashboardScreen(
     LaunchedEffect(viewModel) { viewModel.onIntent(DashboardIntent.Initialize) }
 
     Box(modifier = modifier.fillMaxSize().background(colors.background)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             ShellScreenToolbar(
                 title = DashboardStringRes.TITLE,
                 subtitle = DashboardStringRes.SUBTITLE,
@@ -60,23 +54,30 @@ fun DashboardScreen(
                     )
                 },
             )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = ShellSpacing.lg, vertical = ShellSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(ShellSpacing.lg),
+            ) {
+                val metrics = state.metrics
+                if (metrics != null) {
+                    MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), columns = if (isWide) 3 else 1)
 
-            val metrics = state.metrics
-            if (metrics != null) {
-                MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), columns = if (isWide) 3 else 1)
-
-                if (isWide) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
-                        KnowledgeTransferCard(metrics = metrics, modifier = Modifier.weight(1f))
-                        AreaCoverageCard(metrics = metrics, modifier = Modifier.weight(1.2f))
-                        StatusBreakdownCard(metrics = metrics, modifier = Modifier.weight(1f))
+                    if (isWide) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
+                            KnowledgeTransferCard(metrics = metrics, modifier = Modifier.weight(1f))
+                            AreaCoverageCard(metrics = metrics, modifier = Modifier.weight(1.2f))
+                            StatusBreakdownCard(metrics = metrics, modifier = Modifier.weight(1f))
+                        }
+                    } else {
+                        KnowledgeTransferCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                        AreaCoverageCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                        StatusBreakdownCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
                     }
-                } else {
-                    KnowledgeTransferCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-                    AreaCoverageCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
-                    StatusBreakdownCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
+                    TopOwnersCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
                 }
-                TopOwnersCard(metrics = metrics, modifier = Modifier.fillMaxWidth())
             }
         }
 
