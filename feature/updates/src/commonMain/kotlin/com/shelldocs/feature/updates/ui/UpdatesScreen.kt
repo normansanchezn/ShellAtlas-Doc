@@ -61,7 +61,7 @@ fun UpdatesScreen(
             ) {
                 DocumentationHealthTabRow(
                     selectedTab = state.selectedTab,
-                    metadataIssueCount = state.metadataIssuesRequiringAttention,
+                    metadataIssueCount = state.metadataIssues.size,
                     onSelect = { tab -> viewModel.onIntent(UpdatesIntent.SelectTab(tab)) },
                 )
 

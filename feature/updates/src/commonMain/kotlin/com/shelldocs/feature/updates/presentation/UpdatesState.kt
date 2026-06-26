@@ -3,7 +3,6 @@ package com.shelldocs.feature.updates.presentation
 import com.shelldocs.core.common.error.ErrorDialogState
 import com.shelldocs.core.common.mvi.MviState
 import com.shelldocs.core.domain.entity.document.DocumentClassificationResult
-import com.shelldocs.core.domain.entity.document.MetadataClassificationStatus
 import com.shelldocs.core.domain.entity.updates.PendingUpdate
 import com.shelldocs.core.domain.entity.updates.RiskLevel
 
@@ -27,7 +26,4 @@ data class UpdatesState(
 
     val countsByRisk: Map<RiskLevel, Int> =
         RiskLevel.DOCUMENTATION_HEALTH_LEVELS.associateWith { risk -> updates.count { it.risk == risk } }
-
-    val metadataIssuesRequiringAttention: Int =
-        metadataIssues.count { it.status == MetadataClassificationStatus.REQUIRES_ATTENTION }
 }
