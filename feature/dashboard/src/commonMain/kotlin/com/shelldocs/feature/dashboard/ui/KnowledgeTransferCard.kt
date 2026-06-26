@@ -13,6 +13,7 @@ import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.molecules.ShellHealthRing
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.core.designsystem.tokens.StringLocalRes.KT_TXT
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 
 /** Knowledge Transfer completion ring for the current user. */
@@ -26,7 +27,7 @@ fun KnowledgeTransferCard(metrics: DashboardMetrics, modifier: Modifier = Modifi
         ) {
             ShellHealthRing(score = metrics.knowledgeTransferPercent, modifier = Modifier.size(120.dp))
             Text(
-                text = "Knowledge Transfer",
+                text = KT_TXT,
                 style = ShellTheme.typography.sectionTitle,
                 color = colors.textPrimary,
                 modifier = Modifier.padding(top = ShellSpacing.md),

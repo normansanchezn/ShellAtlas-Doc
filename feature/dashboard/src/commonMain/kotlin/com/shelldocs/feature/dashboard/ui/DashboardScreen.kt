@@ -22,6 +22,9 @@ import com.shelldocs.core.designsystem.molecules.ShellMetricCard
 import com.shelldocs.core.designsystem.molecules.ShellScreenToolbar
 import com.shelldocs.core.designsystem.theme.ShellTheme
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
+import com.shelldocs.core.designsystem.tokens.StringLocalRes.AI_ASSISTANT_USAGE
+import com.shelldocs.core.designsystem.tokens.StringLocalRes.HEALTHY_DOCS_TXT
+import com.shelldocs.core.designsystem.tokens.StringLocalRes.NEEDS_ATTENTION
 import com.shelldocs.core.domain.entity.dashboard.DashboardMetrics
 import com.shelldocs.feature.dashboard.DashboardStringRes
 import com.shelldocs.feature.dashboard.presentation.DashboardIntent
@@ -63,7 +66,7 @@ fun DashboardScreen(
             ) {
                 val metrics = state.metrics
                 if (metrics != null) {
-                    MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), columns = if (isWide) 3 else 1)
+                    MetricCards(metrics = metrics, modifier = Modifier.fillMaxWidth(), columns = if (isWide) 3 else 2)
 
                     if (isWide) {
                         Row(horizontalArrangement = Arrangement.spacedBy(ShellSpacing.lg)) {
@@ -105,20 +108,27 @@ private fun MetricCards(
         { m ->
             ShellMetricCard(
                 icon = IconCheckCircle, iconTint = colors.success,
-                value = "${metrics.healthyDocuments}", caption = "Healthy Documents", modifier = m,
+                value = "${metrics.healthyDocuments}",
+                caption = HEALTHY_DOCS_TXT,
+                modifier = m,
             )
         },
         { m ->
             ShellMetricCard(
                 icon = IconAlertTriangle, iconTint = colors.warning,
-                value = "${metrics.attentionDocuments}", caption = "Needs Attention",
-                deltaColor = colors.danger, modifier = m,
+                value = "${metrics.attentionDocuments}",
+                caption = NEEDS_ATTENTION,
+                deltaColor = colors.danger,
+                modifier = m,
             )
         },
         { m ->
             ShellMetricCard(
-                icon = IconMessageSquare, iconTint = colors.brand,
-                value = "${metrics.aiUsageCount}", caption = "AI Assistant Usage", modifier = m,
+                icon = IconMessageSquare,
+                iconTint = colors.brand,
+                value = "${metrics.aiUsageCount}",
+                caption = AI_ASSISTANT_USAGE,
+                modifier = m,
             )
         },
     )
@@ -131,7 +141,7 @@ private fun MetricCards(
                     }
                 }
                 repeat((columns - row.size).coerceAtLeast(0)) {
-                    Box(modifier = Modifier.weight(1f))
+                    Box(modifier = Modifier.weight(0.5f))
                 }
             }
         }

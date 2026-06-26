@@ -1,13 +1,7 @@
 package com.shelldocs.core.designsystem.molecules
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -20,7 +14,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.shelldocs.core.designsystem.atoms.ShellCard
 import com.shelldocs.core.designsystem.theme.ShellTheme
-import com.shelldocs.core.designsystem.tokens.ShellRadius
 import com.shelldocs.core.designsystem.tokens.ShellSpacing
 
 /** Dashboard stat card: tinted icon chip, big value, caption, optional delta. */
@@ -45,8 +38,8 @@ fun ShellMetricCard(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .clip(RoundedCornerShape(ShellRadius.sm))
-                        .background(iconTint.copy(alpha = 0.12f)),
+                        .clip(RoundedCornerShape(0))
+                        .background(iconTint.copy(alpha = 0.10f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
